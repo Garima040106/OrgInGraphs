@@ -53,34 +53,52 @@ export default function Home() {
     <main className="landing">
       <header className="marketing-nav">
         <Brand />
-        <nav className="marketing-links"><a href="#product">Product</a><a href="#why-oig">Why OIG</a></nav>
-        <div className="nav-actions"><Link className="nav-login" href="/login">Sign in</Link><Link className="button button-dark button-small" href="/login">Open workspace <ArrowRight size={14} /></Link></div>
+        <nav className="marketing-links" aria-label="Primary navigation">
+          <a href="#product">Product</a>
+          <a href="#organization">Organization</a>
+          <a href="#knowledge">Knowledge</a>
+          <a href="#how-it-works">How it works</a>
+        </nav>
+        <div className="nav-actions">
+          <Link className="nav-login" href="/login">Sign in</Link>
+          <Link className="button button-dark button-small" href="/dashboard">Open workspace <ArrowRight size={14} /></Link>
+        </div>
       </header>
 
-      <section className="hero-section">
+      <section className="hero-section" id="organization">
         <div className="hero-copy">
-          <div className="eyebrow"><span className="eyebrow-dot" /> Organizational intelligence</div>
-          <h1>Fasten up your<br /><span>employee onboarding.</span></h1>
-          <p>Connect people, projects, teams, and decisions into one living company graph. Give every employee the context they need to contribute from day one.</p>
-          <div className="hero-actions"><Link href="/login" className="button button-primary">Explore your organization <ArrowRight size={16} /></Link><a href="#product" className="button button-quiet">See how it works <ArrowDownRight size={16} /></a></div>
+          <div className="eyebrow"><span className="eyebrow-dot" /> ORGANIZATIONAL INTELLIGENCE</div>
+          <h1>Every connection<br /><span>tells a story.</span></h1>
+          <h2>Understand how your organization really works.</h2>
+          <p>Connect people, teams, projects, and decisions into one living company graph. Give every employee the context they need to move work forward.</p>
+          <div className="hero-actions">
+            <Link href="/dashboard" className="button button-primary">Explore your organization <ArrowRight size={16} /></Link>
+            <a href="#product" className="button button-quiet">See how it works <ArrowDownRight size={16} /></a>
+          </div>
           <div className="hero-proof"><span className="proof-avatars"><i>AP</i><i>NC</i><i>MR</i><i>+</i></span><span>Company knowledge, connected.</span></div>
         </div>
         <GraphPreview />
         <div className="hero-footnote"><span>01 — A clearer picture of how work gets done</span><span>Built for teams that move fast <ArrowUpRight size={13} /></span></div>
       </section>
 
-      <section className="statement-section" id="why-oig">
-        <div className="section-kicker">THE CONTEXT GAP</div>
-        <div className="statement-content"><h2>Great work shouldn’t depend on<br />knowing who to ask.</h2><div><p>Company knowledge is everywhere. OIG brings it together, so people can find the people, projects, and decisions behind the work.</p><a className="text-link" href="#product">Meet your company graph <ArrowRight size={14} /></a></div></div>
+      <section className="stage-strip" aria-label="OrgInGraphs workflow">
+        <div className="stage-item"><span>DISCOVER</span><p>People, teams, projects</p></div>
+        <div className="stage-item"><span>UNDERSTAND</span><p>Relationships, context, dependencies</p></div>
+        <div className="stage-item"><span>ACT</span><p>Find owners, recover decisions, unblock work</p></div>
+      </section>
+
+      <section className="statement-section" id="how-it-works">
+        <div className="section-kicker">HOW IT WORKS</div>
+        <div className="statement-content"><h2>Bring the organization into focus.</h2><div><p>Company knowledge is everywhere. OIG brings it together, so people can find the people, projects, and decisions behind the work.</p><a className="text-link" href="#product">Meet your company graph <ArrowRight size={14} /></a></div></div>
         <div className="statement-rule" />
         <div className="feature-grid" id="product">
-          <article className="feature-card"><div className="feature-icon icon-blue"><Compass size={19} /></div><span className="feature-number">01 / EXPLORE</span><h3>See how the pieces connect.</h3><p>Move through a living map of people, teams, and projects. Follow the relationships that explain how work actually happens.</p><div className="feature-art feature-art-map"><span /><span /><span /><span /><i /><i /></div></article>
+          <article className="feature-card" id="knowledge"><div className="feature-icon icon-blue"><Compass size={19} /></div><span className="feature-number">01 / EXPLORE</span><h3>See how the pieces connect.</h3><p>Move through a living map of people, teams, and projects. Follow the relationships that explain how work actually happens.</p><div className="feature-art feature-art-map"><span /><span /><span /><span /><i /><i /></div></article>
           <article className="feature-card"><div className="feature-icon icon-violet"><Search size={19} /></div><span className="feature-number">02 / DISCOVER</span><h3>Find the right person, faster.</h3><p>Search beyond titles. Find teammates by what they work on, what they know, and where they’re connected.</p><div className="feature-art feature-art-search"><span><Search size={14} /> idempotency</span><i>Ava Patel <small>Payments · Software Engineering</small></i></div></article>
           <article className="feature-card"><div className="feature-icon icon-amber"><Sparkles size={19} /></div><span className="feature-number">03 / UNDERSTAND</span><h3>Get the context behind the work.</h3><p>Open any profile or project to see the connections around it and build a fuller picture, one step at a time.</p><div className="feature-art feature-art-context"><span className="context-person">AP</span><div><b>Ledger reconciliation</b><small>Owned by Ava · 3 connections</small></div><ArrowUpRight size={14} /></div></article>
         </div>
       </section>
 
-      <section className="closing-section"><div><span className="section-kicker">MAKE THE FIRST WEEK COUNT</span><h2>Give every new teammate<br />a place to start.</h2></div><Link className="button button-dark" href="/login">Explore your organization <ArrowRight size={16} /></Link></section>
+      <section className="closing-section"><div><span className="section-kicker">MAKE THE FIRST WEEK COUNT</span><h2>Give every new teammate<br />a place to start.</h2></div><Link className="button button-dark" href="/dashboard">Explore your organization <ArrowRight size={16} /></Link></section>
       <footer className="marketing-footer"><Brand /><span>Organizational intelligence for teams in motion.</span><span>© 2026 OrgInGraphs</span></footer>
     </main>
   );

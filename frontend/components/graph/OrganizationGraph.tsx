@@ -193,7 +193,7 @@ function GraphCanvas({
     return {
       ...edge,
       style: { stroke: selectedId ? (isConnected ? "#6d80dc" : "#dfe3eb") : "#cbd1de", strokeWidth: isConnected ? 1.8 : 1 },
-      labelStyle: { fill: isConnected ? "#6978bb" : "#9aa2b0", fontSize: 8 },
+      labelStyle: { fill: isConnected ? "#6978bb" : "#9aa2b0", fontSize: 13 },
       labelBgStyle: { fill: "#fff", fillOpacity: .9 },
     };
   }), [edges, selectedId]);
@@ -280,7 +280,7 @@ function GraphCanvas({
             {panelError && <div className="panel-error">{panelError}</div>}
             {detailLoading && <div className="inspector-section"><span className="inline-loading"><span className="spinner" />Loading record details…</span></div>}
             {fieldRows.length > 0 && <div className="inspector-section"><h4>Available information</h4>{fieldRows.map(([key, value]) => <div className="metadata-row" key={key}><span>{key.replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)}</span><span>{String(value)}</span></div>)}</div>}
-            {!!connected.length && <div className="inspector-section"><h4>Connected records · {connected.length}</h4>{connected.slice(0, 7).map((item) => <div className="connection-item" key={`${item.id}:${item.relationship}`}><span className="connection-bullet"><ChevronRight size={11} /></span><span>{item.node?.data.label}<small style={{ display: "block", color: "#a0a7b3", fontSize: 7, marginTop: 2 }}>{String(item.relationship || "connected")} · {item.direction}</small></span></div>)}</div>}
+            {!!connected.length && <div className="inspector-section"><h4>Connected records · {connected.length}</h4>{connected.slice(0, 7).map((item) => <div className="connection-item" key={`${item.id}:${item.relationship}`}><span className="connection-bullet"><ChevronRight size={11} /></span><span>{item.node?.data.label}<small style={{ display: "block", color: "#a0a7b3", marginTop: 2 }}>{String(item.relationship || "connected")} · {item.direction}</small></span></div>)}</div>}
             {selectedNode.data.entityType !== "Employee" && selectedNode.data.entityType !== "Department" && selectedNode.data.entityType !== "Project" && <div className="inspector-section"><h4>Connection note</h4><div className="metadata-row"><span>Backend provides</span><span>Graph neighborhood</span></div></div>}
           </aside>
         )}
