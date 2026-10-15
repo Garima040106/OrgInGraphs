@@ -77,6 +77,7 @@ export function AppShell({
     <div className="app-shell">
       <aside className="sidebar">
         <Brand href="/dashboard" />
+        <div className="sidebar-kicker">Company intelligence</div>
         <button className="workspace-switch" type="button" aria-label={`${company} workspace`}>
           <span className="workspace-mark">{company.slice(0, 1).toUpperCase()}</span>
           <span><b>{company}</b><small>Company workspace</small></span><ChevronDown size={13} />
@@ -99,9 +100,9 @@ export function AppShell({
       </aside>
       <div className="main-column">
         <header className="topbar">
-          <div className="breadcrumbs"><span>{company}</span><span>/</span><strong>{title}</strong></div>
+          <div className="breadcrumbs"><span className="breadcrumb-company">{company}</span><span className="breadcrumb-divider">/</span><strong>{title}</strong></div>
           <div className="topbar-actions">
-            <div className={`connection-pill ${connection ? "" : "offline"}`} title={connection ? "Backend connected" : "Backend unavailable"}><span className="status-dot" />{connection ? "Connected" : health ? "Offline" : "Checking"}</div>
+            <div className={`connection-pill ${connection ? "" : "offline"}`} title={connection ? "Backend connected" : "Backend unavailable"}><span className="status-dot" /><span>{connection ? "Connected" : health ? "Offline" : "Checking"}</span></div>
             <button className="search-trigger" type="button" onClick={() => setSearchOpen(true)}><Search size={13} /><span>Search your organization</span><kbd><Command size={9} /> K</kbd></button>
             <button className="topbar-user" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open OIG Intelligence"><Sparkles size={13} /></button>
           </div>
