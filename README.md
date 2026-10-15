@@ -58,4 +58,3 @@ OrgInGraphs/
 └── README.md
 ```
 
-See [backend/README.md](./backend/README.md) for backend-specific setup details.
