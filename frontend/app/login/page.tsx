@@ -3,10 +3,9 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, CircleHelp, LockKeyhole } from "lucide-react";
-import { z } from "zod";
 import { Brand } from "@/components/Brand";
 
-const emailSchema = z.string().trim().email("Enter a valid work email to continue.");
+const demoEmail = "demo@hirenova.example";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,12 +14,11 @@ export default function LoginPage() {
 
   function enterDemo(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const result = emailSchema.safeParse(workspace);
-    if (!result.success) {
-      setError(result.error.issues[0]?.message ?? "Enter a valid work email to continue.");
+    const value = workspace.trim() || demoEmail;
+    if (!value.includes("@")) {
+      setError("Enter a valid work email to continue.");
       return;
     }
-    const value = result.data;
     if (typeof window !== "undefined") {
       window.localStorage.setItem("oig-demo-workspace", value);
     }
