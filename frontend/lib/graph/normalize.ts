@@ -1,5 +1,5 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { Entity, EntityType, Neighborhood } from "@/lib/types";
+import type { Entity, EntityType, GraphResponse, Neighborhood } from "@/lib/types";
 
 export type GraphNodeData = {
   entity: Entity;
@@ -27,6 +27,39 @@ const knownTypes = new Set<EntityType>([
 
 export function entityTypeOf(entity: Entity): EntityType | "Unknown" {
   return entity.entityType && knownTypes.has(entity.entityType) ? entity.entityType : "Unknown";
+}
+
+export function graphEntity(node: GraphResponse["nodes"][number]): Entity {
+  const entityType = node.labels.find((label): label is EntityType => knownTypes.has(label as EntityType)) ?? "Unknown";
+  return entityType === "Unknown"
+    ? { ...node.properties, id: node.id }
+    : { ...node.properties, id: node.id, entityType };
+}
+
+export function normalizeGraph(graph: GraphResponse): {
+  nodes: Node<GraphNodeData>[];
+  edges: Edge[];
+} {
+  const nodes = graph.nodes.map((node, index) => {
+    const columns = 6;
+    return toGraphNode(graphEntity(node), {
+      x: 80 + (index % columns) * 250,
+      y: 70 + Math.floor(index / columns) * 155,
+    });
+  });
+  const nodeIds = new Set(nodes.map((node) => node.id));
+  const edges = graph.edges
+    .filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
+    .map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      label: edge.type.replaceAll("_", " ").toLowerCase(),
+      type: "smoothstep",
+      animated: false,
+      data: { relationshipType: edge.type, properties: edge.properties },
+    }));
+  return { nodes, edges };
 }
 
 export function toGraphNode(
@@ -59,8 +92,13 @@ export function normalizeNeighborhood(
   originPosition = { x: 400, y: 300 },
 ): { nodes: Node<GraphNodeData>[]; edges: Edge[] } {
   const angleStep = (Math.PI * 2) / Math.max(neighborhood.nodes.length, 1);
+  const addedIds = new Set<string>();
   const nodes = neighborhood.nodes
-    .filter((entity) => entity.id !== origin.id && !existingIds.has(entity.id))
+    .filter((entity) => {
+      if (entity.id === origin.id || existingIds.has(entity.id) || addedIds.has(entity.id)) return false;
+      addedIds.add(entity.id);
+      return true;
+    })
     .map((entity) => {
       const originalIndex = neighborhood.nodes.findIndex((item) => item.id === entity.id);
       const angle = originalIndex * angleStep;
@@ -71,6 +109,7 @@ export function normalizeNeighborhood(
       });
     });
   const validIds = new Set([...existingIds, origin.id, ...nodes.map((node) => node.id)]);
+  const edgeIds = new Set<string>();
   const edges = neighborhood.edges
     .filter((edge) => validIds.has(edge.from) && validIds.has(edge.to))
     .map((edge) => ({
@@ -81,6 +120,11 @@ export function normalizeNeighborhood(
       type: "smoothstep",
       animated: false,
       data: { direction: edge.direction ?? "unknown" },
-    }));
+    }))
+    .filter((edge) => {
+      if (edgeIds.has(edge.id)) return false;
+      edgeIds.add(edge.id);
+      return true;
+    });
   return { nodes, edges };
 }

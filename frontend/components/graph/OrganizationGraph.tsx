@@ -31,7 +31,7 @@ import {
 import { api, friendlyApiError } from "@/lib/api";
 import { buildInitialGraph } from "@/lib/graph/layout";
 import { normalizeNeighborhood, type GraphNodeData } from "@/lib/graph/normalize";
-import type { Department, Employee, EntityType, Neighborhood, Project } from "@/lib/types";
+import type { EntityType, GraphResponse, Neighborhood } from "@/lib/types";
 
 type GraphSelection = { entity: GraphNodeData["entity"]; entityType: GraphNodeData["entityType"] };
 
@@ -221,7 +221,7 @@ function GraphCanvas({
   return (
     <>
       <div className="graph-heading">
-        <div className="graph-heading-left"><Network size={14} /> Organization graph <span style={{ color: "#9aa2b0", fontWeight: 450 }}>· {nodes.length} connected records · Showing up to {Math.min(totalEmployees, 24)} of {totalEmployees} people</span></div>
+        <div className="graph-heading-left"><Network size={14} /> Organization graph <span style={{ color: "#9aa2b0", fontWeight: 450 }}>· {nodes.length} records · {totalEmployees} people</span></div>
         <div className="graph-legend">
           <span><i className="legend-mark" style={{ background: "#7188e5" }} /> People</span>
           <span><i className="legend-mark" style={{ background: "#9a84dd" }} /> Departments</span>
@@ -285,22 +285,20 @@ function GraphCanvas({
           </aside>
         )}
       </div>
-      <span className="sr-only">Initial view includes up to 24 of {totalEmployees} employees. Expand nodes for additional verified connections.</span>
+      <span className="sr-only">Showing all {totalEmployees} employees and their graph connections. Expand nodes for additional verified connections.</span>
     </>
   );
 }
 
 export function OrganizationGraph(props: {
-  employees: Employee[];
-  departments: Department[];
-  projects: Project[];
+  graph: GraphResponse;
   focusId?: string;
   focusType?: string;
   onSelection?: (selection: GraphSelection | null) => void;
 }) {
   const initial = useMemo(
-    () => buildInitialGraph(props.employees, props.departments, props.projects),
-    [props.departments, props.employees, props.projects],
+    () => buildInitialGraph(props.graph),
+    [props.graph],
   );
   return (
     <div className="graph-workspace">

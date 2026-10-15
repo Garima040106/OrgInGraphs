@@ -14,6 +14,25 @@ export type EntityType =
   | "Channel"
   | "Message";
 
+export type GraphApiNode = {
+  id: string;
+  labels: string[];
+  properties: Record<string, unknown>;
+};
+
+export type GraphApiEdge = {
+  id: string;
+  type: string;
+  source: string;
+  target: string;
+  properties: Record<string, unknown>;
+};
+
+export type GraphResponse = {
+  nodes: GraphApiNode[];
+  edges: GraphApiEdge[];
+};
+
 export type Entity = Record<string, unknown> & {
   id: string;
   name?: string;
