@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+logs/
+*.log
+
+tmp/
+temp/
+*.tmp
+*.temp
+
+.DS_Store
+*.swp
+*.swo
