@@ -1,6 +1,6 @@
 # OrgInGraphs
 
-OrgInGraphs is an AI-powered company knowledge graph project. The repository currently contains the initial typed Node.js backend foundation, prepared for future FalkorDB connectivity, openCypher graph operations, and LangGraph workflows.
+OrgInGraphs is an AI-powered company knowledge graph project. The backend now provides a deterministic synthetic Hirenova company graph, FalkorDB persistence through openCypher, and read-only REST APIs for exploring company structure and history.
 
 ## Project details
 
@@ -12,12 +12,13 @@ OrgInGraphs is an AI-powered company knowledge graph project. The repository cur
 
 ## Current status
 
-The backend setup is intentionally minimal. It validates environment configuration and provides a modular source structure for future development. It does not currently seed company data, connect to FalkorDB, execute openCypher queries, expose APIs, or run LangGraph agents.
+The backend is intentionally limited to synthetic data and does not call Jira, Confluence, GitHub, or Slack. Seed records identify their source system and reserved example URLs.
 
 ## Prerequisites
 
 - Node.js 20 or newer
 - npm
+- A reachable FalkorDB Cloud graph for `seed:falkordb` and the API
 
 ## Backend installation
 
@@ -29,6 +30,8 @@ cp .env.example .env
 
 The `.env.example` file contains application settings and placeholder FalkorDB connection variables. Update the values for local development as needed. Do not commit `.env` or real secrets.
 
+Relevant variables are `PORT`, `NODE_ENV`, `COMPANY_START_DATE` (ISO date; Hirenova is founded exactly three years earlier), `FALKORDB_HOST`, `FALKORDB_PORT`, `FALKORDB_USERNAME`, `FALKORDB_PASSWORD`, `FALKORDB_TLS`, and `FALKORDB_DATABASE`.
+
 ## Available commands
 
 Run these commands from the `backend/` directory:
@@ -37,7 +40,26 @@ Run these commands from the `backend/` directory:
 npm run dev      # Start the TypeScript entry point in watch mode
 npm run build    # Compile TypeScript into dist/
 npm start        # Run the compiled application
+npm test         # Run seed integrity tests
+npm run seed:generate  # Write deterministic seed-data.json
+npm run seed:validate  # Validate without database access
+npm run seed:falkordb  # MERGE the seed into configured FalkorDB
 ```
+
+## Backend API
+
+After `npm run seed:falkordb` and `npm run dev`, the following endpoints are available:
+
+- `GET /health`
+- `GET /api/company`
+- `GET /api/employees?departmentId=swe&teamId=eng&employmentStatus=active`
+- `GET /api/employees/:employeeId`
+- `GET /api/departments` and `GET /api/departments/:departmentId`
+- `GET /api/projects` and `GET /api/projects/:projectId`
+- `GET /api/graph/neighborhood/Employee/emp-03`
+- `GET /api/search?q=idempotency`
+
+Invalid IDs, filters, entity types, and empty search terms return `400`; missing records return `404`; database failures return `503`.
 
 ## Project structure
 
@@ -45,16 +67,16 @@ npm start        # Run the compiled application
 OrgInGraphs/
 ├── backend/
 │   ├── src/
-│   │   ├── agents/    # Future LangGraph workflows
+│   │   ├── api/       # Express read endpoints and validation
 │   │   ├── config/    # Environment loading and validation
-│   │   ├── db/        # Future FalkorDB connectivity
-│   │   ├── graph/     # Future openCypher graph operations
-│   │   ├── types/     # Shared TypeScript types
-│   │   └── utils/     # Common utilities
+│   │   ├── db/        # FalkorDB client and idempotent graph writes
+│   │   ├── seed/      # Deterministic generation and validation
+│   │   └── types/     # Shared TypeScript types
+│   ├── scripts/       # Seed commands
+│   ├── tests/         # Seed integrity tests
 │   ├── .env.example
 │   ├── .gitignore
 │   ├── package.json
 │   └── tsconfig.json
 └── README.md
 ```
-
