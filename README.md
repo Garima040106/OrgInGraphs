@@ -51,6 +51,7 @@ npm run seed:falkordb  # MERGE the seed into configured FalkorDB
 After `npm run seed:falkordb` and `npm run dev`, the following endpoints are available:
 
 - `GET /health`
+- `GET /api/graph`
 - `GET /api/company`
 - `GET /api/employees?departmentId=swe&teamId=eng&employmentStatus=active`
 - `GET /api/employees/:employeeId`
@@ -58,6 +59,31 @@ After `npm run seed:falkordb` and `npm run dev`, the following endpoints are ava
 - `GET /api/projects` and `GET /api/projects/:projectId`
 - `GET /api/graph/neighborhood/Employee/emp-03`
 - `GET /api/search?q=idempotency`
+
+`GET /api/graph` returns the complete graph in one request:
+
+```json
+{
+  "nodes": [
+    {
+      "id": "emp-01",
+      "labels": ["Employee"],
+      "properties": { "id": "emp-01", "name": "Ava Patel" }
+    }
+  ],
+  "edges": [
+    {
+      "id": "REPORTS_TO:emp-03:emp-00",
+      "type": "REPORTS_TO",
+      "source": "emp-03",
+      "target": "emp-00",
+      "properties": {}
+    }
+  ]
+}
+```
+
+The endpoint reads all nodes and all relationships from the configured FalkorDB graph, including disconnected nodes, without truncating the result.
 
 Invalid IDs, filters, entity types, and empty search terms return `400`; missing records return `404`; database failures return `503`.
 
