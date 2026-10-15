@@ -30,7 +30,7 @@ cp .env.example .env
 
 The `.env.example` file contains application settings and placeholder FalkorDB connection variables. Update the values for local development as needed. Do not commit `.env` or real secrets.
 
-Relevant variables are `PORT`, `NODE_ENV`, `COMPANY_START_DATE` (ISO date; Hirenova is founded exactly three years earlier), `FALKORDB_HOST`, `FALKORDB_PORT`, `FALKORDB_USERNAME`, `FALKORDB_PASSWORD`, `FALKORDB_TLS`, and `FALKORDB_DATABASE`.
+Relevant variables are `PORT`, `NODE_ENV`, `COMPANY_START_DATE` (ISO date; Hirenova is founded exactly three years earlier), `FALKORDB_HOST`, `FALKORDB_PORT`, `FALKORDB_USERNAME`, `FALKORDB_PASSWORD`, `FALKORDB_TLS`, and `FALKORDB_DATABASE`. The API allows browser requests from `http://localhost:3000` and `http://127.0.0.1:3000` by default; set `FRONTEND_ORIGINS` to a comma-separated origin list to override those defaults.
 
 ## Available commands
 
@@ -61,6 +61,12 @@ After `npm run seed:falkordb` and `npm run dev`, the following endpoints are ava
 
 Invalid IDs, filters, entity types, and empty search terms return `400`; missing records return `404`; database failures return `503`.
 
+The neighborhood response includes each node's `entityType` and each edge's actual `from`, `to`, and `direction` (`incoming` or `outgoing`) so graph clients can render the relationship accurately.
+
+## Frontend
+
+The Next.js frontend is in `frontend/`. See [frontend/README.md](frontend/README.md) for installation, environment configuration, and development commands. Run the frontend on port `3000` and the backend on port `8080`.
+
 ## Project structure
 
 ```text
@@ -78,5 +84,6 @@ OrgInGraphs/
 │   ├── .gitignore
 │   ├── package.json
 │   └── tsconfig.json
+├── frontend/         # Next.js organizational graph and workspace UI
 └── README.md
 ```
