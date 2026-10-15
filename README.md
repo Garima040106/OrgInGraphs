@@ -5,7 +5,7 @@ OrgInGraphs is an AI-powered company knowledge graph project. The backend now pr
 ## Project details
 
 - **Version:** 1.0.0
-- **Authors:** Garima and Nikhil
+- **Authors:** Garima,Nikhil and Mohit
 - **Runtime:** Node.js
 - **Language:** TypeScript
 - **Package manager:** npm
