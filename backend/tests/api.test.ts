@@ -3,6 +3,7 @@ import { once } from "node:events";
 import test from "node:test";
 import type { Graph } from "falkordb";
 import { createApp } from "../src/api/app.js";
+import type { NormalizedDocument } from "../src/agents/mock-fetcher/types.js";
 
 test("CORS allows the local frontend origins and answers preflight requests", async () => {
   const server = createApp({} as Graph).listen(0, "127.0.0.1");
@@ -77,4 +78,49 @@ test("Product Progress API returns consistent database errors", async () => {
   } finally {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
+});
+
+const ingestionDocument: NormalizedDocument = { sourceSystem: 'jira', sourceRecordId: 'JIRA-1', title: 'Bug', content: 'Bug: timeout', provenance: 'synthetic', synthetic: true, metadata: {} };
+const startIngestionServer = async (ingestion: Parameters<typeof createApp>[1]['ingestion']) => {
+  const server = createApp({} as Graph, { ingestion }).listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const address = server.address();
+  assert.ok(address && typeof address !== 'string');
+  return { server, url: `http://127.0.0.1:${address.port}/api/ingestion/process` };
+};
+
+test("ingestion API processes fetched documents and returns outcomes", async () => {
+  const { server, url } = await startIngestionServer({
+    fetcher: async () => ({ source: 'jira', documents: [ingestionDocument] }),
+    processor: async () => [{ sourceSystem: 'jira', sourceRecordId: 'JIRA-1', status: 'processed', route: 'ticket-identification', unresolvedReferences: [] }]
+  });
+  try {
+    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'jira', limit: 1 }) });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { status: 'processed', source: 'jira', fetchedDocumentCount: 1, outcomes: [{ sourceSystem: 'jira', sourceRecordId: 'JIRA-1', status: 'processed', route: 'ticket-identification', unresolvedReferences: [] }], errors: [] });
+  } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
+});
+
+test("ingestion API handles empty results and rejects arbitrary URLs", async () => {
+  let processed = false;
+  const { server, url } = await startIngestionServer({ fetcher: async () => ({ source: 'slack', documents: [] }), processor: async () => { processed = true; return []; } });
+  try {
+    const empty = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'slack' }) });
+    assert.equal(empty.status, 200); assert.equal((await empty.json()).status, 'empty'); assert.equal(processed, false);
+    const invalid = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'jira', url: 'https://example.test' }) });
+    assert.equal(invalid.status, 400);
+  } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
+});
+
+test("ingestion API returns sanitized fetch and database failures", async () => {
+  const fetchServer = await startIngestionServer({ fetcher: async () => { throw new Error('token=secret https://tunnel.example failed'); }, processor: async () => [] });
+  try {
+    const response = await fetch(fetchServer.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'github' }) });
+    assert.equal(response.status, 503); assert.deepEqual((await response.json()).errors, ['Mock API fetch failed.']);
+  } finally { await new Promise<void>((resolve, reject) => fetchServer.server.close((error) => error ? reject(error) : resolve())); }
+  const dbServer = await startIngestionServer({ fetcher: async () => ({ source: 'jira', documents: [ingestionDocument] }), processor: async () => { throw new Error('FalkorDB password=secret unavailable'); } });
+  try {
+    const response = await fetch(dbServer.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'jira' }) });
+    assert.equal(response.status, 503); assert.deepEqual((await response.json()).errors, ['Document processing failed.']);
+  } finally { await new Promise<void>((resolve, reject) => dbServer.server.close((error) => error ? reject(error) : resolve())); }
 });

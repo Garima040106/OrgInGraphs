@@ -41,7 +41,7 @@ export function deterministicTicket(input: TicketInput) {
     kind: classifyTicket(text), title: title || 'Untitled ticket', description: text,
     priority: extractPriority(text), status: extractStatus(text), references: [],
     sourceSystem, sourceRecordId, graphDomain: 'product-progress' as const,
-    synthetic: sourceSystem === 'synthetic' || sourceSystem === 'seed',
+    synthetic: input.provenance === 'synthetic' || (!input.provenance && (sourceSystem === 'synthetic' || sourceSystem === 'seed')),
     createdAt: timestamp, updatedAt: timestamp
   };
 }

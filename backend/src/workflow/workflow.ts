@@ -26,7 +26,9 @@ function unresolvedFromState(state: WorkflowGraphState) {
 
 function agentErrors(state: WorkflowGraphState): WorkflowError[] {
   const errors = state.route === 'ticket-identification' ? (state.ticketState?.errors ?? []) : (state.featureUpdateState?.errors ?? []);
-  return errors.map((message) => ({ code: 'agent-validation' as const, message }));
+  return errors.map((message) => message.includes('persistence failed') || message.includes('FalkorDB')
+    ? { code: 'database-failure' as const, message: 'Graph database persistence failed.', retryable: true }
+    : { code: 'agent-validation' as const, message });
 }
 
 function responseFor(state: WorkflowGraphState): WorkflowResponse {

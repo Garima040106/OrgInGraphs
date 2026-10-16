@@ -1,11 +1,16 @@
 import type { Graph } from 'falkordb';
-import { query } from '../../db/falkordb.js';
+import { query, rows } from '../../db/falkordb.js';
 import type { ValidatedIdentifiedTicket } from './validation.js';
 
 export async function persistTicket(graph: Graph, ticket: ValidatedIdentifiedTicket): Promise<void> {
   const properties = { ...ticket };
   delete (properties as Partial<ValidatedIdentifiedTicket>).id;
   await query(graph, 'MERGE (n:Ticket {id: $id}) SET n += $properties', { id: ticket.id, properties });
+  const verification = rows(await query(graph, 'MATCH (n:Ticket {id: $id}) RETURN n', { id: ticket.id }));
+  const persisted = verification[0]?.n as Record<string, unknown> | undefined;
+  if (!persisted || persisted.id !== ticket.id || persisted.sourceSystem !== ticket.sourceSystem || persisted.sourceRecordId !== ticket.sourceRecordId) {
+    throw new Error('Ticket persistence verification failed.');
+  }
   const links: Array<[string, string | undefined, string]> = [
     ['PRODUCT', ticket.productId, 'PART_OF'],
     ['MODULE', ticket.moduleId, 'PART_OF'],

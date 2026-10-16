@@ -5,6 +5,7 @@ import { query, rows } from '../db/falkordb.js';
 import { fetchEntireGraph } from '../graph/entire.js';
 import { fetchProductProgressGraph } from '../product/graph-api.js';
 import { runOrgInGraphsWorkflow } from '../workflow/workflow.js';
+import { ingestionRequestSchema, runIngestionWorkflow, type IngestionWorkflowDependencies } from '../workflow/ingestion-workflow.js';
 
 const idSchema = z.string().regex(/^[a-z0-9-]+$/);
 const filterSchema = z.object({ departmentId:idSchema.optional(), teamId:idSchema.optional(), employmentStatus:z.enum(['active','inactive']).optional() });
@@ -23,7 +24,7 @@ const workflowStatus = (result: Awaited<ReturnType<typeof runOrgInGraphsWorkflow
   return 200;
 };
 
-export function createApp(graph:Graph) {
+export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowDependencies } = {}) {
   const app=express();
   const allowedOrigins=new Set((process.env.FRONTEND_ORIGINS??'http://localhost:3000,http://127.0.0.1:3000').split(',').map(origin=>origin.trim()).filter(Boolean));
   app.use((req,res,next)=>{
@@ -84,5 +85,20 @@ export function createApp(graph:Graph) {
   app.post('/api/product-progress/tickets', processWorkflow('ticket'));
   app.post('/api/product-progress/activities', processWorkflow('feature-update'));
   app.post('/api/product-progress/workflow', processWorkflow());
+  app.post('/api/ingestion/process', async (req, res) => {
+    try {
+      const body = parse(ingestionRequestSchema, req.body);
+      const dependencies = options.ingestion
+        ? { ...options.ingestion, processorOptions: { ...options.ingestion.processorOptions, graph } }
+        : { processorOptions: { graph } };
+      const result = await runIngestionWorkflow(body, dependencies);
+      if (result.status === 'failed') return res.status(503).json({ status: result.status, source: result.source, fetchedDocumentCount: result.documents.length, outcomes: result.outcomes, errors: result.errors });
+      return res.json({ status: result.status, source: result.source, fetchedDocumentCount: result.documents.length, outcomes: result.outcomes, errors: result.errors });
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid request', details: error.flatten() });
+      console.error('Unable to process ingestion request:', error);
+      return res.status(500).json({ error: 'Ingestion processing failed' });
+    }
+  });
   return app;
 }

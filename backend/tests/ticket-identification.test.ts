@@ -43,7 +43,11 @@ test('invalid model output is rejected by structured validation', async () => {
 
 test('reprocessing the same source produces the same stable ticket and idempotent MERGE operations', async () => {
   const queries: string[] = [];
-  const graph = { query: async (cypher: string) => { queries.push(cypher); return { data: [] }; } } as never;
+  const graph = { query: async (cypher: string, options?: { params?: Record<string, string> }) => {
+    queries.push(cypher);
+    if (cypher.includes('MATCH (n:Ticket')) return { data: [{ n: { properties: { id: options?.params?.id, sourceSystem: 'synthetic', sourceRecordId: 'incoming-001' } } }] };
+    return { data: [] };
+  } } as never;
   const first = await runTicketIdentification(input('Task: update retry dashboard'), { graph });
   const second = await runTicketIdentification(input('Task: update retry dashboard'), { graph });
   assert.equal(first.ticket?.id, second.ticket?.id);
@@ -51,4 +55,29 @@ test('reprocessing the same source produces the same stable ticket and idempoten
   assert.equal(second.persisted, true);
   assert.equal(queries.filter((query) => query.includes('MERGE (n:Ticket')).length, 2);
   assert.ok(queries.every((query) => query.includes('$')));
+});
+
+test('fails persistence when the ticket is missing after the write', async () => {
+  const graph = { query: async () => ({ data: [] }) } as never;
+  const result = await runTicketIdentification(input('Task: missing after write'), { graph });
+  assert.equal(result.persisted, false);
+  assert.ok(result.errors.includes('Ticket persistence failed.'));
+});
+
+test('fails persistence when read-back metadata does not match', async () => {
+  const graph = { query: async (cypher: string) => cypher.includes('MATCH (n:Ticket')
+    ? { data: [{ n: { properties: { id: 'wrong-id', sourceSystem: 'jira', sourceRecordId: 'other' } } }] }
+    : { data: [] } } as never;
+  const result = await runTicketIdentification(input('Task: metadata mismatch'), { graph });
+  assert.equal(result.persisted, false);
+  assert.ok(result.errors.includes('Ticket persistence failed.'));
+});
+
+test('fails persistence when the write or read query rejects', async () => {
+  for (const rejectOn of ['MERGE (n:Ticket', 'MATCH (n:Ticket']) {
+    const graph = { query: async (cypher: string) => cypher.includes(rejectOn) ? Promise.reject(new Error('database secret')) : { data: [] } } as never;
+    const result = await runTicketIdentification(input(`Task: rejected ${rejectOn}`), { graph });
+    assert.equal(result.persisted, false);
+    assert.ok(result.errors.includes('Ticket persistence failed.'));
+  }
 });

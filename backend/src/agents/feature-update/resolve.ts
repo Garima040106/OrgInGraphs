@@ -6,9 +6,9 @@ const domain = 'product-progress';
 
 export async function resolveUpdateReference(graph: Graph | undefined, reference: UpdateReference['kind'], text: string): Promise<UpdateReference> {
   if (!graph) return { kind: reference, text, status: 'unresolved', verified: false };
-  const label = reference === 'pull-request' ? 'PullRequest' : reference === 'commit' ? 'Commit' : reference === 'release' ? 'Release' : reference === 'ticket' ? 'Ticket|Bug|Feature|FeatureRequest' : reference === 'feature' ? 'Feature|FeatureRequest' : '';
-  if (!label) return { kind: reference, text, status: 'unresolved', verified: false };
-  const result = await query(graph, `MATCH (n) WHERE n.graphDomain = $domain AND (n:${label}) AND (n.id = $text OR toLower(n.title) = toLower($text) OR toLower(n.name) = toLower($text)) RETURN n`, { domain, text });
+  const labels = reference === 'pull-request' ? ['PullRequest'] : reference === 'commit' ? ['Commit'] : reference === 'release' ? ['Release'] : reference === 'ticket' ? ['Ticket', 'Bug', 'Feature', 'FeatureRequest'] : reference === 'feature' ? ['Feature', 'FeatureRequest'] : [];
+  if (!labels.length) return { kind: reference, text, status: 'unresolved', verified: false };
+  const result = await query(graph, 'MATCH (n) WHERE n.graphDomain = $domain AND any(label IN labels(n) WHERE label IN $labels) AND (n.id = $text OR toLower(n.title) = toLower($text) OR toLower(n.name) = toLower($text)) RETURN n', { domain, labels, text });
   const candidates = rows(result).map((row) => row.n?.id).filter((id): id is string => typeof id === 'string');
   if (candidates.length === 1) return { kind: reference, text, id: candidates[0], status: 'resolved', verified: false };
   if (candidates.length > 1) return { kind: reference, text, status: 'ambiguous', verified: false, candidates };

@@ -29,7 +29,7 @@ export function deterministicFeatureUpdate(input: FeatureUpdateInput) {
     activityType: activityType(text), summary: text, references: [], ...statusChange(text),
     ...(timestamp ? { occurredAt: timestamp } : {}),
     sourceSystem, sourceRecordId,
-    provenance: sourceSystem === 'seed' || sourceSystem === 'synthetic' ? 'synthetic' as const : 'user-provided' as const,
+    provenance: input.provenance ?? (sourceSystem === 'seed' || sourceSystem === 'synthetic' ? 'synthetic' as const : 'user-provided' as const),
     verifiedExternalEvent: false as const, graphDomain: 'product-progress' as const,
     createdAt: timestamp ?? 'unknown', updatedAt: timestamp ?? 'unknown'
   };

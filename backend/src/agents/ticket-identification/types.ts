@@ -14,6 +14,7 @@ export interface TicketInput {
   source?: string;
   sourceRecordId?: string;
   receivedAt?: string;
+  provenance?: 'synthetic' | 'user-provided' | 'external-verified';
 }
 
 export interface ReferenceCandidate {

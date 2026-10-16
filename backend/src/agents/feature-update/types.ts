@@ -8,6 +8,8 @@ export interface FeatureUpdateInput {
   source?: string;
   sourceRecordId?: string;
   receivedAt?: string;
+  provenance?: 'synthetic' | 'user-provided' | 'external-verified';
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateReference {

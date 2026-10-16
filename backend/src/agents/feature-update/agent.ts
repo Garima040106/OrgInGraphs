@@ -8,15 +8,19 @@ import { configuredFeatureUpdateModel } from '../../models/agents.js';
 
 const actorPattern = /(?:actor|by|from)\s*(?:am|:|-)?\s*(emp-\d{2}|[A-Za-z][A-Za-z .'-]+?)(?=\s*(?:[:;,]|\b(?:fixed|reviewed|merged|updated|completed|is|was)\b|$))/i;
 const entityPatterns: Array<[UpdateReference['kind'], RegExp]> = [
-  ['pull-request', /(?:PR|pull request)\s*(?:#|:)?\s*([A-Za-z0-9._-]+)/gi],
+  ['pull-request', /\b(?:PR|pull request)\b\s*(?:#|:)?\s*([A-Za-z0-9._-]+)/gi],
   ['commit', /commit\s*(?:#|:)?\s*([A-Za-z0-9._-]+)/gi],
   ['release', /release\s*(?:#|:)?\s*([A-Za-z0-9._-]+)/gi],
   ['ticket', /(?:ticket|bug)\s*(?:#|:)?\s*([A-Za-z0-9._-]+)/gi]
 ];
 
-function extractReferences(text: string): UpdateReference[] {
+function extractReferences(text: string, metadata?: Record<string, unknown>): UpdateReference[] {
   const result: UpdateReference[] = [];
   for (const [kind, pattern] of entityPatterns) for (const match of text.matchAll(pattern)) if (match[1]) result.push({ kind, text: match[1], status: 'unresolved', verified: false });
+  const linkedJiraKey = typeof metadata?.linkedJiraKey === 'string' ? metadata.linkedJiraKey.trim() : '';
+  if (linkedJiraKey && !result.some((reference) => reference.kind === 'ticket' && reference.text.toLowerCase() === linkedJiraKey.toLowerCase())) {
+    result.push({ kind: 'ticket', text: linkedJiraKey, status: 'unresolved', verified: false });
+  }
   return result;
 }
 
@@ -25,7 +29,7 @@ export const identifyUpdateNode = async (state: FeatureUpdateState, model?: Feat
 export async function resolveUpdateNode(state: FeatureUpdateState): Promise<FeatureUpdateState> {
   if (!state.parsed) return { ...state, errors: [...state.errors, 'Update has not been parsed'] };
   const parsed = { ...state.parsed };
-  const references = extractReferences(state.input.text);
+  const references = extractReferences(state.input.text, state.input.metadata);
   const resolvedReferences = [];
   for (const reference of references) resolvedReferences.push(await resolveUpdateReference(state.graph, reference.kind, reference.text));
   const actorMatch = state.input.text.match(actorPattern);
@@ -61,9 +65,18 @@ export async function persistUpdateNode(state: FeatureUpdateState): Promise<Feat
 /** State-in/state-out nodes can be wired directly into a LangGraph StateGraph. */
 export async function runFeatureUpdate(input: FeatureUpdateInput, options: { graph?: FeatureUpdateState['graph']; model?: FeatureUpdateModel; useConfiguredModel?: boolean } = {}) {
   let state: FeatureUpdateState = { input, ambiguities: [], unresolved: [], errors: [], persisted: false, graph: options.graph };
-  state = await identifyUpdateNode(state, options.model ?? (options.useConfiguredModel === false ? undefined : configuredFeatureUpdateModel()));
-  state = await resolveUpdateNode(state);
+  try { state = await identifyUpdateNode(state, options.model ?? (options.useConfiguredModel === false ? undefined : configuredFeatureUpdateModel())); }
+  catch { return { ...state, errors: [...state.errors, 'Update parsing failed.'] }; }
+  try { state = await resolveUpdateNode(state); }
+  catch { return { ...state, errors: [...state.errors, 'Update reference resolution failed.'] }; }
   state = validateUpdateNode(state);
-  state = await persistUpdateNode(state);
+  if (state.errors.length) return state;
+  try { state = await persistUpdateNode(state); }
+  catch (error) {
+    const diagnostic = error instanceof Error && /^Activity persistence failed during (activity merge|relationship merge|reference merge|ticket status update|feature status update)\.$/.test(error.message)
+      ? error.message
+      : 'Update persistence failed.';
+    return { ...state, errors: [...state.errors, diagnostic], persisted: false };
+  }
   return state;
 }
