@@ -69,7 +69,7 @@ export function AppShell({
     pathname.startsWith("/people") ? "People" :
       pathname.startsWith("/departments") ? "Departments" :
         pathname.startsWith("/projects") ? "Projects" :
-          pathname.startsWith("/settings") ? "Workspace settings" :
+          pathname === "/settings" ? "Workspace settings" :
           pathname === "/dashboard" ? "Organization graph" : "Workspace";
   const connection = health?.status === "ok";
 
@@ -92,7 +92,7 @@ export function AppShell({
           })}
         </nav>
         <div className="nav-section-label">PREFERENCES</div>
-        <nav className="side-nav"><Link href="/settings" className={pathname.startsWith("/settings") ? "active" : ""} aria-current={pathname.startsWith("/settings") ? "page" : undefined}><Settings2 size={15} /><span>Workspace settings</span></Link></nav>
+        <nav className="side-nav"><Link href="/settings" className={pathname === "/settings" ? "active" : ""} aria-current={pathname === "/settings" ? "page" : undefined}><Settings2 size={15} /><span>Workspace settings</span></Link></nav>
         <div className="sidebar-bottom">
           <div className="sidebar-help"><CircleHelp size={14} /><span>Help center</span></div>
           <div className="sidebar-user"><span className="user-avatar">{workspace.slice(0, 2).toUpperCase()}</span><div><b title={workspace}>{workspace}</b><small>Demo access</small></div><ArrowDownUp size={13} color="#98a0af" /></div>
