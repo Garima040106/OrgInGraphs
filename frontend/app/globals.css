@@ -624,6 +624,138 @@ body {
   }
 }
 
+/* Keep the shell columns independent so content cannot slide beneath the sidebar. */
+.app-shell {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  padding-left: 0;
+}
+
+.app-shell .sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 5;
+  flex: none;
+  width: 248px;
+  min-width: 248px;
+  min-height: 100vh;
+  grid-column: 1;
+}
+
+.app-shell .main-column {
+  grid-column: 2;
+  flex: none;
+  width: auto;
+  max-width: 100%;
+  height: 100dvh;
+  min-width: 0;
+  min-height: 0;
+  margin-left: 0;
+  overflow: hidden;
+}
+
+.app-shell .topbar {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.app-shell .workspace-content {
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.app-shell .topbar {
+  position: relative;
+  top: auto;
+  z-index: 20;
+  flex: 0 0 auto;
+  background: rgba(255, 254, 243, .98);
+}
+
+.app-shell .workspace-settings {
+  width: min(100%, 1180px);
+  max-width: 1180px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.app-shell .breadcrumbs {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.app-shell .breadcrumb-company,
+.app-shell .breadcrumbs strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-shell .topbar-actions {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.app-shell .topbar-user {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  line-height: 0;
+}
+
+.app-shell .assistant-launch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.app-shell .assistant-launch svg {
+  display: block;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .app-shell .sidebar {
+    position: fixed;
+    flex: none;
+    width: 72px;
+    min-width: 72px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .app-shell .sidebar {
+    position: fixed;
+    flex: none;
+    width: 58px;
+    min-width: 58px;
+  }
+
+  .app-shell .breadcrumbs {
+    flex: 1 1 auto;
+  }
+}
+
 @media (max-width: 900px) {
   .sidebar {
     width: 72px;
@@ -1550,7 +1682,6 @@ body {
 }
 
 .main-column {
-  margin-left: 224px;
   min-height: 100dvh;
 }
 
