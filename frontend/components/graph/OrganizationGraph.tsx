@@ -56,16 +56,28 @@ function EntityCardNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
         <button
           className="node-expand-button"
           type="button"
-          title={data.isExpanded ? `Collapse connections for ${data.label}` : `Expand connections for ${data.label}`}
-          aria-label={data.isExpanded ? `Collapse connections for ${data.label}` : `Expand connections for ${data.label}`}
-          disabled={data.isExpanding}
+          title={
+            data.hasChildren === false
+              ? `${data.label} is a terminal record`
+              : data.isExpanded
+                ? `Collapse connections for ${data.label}`
+                : `Expand connections for ${data.label}`
+          }
+          aria-label={
+            data.hasChildren === false
+              ? `${data.label} is a terminal record`
+              : data.isExpanded
+                ? `Collapse connections for ${data.label}`
+                : `Expand connections for ${data.label}`
+          }
+          disabled={data.isExpanding || data.hasChildren === false}
           onClick={(event) => {
             event.stopPropagation();
             data.onExpand?.();
           }}
         >
           {data.isExpanding ? <span className="spinner" /> : <ChevronRight size={12} />}
-          {data.isExpanding ? "Loading" : data.isExpanded ? "Collapse" : "Expand"}
+          {data.isExpanding ? "Loading" : data.hasChildren === false ? "Terminal" : data.isExpanded ? "Collapse" : "Expand"}
         </button>
       </div>
       <Handle id="target-right" type="target" position={Position.Right} />
@@ -218,9 +230,15 @@ export function GraphRenderer({
     const isConnected = !!selectedId && (edge.source === selectedId || edge.target === selectedId);
     return {
       ...edge,
-      style: { stroke: selectedId ? (isConnected ? "#6d80dc" : "#dfe3eb") : "#cbd1de", strokeWidth: isConnected ? 1.8 : 1 },
-      labelStyle: { fill: isConnected ? "#6978bb" : "#9aa2b0", fontSize: 13 },
-      labelBgStyle: { fill: "#fff", fillOpacity: .9 },
+      type: "default",
+      style: {
+        stroke: selectedId ? (isConnected ? "#6366f1" : "#e2e8f0") : "#cbd5e1",
+        strokeWidth: isConnected ? 2 : 1.5,
+        strokeLinecap: "round" as const,
+        transition: "stroke 0.2s, stroke-width 0.2s",
+      },
+      labelStyle: { fill: isConnected ? "#4f46e5" : "#64748b", fontSize: 12, fontWeight: 500 },
+      labelBgStyle: { fill: "#ffffff", fillOpacity: 0.95 },
     };
   }), [edges, selectedId]);
 
@@ -306,9 +324,21 @@ export function GraphRenderer({
             </div>
             <div className="inspector-source"><span>Record source</span><b>{entitySource(selectedNode.data.entity)}</b></div>
             <div className="inspector-actions">
-              <button className="small-button" type="button" onClick={() => void expandNode(selectedNode)} disabled={!!expandingId}>
+              <button
+                className="small-button"
+                type="button"
+                onClick={() => void expandNode(selectedNode)}
+                disabled={!!expandingId || selectedNode.data.hasChildren === false}
+                title={selectedNode.data.hasChildren === false ? "Terminal record — no descendants to expand" : undefined}
+              >
                 {expandingId === selectedNode.id ? <span className="spinner" /> : <Network size={12} />}
-                {expandingId === selectedNode.id ? "Loading" : expandedIds.has(selectedNode.id) ? "Collapse" : "Expand"}
+                {expandingId === selectedNode.id
+                  ? "Loading"
+                  : selectedNode.data.hasChildren === false
+                    ? "Terminal"
+                    : expandedIds.has(selectedNode.id)
+                      ? "Collapse"
+                      : "Expand"}
               </button>
               {path && <Link href={path} className="small-button">Open profile <ArrowUpRight size={11} /></Link>}
             </div>
