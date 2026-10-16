@@ -1726,9 +1726,568 @@ body {
   opacity: .65;
 }
 
+/* Compact workspace correction: keep the product readable without the zoomed-in feel. */
+.app-shell .sidebar {
+  width: 248px;
+  flex-basis: 248px;
+  padding: 18px 12px 14px;
+}
+
+.app-shell .sidebar .brand {
+  padding: 0 8px 18px;
+}
+
+.app-shell .sidebar-kicker {
+  margin: -8px 8px 12px;
+  font-size: 10px;
+}
+
+.app-shell .workspace-switch {
+  min-height: 50px;
+  padding: 8px;
+  gap: 9px;
+}
+
+.app-shell .workspace-switch b,
+.app-shell .sidebar-user b {
+  max-width: 165px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.app-shell .workspace-switch small,
+.app-shell .sidebar-user small {
+  font-size: 11px;
+}
+
+.app-shell .workspace-mark {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.app-shell .nav-section-label {
+  margin: 14px 0 7px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+.app-shell .side-nav {
+  gap: 3px;
+}
+
+.app-shell .side-nav a {
+  min-height: 38px;
+  padding: 7px 10px;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.app-shell .side-nav a svg {
+  width: 16px;
+  height: 16px;
+}
+
+.app-shell .sidebar-help {
+  min-height: 40px;
+  padding: 10px;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.app-shell .sidebar-help svg {
+  width: 15px;
+  height: 15px;
+}
+
+.app-shell .sidebar-user {
+  gap: 9px;
+  padding: 12px 8px 0;
+}
+
+.app-shell .sidebar-user .user-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+
+.app-shell .topbar {
+  height: 60px;
+  flex-basis: 60px;
+  padding: 0 22px;
+}
+
+.app-shell .breadcrumbs {
+  gap: 9px;
+  font-size: 13px;
+}
+
+.app-shell .connection-pill {
+  min-height: 28px;
+  padding: 0 9px;
+  font-size: 12px;
+}
+
+.app-shell .search-trigger {
+  height: 36px;
+  gap: 8px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.app-shell .search-trigger kbd {
+  font-size: 10px;
+  padding: 2px 5px;
+}
+
+.app-shell .topbar-user {
+  width: 32px;
+  height: 32px;
+}
+
+.app-shell .workspace-content {
+  padding: 24px;
+}
+
+.app-shell .page-heading {
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.app-shell .dashboard-heading-copy h1,
+.app-shell .page-heading h1 {
+  font-size: clamp(30px, 3.2vw, 36px);
+  line-height: 1;
+}
+
+.app-shell .dashboard-heading-copy .eyebrow {
+  margin-bottom: 9px;
+  font-size: 10px;
+}
+
+.app-shell .dashboard-heading-copy p,
+.app-shell .page-heading p {
+  max-width: 560px;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.app-shell .heading-actions {
+  gap: 8px;
+}
+
+.app-shell .small-button {
+  min-height: 36px;
+  gap: 7px;
+  padding: 8px 11px;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.app-shell .dashboard-stats {
+  min-height: 82px;
+  margin-bottom: 16px;
+  padding: 0;
+}
+
+.app-shell .stat-item {
+  min-height: 82px;
+  padding: 14px 18px;
+  gap: 10px;
+}
+
+.app-shell .stat-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.app-shell .stat-item b {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.app-shell .stat-item .metric-label {
+  margin-bottom: 1px;
+  font-size: 10px;
+}
+
+.app-shell .stat-item > span:last-child > small:last-child {
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.app-shell .stats-caption {
+  position: static;
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin: -2px 16px 7px;
+  font-size: 10px;
+}
+
+.app-shell .graph-workspace {
+  height: calc(100dvh - 244px);
+  min-height: 480px;
+}
+
+.app-shell .graph-heading {
+  height: 50px;
+  padding: 0 16px;
+}
+
+.app-shell .graph-heading-left {
+  gap: 9px;
+  font-size: 13px;
+}
+
+.app-shell .graph-heading-left > span {
+  font-size: 12px;
+}
+
+.app-shell .graph-heading-left strong {
+  font-size: 13px;
+}
+
+.app-shell .graph-heading-left small {
+  font-size: 10px;
+}
+
+.app-shell .graph-title-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.app-shell .graph-legend {
+  gap: 12px;
+  font-size: 11px;
+}
+
+.app-shell .graph-body {
+  inset-block-start: 50px;
+}
+
+.app-shell .graph-hint {
+  max-width: min(390px, calc(100% - 24px));
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+.app-shell .graph-fit-actions {
+  gap: 6px;
+}
+
+.app-shell .graph-fit-actions .small-button {
+  min-height: 32px;
+}
+
+.app-shell .entity-node {
+  width: 194px;
+  min-width: 180px;
+  max-width: 210px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.app-shell .entity-node.employee {
+  min-width: 190px;
+}
+
+.app-shell .entity-node .node-icon,
+.app-shell .entity-node .node-avatar {
+  width: 30px;
+  height: 30px;
+}
+
+.app-shell .node-label {
+  max-width: 145px;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.app-shell .node-subtitle {
+  max-width: 145px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.app-shell .node-type {
+  margin-top: 7px;
+  font-size: 10px;
+}
+
+.app-shell .react-flow__controls-button {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.app-shell .react-flow__minimap {
+  right: 12px !important;
+  top: 12px !important;
+  width: 150px !important;
+  height: 100px !important;
+}
+
+.app-shell .inspector {
+  width: min(320px, calc(100% - 24px));
+}
+
+.app-shell .inspector-head {
+  min-height: 48px;
+  padding: 12px 15px;
+}
+
+.app-shell .inspector-head span {
+  font-size: 12px;
+}
+
+.app-shell .inspector-identity {
+  gap: 10px;
+  padding: 15px;
+}
+
+.app-shell .inspector-identity h3 {
+  font-size: 20px;
+}
+
+.app-shell .inspector-identity p {
+  font-size: 12px;
+}
+
+.app-shell .inspector-section {
+  padding: 13px 15px;
+}
+
+.app-shell .inspector-section h4 {
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+
+.app-shell .metadata-row,
+.app-shell .connection-item {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.app-shell .connection-item small {
+  font-size: 11px;
+}
+
+.app-shell .inspector-actions {
+  gap: 7px;
+  padding: 12px 15px;
+}
+
+.app-shell .panel-error,
+.app-shell .inline-loading {
+  font-size: 12px;
+}
+
+.app-shell .error-banner {
+  gap: 10px;
+  padding: 11px 13px;
+  font-size: 13px;
+}
+
+.app-shell .directory-toolbar {
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.app-shell .directory-search {
+  width: min(360px, 100%);
+  height: 38px;
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.app-shell .directory-search input {
+  font-size: 13px;
+}
+
+.app-shell .filter-select {
+  height: 38px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.app-shell .directory-table th {
+  padding: 11px 13px;
+  font-size: 11px;
+}
+
+.app-shell .directory-table td {
+  padding: 12px 13px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.app-shell .table-person {
+  gap: 9px;
+  min-width: 170px;
+}
+
+.app-shell .table-person b {
+  font-size: 14px;
+}
+
+.app-shell .table-person small {
+  margin-top: 3px;
+  font-size: 11px;
+}
+
+.app-shell .status-badge {
+  gap: 5px;
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.app-shell .entity-card {
+  padding: 16px;
+}
+
+.app-shell .entity-card h3 {
+  font-size: 20px;
+}
+
+.app-shell .entity-card p,
+.app-shell .entity-card-meta {
+  font-size: 12px;
+}
+
+.app-shell .entity-card-meta {
+  margin-top: 13px;
+  padding-top: 11px;
+}
+
 @media (max-width: 900px) {
-  .main-column {
-    margin-left: 72px;
+  .app-shell .sidebar {
+    width: 72px;
+    flex-basis: 72px;
+    padding-inline: 8px;
+  }
+
+  .app-shell .sidebar .brand-wordmark,
+  .app-shell .workspace-switch span:not(.workspace-mark),
+  .app-shell .workspace-switch > svg,
+  .app-shell .nav-section-label,
+  .app-shell .side-nav a span,
+  .app-shell .sidebar-help span,
+  .app-shell .sidebar-user > div,
+  .app-shell .sidebar-user > svg {
+    display: none;
+  }
+
+  .app-shell .sidebar .brand,
+  .app-shell .workspace-switch,
+  .app-shell .side-nav a,
+  .app-shell .sidebar-user,
+  .app-shell .sidebar-help {
+    justify-content: center;
+  }
+
+  .app-shell .workspace-switch {
+    padding: 7px;
+  }
+
+  .app-shell .topbar,
+  .app-shell .workspace-content {
+    padding-inline: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell .topbar {
+    height: 56px;
+    flex-basis: 56px;
+  }
+
+  .app-shell .workspace-content {
+    padding: 18px 14px 24px;
+  }
+
+  .app-shell .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .app-shell .page-heading h1,
+  .app-shell .dashboard-heading-copy h1 {
+    font-size: clamp(30px, 8vw, 36px);
+  }
+
+  .app-shell .page-heading p,
+  .app-shell .dashboard-heading-copy p {
+    font-size: 13px;
+  }
+
+  .app-shell .heading-actions {
+    width: 100%;
+  }
+
+  .app-shell .heading-actions .small-button {
+    flex: 1;
+  }
+
+  .app-shell .dashboard-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .app-shell .stat-item {
+    min-height: 72px;
+    padding: 11px 10px;
+  }
+
+  .app-shell .stat-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .app-shell .stat-item b {
+    font-size: 27px;
+  }
+
+  .app-shell .stat-item > span:last-child > small:last-child {
+    font-size: 10px;
+  }
+
+  .app-shell .graph-workspace {
+    height: calc(100dvh - 260px);
+    min-height: 420px;
+  }
+
+  .app-shell .graph-heading {
+    min-height: 50px;
+    height: auto;
+    padding: 9px 11px;
+  }
+
+  .app-shell .graph-body {
+    inset-block-start: 50px;
+  }
+
+  .app-shell .graph-legend {
+    gap: 7px;
+    font-size: 10px;
+  }
+
+  .app-shell .directory-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .app-shell .directory-search {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .app-shell .directory-table th,
+  .app-shell .directory-table td {
+    padding: 10px;
   }
 }
 
@@ -2090,6 +2649,18 @@ body {
     align-items: flex-start;
     flex-direction: column;
     gap: 10px;
+  }
+}
+
+/* Keep the fixed navigation width and content track in sync on narrow screens. */
+@media (max-width: 760px) {
+  .app-shell {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .app-shell .sidebar {
+    width: 58px;
+    min-width: 58px;
   }
 }
 
