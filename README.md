@@ -32,6 +32,8 @@ The `.env.example` file contains application settings and placeholder FalkorDB c
 
 Relevant variables are `PORT`, `NODE_ENV`, `COMPANY_START_DATE` (ISO date; Hirenova is founded exactly three years earlier), `FALKORDB_HOST`, `FALKORDB_PORT`, `FALKORDB_USERNAME`, `FALKORDB_PASSWORD`, `FALKORDB_TLS`, and `FALKORDB_DATABASE`. The API allows browser requests from `http://localhost:3000` and `http://127.0.0.1:3000` by default; set `FRONTEND_ORIGINS` to a comma-separated origin list to override those defaults.
 
+LLM processing is optional. Leave `MODEL_PROVIDER=disabled` for deterministic offline agents. To enable the two active agents, set `MODEL_PROVIDER=openai-compatible`, `MODEL_BASE_URL`, `MODEL_API_KEY`, and `MODEL_DEFAULT_ID`; optionally override `MODEL_TICKET_ID`, `MODEL_FEATURE_UPDATE_ID`, and their temperatures. `MODEL_TIMEOUT_MS` controls request timeout. Credentials are read only from the environment and are never written to graph records or logs.
+
 ## Available commands
 
 Run these commands from the `backend/` directory:

@@ -20,6 +20,9 @@
     "seed:generate": "tsx scripts/seed-generate.ts",
     "seed:validate": "tsx scripts/seed-validate.ts",
     "seed:falkordb": "tsx scripts/seed-falkordb.ts",
+    "product:seed:generate": "tsx scripts/product-seed-generate.ts",
+    "product:seed:validate": "tsx scripts/product-seed-validate.ts",
+    "product:seed:falkordb": "tsx scripts/product-seed-falkordb.ts",
     "test": "tsx --test tests/**/*.test.ts"
   },
   "dependencies": {

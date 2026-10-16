@@ -4,6 +4,21 @@ dist/
 .env.*
 !.env.example
 
+# Generated seed output from `npm run seed:generate`.
+/seed-data.json
+
+# Seed scripts are local implementation artifacts; existing tracked scripts remain tracked.
+/scripts/*seed*.*
+
+# Local-only seed artifacts and exports.
+/seed-output/
+/seed-exports/
+/tmp/seed/
+/temp/seed/
+
+# Local database dumps; schema/source files remain trackable.
+/database-dumps/
+
 logs/
 *.log
 

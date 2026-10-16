@@ -10,7 +10,8 @@ const environmentSchema = z.object({
   FALKORDB_PASSWORD: z.string().optional(),
   FALKORDB_DATABASE: z.string().min(1).default('orgingraphs'),
   FALKORDB_TLS: z.enum(['true', 'false']).default('false'),
-  COMPANY_START_DATE: z.string().date().default('2026-01-01')
+  COMPANY_START_DATE: z.string().date().default('2026-01-01'),
+  CONFLUENCE_INGESTION_ENABLED: z.enum(['true', 'false']).default('false')
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

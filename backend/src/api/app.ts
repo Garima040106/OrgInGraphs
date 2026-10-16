@@ -3,6 +3,8 @@ import { z } from 'zod';
 import type { Graph } from 'falkordb';
 import { query, rows } from '../db/falkordb.js';
 import { fetchEntireGraph } from '../graph/entire.js';
+import { fetchProductProgressGraph } from '../product/graph-api.js';
+import { runOrgInGraphsWorkflow } from '../workflow/workflow.js';
 
 const idSchema = z.string().regex(/^[a-z0-9-]+$/);
 const filterSchema = z.object({ departmentId:idSchema.optional(), teamId:idSchema.optional(), employmentStatus:z.enum(['active','inactive']).optional() });
@@ -13,6 +15,13 @@ const sendError = (res:Response, error:unknown) => {
   console.error(error); return res.status(503).json({ error:'Database request failed' });
 };
 const one = async (graph:Graph, label:string, id:string) => rows(await query(graph,`MATCH (n:${label} {id:$id}) RETURN n`,{id}))[0]?.n;
+const workflowBodySchema = z.object({ text:z.string().trim().min(1).max(20_000), type:z.enum(['auto','ticket','feature-update']).optional(), source:z.string().trim().min(1).max(100).optional(), sourceRecordId:z.string().trim().min(1).max(200).optional(), receivedAt:z.string().datetime().optional(), provenance:z.enum(['synthetic','user-provided','external-verified']).optional() }).strict();
+
+const workflowStatus = (result: Awaited<ReturnType<typeof runOrgInGraphsWorkflow>>) => {
+  if (result.errors.some((error) => error.code === 'invalid-input')) return 400;
+  if (result.errors.some((error) => error.code === 'database-failure' || error.code === 'model-failure')) return 503;
+  return 200;
+};
 
 export function createApp(graph:Graph) {
   const app=express();
@@ -61,5 +70,19 @@ export function createApp(graph:Graph) {
     } catch(e) { return sendError(res,e); }
   });
   app.get('/api/search',async(req,res)=>{try{const q=parse(z.string().trim().min(1).max(100),req.query.q);const result=await query(graph,'MATCH (n) WHERE (n.name IS NOT NULL AND toLower(n.name) CONTAINS toLower($q)) OR (n.title IS NOT NULL AND toLower(n.title) CONTAINS toLower($q)) OR (n.email IS NOT NULL AND toLower(n.email) CONTAINS toLower($q)) RETURN labels(n)[0] AS entityType,n LIMIT 50',{q});return res.json(rows(result).map((item)=>({...item,n:item.n && 'properties' in item.n ? item.n.properties : item.n})));}catch(e){return sendError(res,e);}});
+  app.get('/api/product-progress/graph', async (_req, res) => {
+    try { return res.json(await fetchProductProgressGraph(graph)); }
+    catch (error) { console.error('Unable to fetch Product Progress graph:', error); return res.status(503).json({ error: 'Product Progress graph unavailable' }); }
+  });
+  const processWorkflow = (forcedType?: 'ticket' | 'feature-update') => async (req:Request, res:Response) => {
+    try {
+      const body = parse(workflowBodySchema, { ...req.body, ...(forcedType ? { type: forcedType } : {}) });
+      const result = await runOrgInGraphsWorkflow(body, { graph });
+      return res.status(workflowStatus(result)).json(result);
+    } catch (error) { return sendError(res, error); }
+  };
+  app.post('/api/product-progress/tickets', processWorkflow('ticket'));
+  app.post('/api/product-progress/activities', processWorkflow('feature-update'));
+  app.post('/api/product-progress/workflow', processWorkflow());
   return app;
 }
