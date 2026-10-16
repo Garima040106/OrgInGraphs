@@ -43,18 +43,24 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 /* Marketing */
 .landing { overflow: hidden; }
-.marketing-nav { position: sticky; top: 14px; z-index: 15; height: 64px; max-width: 1172px; padding: 0 24px; margin: 14px auto -78px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(226, 230, 238, .95); border-radius: 14px; background: rgba(255, 255, 255, .92); box-shadow: 0 8px 26px rgba(36, 48, 73, .07); backdrop-filter: blur(14px); }
-.marketing-links { display: flex; gap: 35px; margin-left: 80px; }
+.marketing-nav { position: sticky; top: 14px; z-index: 15; height: 64px; max-width: 1172px; padding: 0 24px; margin: 14px auto -78px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(226, 230, 238, .95); border-radius: 999px; background: rgba(255, 255, 255, .92); box-shadow: 0 8px 26px rgba(36, 48, 73, .07); backdrop-filter: blur(14px); }
+.marketing-links { display: flex; gap: 28px; margin-left: 80px; }
 .marketing-links a, .nav-login { color: #606b7e; font-size: 12px; font-weight: 550; transition: color .15s; }
 .marketing-links a:hover, .nav-login:hover { color: var(--blue); }
 .nav-actions { display: flex; align-items: center; gap: 23px; }
 .hero-section { max-width: 1240px; min-height: 622px; margin: auto; padding: 86px 34px 24px; display: grid; grid-template-columns: .88fr 1.12fr; align-items: center; column-gap: 34px; position: relative; }
 .hero-copy { align-self: center; padding-bottom: 28px; }
-.hero-copy h1, .login-story h1 { font-family: var(--display); font-size: clamp(50px, 5.7vw, 76px); line-height: .99; letter-spacing: -.035em; font-weight: 500; margin: 22px 0 19px; color: #18233b; }
+.hero-copy h1, .login-story h1 { font-family: var(--display); font-size: clamp(50px, 5.7vw, 76px); line-height: .99; letter-spacing: -.035em; font-weight: 500; margin: 22px 0 10px; color: #18233b; }
 .hero-copy h1 span, .login-story h1 span { color: #687aa8; font-weight: 400; font-style: italic; }
+.hero-copy h2 { margin: 0 0 18px; font-family: var(--display); font-size: clamp(24px, 2.5vw, 36px); line-height: 1.05; letter-spacing: -.018em; color: #24314d; font-style: italic; font-weight: 500; }
 .hero-copy > p, .login-story > p { max-width: 465px; color: #737d90; font-size: 15px; line-height: 1.8; margin: 0; }
 .hero-actions { display: flex; align-items: center; gap: 13px; margin-top: 29px; }
 .hero-proof { display: flex; align-items: center; gap: 12px; margin-top: 39px; color: #8b93a4; font-size: 11px; }
+.stage-strip { max-width: 1172px; margin: 0 auto 24px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #1d2943; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 42px rgba(29, 41, 67, 0.16); }
+.stage-item { position: relative; padding: 28px 28px 24px; border-right: 1px solid rgba(255,255,255,0.1); min-height: 118px; }
+.stage-item:last-child { border-right: none; }
+.stage-item span { display: block; color: #c7d5ee; font-size: 9px; letter-spacing: .18em; font-weight: 700; margin-bottom: 10px; }
+.stage-item p { margin: 0; color: #f7f3ee; font-size: 15px; line-height: 1.5; max-width: 240px; }
 .proof-avatars { display: flex; }
 .proof-avatars i { font-style: normal; width: 25px; height: 25px; border: 2px solid #fff; border-radius: 50%; background: #dce2f8; color: #4d5d93; display: grid; place-items: center; font-size: 7px; font-weight: 700; margin-left: -5px; }
 .proof-avatars i:first-child { margin-left: 0; background: #f4dfd3; color: #8e654d; }
@@ -1333,436 +1339,201 @@ body {
   .hero-footnote span:last-child { display: none; }.closing-section h2 { font-size: 30px; }.login-top { height: 65px; }.login-footer span:last-child { max-width: 140px; text-align: right; }.page-heading { flex-direction: column; }.heading-actions { width: 100%; }.directory-toolbar { flex-wrap: wrap; }.directory-search { flex: 1 1 100%; }.entity-list { grid-template-columns: 1fr; }.detail-grid { grid-template-columns: 1fr; gap: 15px; }.graph-heading { padding: 0 9px; }.graph-heading-left { gap: 5px; }.graph-legend span:nth-child(3) { display: none; }
 }
 
-/* Final dashboard art direction */
-.app-shell {
-  min-height: 100dvh;
-}
-
-.main-column {
-  background: #F4F2E8;
-}
-
-.workspace-content {
-  width: min(100%, 1600px);
-  margin: 0 auto;
-  padding: 32px clamp(20px, 3.5vw, 56px) 40px;
-}
-
-.topbar {
-  height: 64px;
-  flex-basis: 64px;
-  padding: 0 clamp(20px, 3.5vw, 56px);
-}
-
-.breadcrumbs {
-  gap: 12px;
-  font-size: 11px;
-  letter-spacing: -.01em;
-}
-
-.topbar-actions {
-  gap: 10px;
-}
-
-.page-heading {
-  align-items: flex-end;
-  max-width: 1180px;
-  margin: 0 auto 24px;
-}
-
-.page-heading h1 {
-  font-size: clamp(32px, 3.2vw, 46px);
-  line-height: .95;
-}
-
-.page-heading p {
-  max-width: 520px;
-  margin-top: 10px;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.heading-actions {
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.small-button {
-  min-height: 36px;
-  padding: 0 13px;
-  border-radius: 7px;
-  font-size: 10px;
-  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
-}
-
-.small-button:active {
-  transform: translateY(1px);
-}
-
-.dashboard-stats {
-  width: min(100%, 1180px);
-  min-height: 84px;
-  margin: 0 auto 20px;
-  padding: 16px 20px;
-  border-radius: 10px;
-}
-
-.stat-item {
-  min-width: 150px;
-}
-
-.stat-item b {
-  font-family: var(--display);
-  font-size: 26px;
-  font-weight: 500;
-  letter-spacing: -.02em;
-}
-
-.stat-item small {
-  font-size: 10px;
-  margin-top: 5px;
-}
-
-.stats-caption {
-  font-size: 10px;
-}
-
-.graph-workspace {
-  width: min(100%, 1180px);
-  height: clamp(560px, calc(100dvh - 260px), 820px);
-  min-height: 560px;
-  margin: 0 auto;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(25, 25, 27, .045);
-}
-
-.graph-heading {
-  height: 52px;
-  padding: 0 18px;
-}
-
-.graph-heading-left {
-  gap: 10px;
-  font-size: 11px;
-}
-
-.graph-heading-left span {
-  color: #3F403D !important;
-  font-weight: 400 !important;
-}
-
-.graph-legend {
-  gap: 16px;
-  font-size: 10px;
-}
-
-.graph-body {
-  inset: 52px 0 0;
-}
-
-.react-flow__background {
-  background-image: radial-gradient(#E7E4D9 0.75px, transparent 0.75px) !important;
-  background-size: 20px 20px !important;
-}
-
-.react-flow__edge-path {
-  stroke: #246B49;
-  stroke-opacity: .38;
-  stroke-width: 1.25;
-}
-
-.react-flow__edge-text {
-  fill: #3F403D;
-  font-family: Inter, sans-serif;
-  font-size: 10px;
-}
-
-.react-flow__edge-textbg {
-  fill: #FFFEF3;
-  fill-opacity: .94;
-}
-
-.react-flow__controls {
-  border-radius: 8px !important;
-  overflow: hidden;
-}
-
-.react-flow__controls-button {
-  width: 32px !important;
-  height: 32px !important;
-}
-
-.react-flow__minimap {
-  right: 16px !important;
-  top: 16px !important;
-  background: #FFFEF3 !important;
-  border-radius: 8px !important;
-}
-
-.graph-fit-actions {
-  top: 16px;
-  left: 16px;
-}
-
-.entity-node {
-  min-width: 182px;
-  padding: 11px 13px;
-  border-radius: 9px;
-}
-
-.entity-node.employee {
-  min-width: 192px;
-}
-
-.node-topline {
-  gap: 10px;
-}
-
-.node-label {
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.node-subtitle {
-  margin-top: 4px;
-  font-size: 10px;
-}
-
-.node-type {
-  margin-top: 10px;
-  font-size: 9px;
-  letter-spacing: .08em;
-}
-
-.node-icon,
-.node-avatar {
-  width: 30px;
-  height: 30px;
-}
-
-.graph-hint {
-  left: 16px;
-  bottom: 16px;
-  padding: 8px 10px;
-  font-size: 9px;
-}
-
-.inspector {
-  top: 16px;
-  right: 16px;
-  bottom: 16px;
-  width: 320px;
-  border-radius: 10px;
-}
-
-.inspector-head {
-  min-height: 48px;
-  padding: 0 16px;
-  font-size: 11px;
-}
-
-.inspector-identity {
-  padding: 18px 16px 14px;
-}
-
-.inspector-identity h3 {
-  font-family: var(--display);
-  font-size: 22px;
-  font-weight: 500;
-}
-
-.inspector-identity p {
-  font-size: 10px;
-}
-
-.inspector-actions {
-  padding: 0 16px 16px;
-  gap: 8px;
-}
-
-.inspector-section {
-  padding: 14px 16px;
-}
-
-.inspector-section h4 {
-  margin-bottom: 10px;
-  color: #174D35;
-  font-size: 10px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.metadata-row {
-  gap: 12px;
-  padding: 7px 0;
-  font-size: 10px;
-}
-
-.directory-toolbar {
-  width: min(100%, 1180px);
-  margin: 0 auto 16px;
-  gap: 8px;
-}
-
-.directory-search,
-.filter-select {
-  min-height: 38px;
-  border-radius: 7px;
-}
-
-.entity-list,
-.directory-table-wrap,
-.profile-grid {
-  width: min(100%, 1180px);
-  margin-inline: auto;
-}
-
-.entity-list {
-  gap: 12px;
-}
-
-.entity-card {
-  min-height: 132px;
-  padding: 16px;
-  border-radius: 10px;
-}
-
-.entity-card-head h3 {
-  color: #19191B;
-  font-family: var(--display);
-  font-size: 21px;
-  font-weight: 500;
-}
-
-.entity-card-head p {
-  color: #3F403D;
-  font-size: 10px;
-}
-
-.directory-table {
-  font-size: 11px;
-}
-
-.directory-table th {
-  color: #3F403D;
-  font-size: 9px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.directory-table td {
-  color: #19191B;
-  padding: 14px 16px;
-}
-
-.profile-main-card,
-.profile-side-card {
-  border-radius: 10px;
-}
-
-.profile-main-card {
-  padding: 24px;
-}
-
-.profile-side-card {
-  padding: 20px;
-}
-
-.profile-person h2 {
-  color: #19191B;
-  font-family: var(--display);
-  font-size: 29px;
-  font-weight: 500;
-}
-
-.detail-section-title {
-  color: #174D35;
-  font-size: 10px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-
-.error-banner {
-  width: min(100%, 1180px);
-  margin: 0 auto 16px;
-  border-radius: 8px;
-}
-
-@media (max-width: 900px) {
-  .workspace-content {
-    padding-inline: 20px;
-  }
-
-  .page-heading,
-  .dashboard-stats,
-  .graph-workspace,
-  .directory-toolbar,
-  .entity-list,
-  .directory-table-wrap,
-  .profile-grid,
-  .error-banner {
-    width: 100%;
-  }
-
-  .graph-workspace {
-    height: calc(100dvh - 300px);
-    min-height: 520px;
-  }
-}
-
-@media (max-width: 640px) {
-  .workspace-content {
-    padding: 24px 12px 28px;
-  }
-
-  .page-heading h1 {
-    font-size: 34px;
-  }
-
-  .dashboard-stats {
-    min-height: 0;
-    padding: 14px;
-  }
-
-  .stat-item {
-    min-width: 0;
-  }
-
-  .stat-item b {
-    font-size: 22px;
-  }
-
-  .stat-item small {
-    font-size: 9px;
-  }
-
-  .graph-workspace {
-    height: calc(100dvh - 310px);
-    min-height: 440px;
-  }
-
-  .graph-heading {
-    padding: 0 12px;
-  }
-
-  .graph-heading-left span {
-    display: none;
-  }
-
-  .graph-legend span {
-    display: none;
-  }
-
-  .inspector {
-    top: auto;
-    bottom: 8px;
-    left: 8px;
-    right: 8px;
-    width: auto;
-    max-height: calc(100% - 16px);
-  }
+/* Workspace typography. Scoped here so public and login pages retain their current type scale. */
+.app-shell .sidebar { width: 268px; flex-basis: 268px; padding: 22px 14px 16px; }
+.app-shell .workspace-switch { min-height: 58px; gap: 11px; padding: 10px; }
+.app-shell .workspace-switch b,
+.app-shell .sidebar-user b { max-width: 180px; font-size: 18px; line-height: 1.25; overflow-wrap: anywhere; }
+.app-shell .workspace-switch small,
+.app-shell .sidebar-user small { font-size: 14px; line-height: 1.35; }
+.app-shell .workspace-mark { width: 36px; height: 36px; font-size: 15px; }
+.app-shell .nav-section-label { padding: 0 11px; margin: 18px 0 9px; font-size: 13px; letter-spacing: .12em; }
+.app-shell .side-nav { gap: 5px; }
+.app-shell .side-nav a { min-height: 46px; height: auto; padding: 9px 11px; gap: 11px; font-size: 18px; line-height: 1.25; }
+.app-shell .side-nav a svg { width: 19px; height: 19px; flex: 0 0 auto; }
+.app-shell .sidebar-help { min-height: 47px; padding: 12px 11px; gap: 10px; font-size: 15px; }
+.app-shell .sidebar-help svg { width: 18px; height: 18px; }
+.app-shell .sidebar-user { gap: 10px; padding: 15px 8px 0; }
+.app-shell .sidebar-user .user-avatar { width: 36px; height: 36px; font-size: 12px; }
+.app-shell .sidebar-user > svg { flex: 0 0 auto; }
+.app-shell .topbar { height: 72px; flex-basis: 72px; padding: 0 28px; }
+.app-shell .breadcrumbs { gap: 11px; font-size: 16px; line-height: 1.35; }
+.app-shell .connection-pill { gap: 8px; padding: 8px 12px; font-size: 14px; }
+.app-shell .connection-pill .status-dot { width: 8px; height: 8px; }
+.app-shell .search-trigger { height: 42px; gap: 10px; padding: 0 12px; font-size: 15px; }
+.app-shell .search-trigger kbd { font-size: 12px; padding: 3px 6px; }
+.app-shell .topbar-user { width: 38px; height: 38px; }
+.app-shell .workspace-content { padding: 30px; }
+.app-shell .page-heading { gap: 24px; margin-bottom: 24px; }
+.app-shell .page-heading h1 { font-size: clamp(40px, 3.2vw, 46px); line-height: 1.08; letter-spacing: -.035em; }
+.app-shell .page-heading p { max-width: 720px; font-size: 18px; line-height: 1.55; margin-top: 9px; }
+.app-shell .heading-actions { gap: 10px; }
+.app-shell .small-button { min-height: 42px; gap: 9px; padding: 10px 14px; font-size: 16px; line-height: 1.3; white-space: normal; }
+.app-shell .dashboard-stats { flex-wrap: wrap; gap: 24px; margin-bottom: 20px; padding: 18px 20px; }
+.app-shell .stat-item { gap: 12px; }
+.app-shell .stat-icon { width: 40px; height: 40px; }
+.app-shell .stat-item b { font-size: 40px; line-height: 1.05; }
+.app-shell .stat-item small { font-size: 15px; line-height: 1.35; margin-top: 5px; }
+.app-shell .stats-divider { height: 42px; }
+.app-shell .stats-caption { font-size: 14px; line-height: 1.4; }
+.app-shell .graph-workspace { height: calc(100vh - 285px); min-height: 520px; }
+.app-shell .graph-heading { height: 56px; padding: 0 20px; }
+.app-shell .graph-heading-left { gap: 11px; font-size: 16px; line-height: 1.3; }
+.app-shell .graph-heading-left > span { font-size: 14px; line-height: 1.4; }
+.app-shell .graph-legend { gap: 16px; font-size: 15px; }
+.app-shell .graph-legend span { gap: 7px; }
+.app-shell .legend-mark { width: 10px; height: 10px; }
+.app-shell .graph-body { inset-block-start: 56px; }
+.app-shell .graph-hint { max-width: min(460px, calc(100% - 24px)); padding: 9px 12px; font-size: 14px; line-height: 1.45; }
+.app-shell .graph-fit-actions { gap: 7px; }
+.app-shell .graph-fit-actions .small-button { min-height: 40px; }
+.app-shell .entity-node { min-width: 210px; max-width: 250px; padding: 12px 14px; border-radius: 9px; }
+.app-shell .entity-node.employee { min-width: 220px; }
+.app-shell .node-topline { gap: 10px; }
+.app-shell .entity-node .node-icon,
+.app-shell .entity-node .node-avatar { width: 36px; height: 36px; }
+.app-shell .node-label { max-width: 184px; font-size: 16px; line-height: 1.3; white-space: normal; overflow-wrap: anywhere; }
+.app-shell .node-subtitle { max-width: 184px; margin-top: 4px; font-size: 14px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
+.app-shell .node-type { margin-top: 9px; font-size: 13px; letter-spacing: .08em; }
+.app-shell .inspector { width: min(360px, calc(100% - 24px)); }
+.app-shell .inspector-head { min-height: 54px; padding: 14px 17px; }
+.app-shell .inspector-head span { font-size: 14px; letter-spacing: .08em; }
+.app-shell .icon-button { width: 36px; height: 36px; }
+.app-shell .inspector-identity { gap: 13px; padding: 18px 17px; }
+.app-shell .inspector-identity h3 { font-size: 22px; line-height: 1.25; overflow-wrap: anywhere; }
+.app-shell .inspector-identity p { font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.app-shell .inspector-section { padding: 16px 17px; }
+.app-shell .inspector-section h4 { margin-bottom: 12px; font-size: 14px; letter-spacing: .08em; }
+.app-shell .metadata-row,
+.app-shell .connection-item { gap: 10px; margin-top: 11px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
+.app-shell .metadata-row span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.app-shell .connection-item small { font-size: 13px; line-height: 1.4; }
+.app-shell .connection-bullet { width: 26px; height: 26px; flex: 0 0 auto; }
+.app-shell .inspector-actions { gap: 8px; padding: 14px 17px; }
+.app-shell .panel-error,
+.app-shell .inline-loading { font-size: 14px; line-height: 1.5; }
+.app-shell .empty-state b { font-size: 20px; line-height: 1.35; }
+.app-shell .empty-state p { max-width: 560px; font-size: 16px; line-height: 1.55; }
+.app-shell .error-banner { gap: 14px; padding: 15px 17px; font-size: 16px; line-height: 1.5; }
+.app-shell .directory-toolbar { gap: 12px; margin-bottom: 18px; }
+.app-shell .directory-search { width: min(440px, 100%); height: 48px; gap: 10px; padding: 0 13px; }
+.app-shell .directory-search input { min-width: 0; font-size: 16px; }
+.app-shell .filter-select { height: 48px; padding: 0 13px; font-size: 15px; }
+.app-shell .directory-table-wrap { overflow-x: auto; }
+.app-shell .directory-table th { padding: 14px 15px; font-size: 14px; line-height: 1.35; }
+.app-shell .directory-table td { padding: 15px; font-size: 16px; line-height: 1.4; white-space: normal; overflow-wrap: anywhere; }
+.app-shell .table-person { gap: 11px; min-width: 190px; }
+.app-shell .table-person b { font-size: 18px; line-height: 1.3; overflow-wrap: anywhere; }
+.app-shell .table-person small { margin-top: 4px; font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.app-shell .status-badge { gap: 7px; padding: 6px 10px; font-size: 14px; line-height: 1.25; overflow-wrap: anywhere; }
+.app-shell .status-badge .status-dot { width: 7px; height: 7px; flex: 0 0 auto; }
+.app-shell .entity-list { gap: 16px; }
+.app-shell .entity-card { min-width: 0; padding: 20px; border-radius: 9px; }
+.app-shell .entity-card-head { gap: 12px; align-items: flex-start; }
+.app-shell .entity-card h3 { font-size: 22px; line-height: 1.3; overflow-wrap: anywhere; }
+.app-shell .entity-card p { margin-top: 6px; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.app-shell .entity-card-meta { gap: 12px; margin-top: 18px; padding-top: 14px; font-size: 15px; line-height: 1.4; }
+.app-shell .entity-card-meta b { font-size: 17px; }
+.app-shell .profile-grid { grid-template-columns: minmax(0, 1fr) minmax(300px, 340px); gap: 18px; }
+.app-shell .profile-main-card,
+.app-shell .profile-side-card { min-width: 0; padding: 24px; }
+.app-shell .profile-person h2 { font-size: 26px; line-height: 1.25; overflow-wrap: anywhere; }
+.app-shell .profile-person p { font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
+.app-shell .detail-grid { gap: 22px; }
+.app-shell .detail-label { font-size: 14px; line-height: 1.35; }
+.app-shell .detail-value { font-size: 16px; line-height: 1.45; }
+.app-shell .detail-section-title { margin: 24px 0 12px; font-size: 16px; letter-spacing: .08em; }
+.app-shell .tag { padding: 7px 10px; font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.app-shell .detail-link { font-size: 15px; line-height: 1.4; }
+.app-shell .profile-side-card h3 { margin-bottom: 16px; font-size: 22px; line-height: 1.3; }
+.app-shell .related-row { gap: 10px; padding: 12px 0; font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+.app-shell .related-row small { margin-top: 4px; font-size: 14px; line-height: 1.35; }
+.app-shell .muted-copy { font-size: 15px; line-height: 1.55; }
+.app-shell .assistant-panel { width: min(460px, calc(100vw - 36px)); height: min(680px, calc(100vh - 100px)); }
+.app-shell .assistant-header { min-height: 64px; padding: 15px 18px; }
+.app-shell .assistant-title b { font-size: 18px; }
+.app-shell .assistant-title small { font-size: 14px; }
+.app-shell .assistant-scope { margin: 12px 15px 3px; padding: 11px; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.app-shell .assistant-messages { padding: 16px; gap: 12px; }
+.app-shell .assistant-bubble { padding: 12px 14px; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+.app-shell .suggestion-chip { padding: 9px 11px; font-size: 14px; line-height: 1.4; }
+.app-shell .assistant-form { gap: 9px; padding: 13px; }
+.app-shell .assistant-form input { height: 46px; padding: 0 12px; font-size: 16px; }
+.app-shell .assistant-form button { width: 46px; height: 46px; flex: 0 0 auto; }
+.app-shell .assistant-launch { min-height: 48px; height: auto; padding: 10px 16px; font-size: 15px; }
+.app-shell .search-dialog { width: min(700px, calc(100vw - 30px)); }
+.app-shell .search-input-row { min-height: 66px; height: auto; padding: 10px 18px; }
+.app-shell .search-input-row input { font-size: 18px; }
+.app-shell .search-input-row kbd { font-size: 13px; }
+.app-shell .search-results { max-height: 50vh; padding: 10px; }
+.app-shell .search-caption { font-size: 14px; padding: 10px; }
+.app-shell .search-result { gap: 12px; padding: 12px; }
+.app-shell .search-result-icon { width: 38px; height: 38px; flex: 0 0 auto; }
+.app-shell .search-result b { font-size: 17px; line-height: 1.35; overflow-wrap: anywhere; }
+.app-shell .search-result small { margin-top: 4px; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.app-shell .search-empty { padding: 34px 18px; font-size: 16px; line-height: 1.5; }
+.app-shell .search-footer { gap: 10px; padding: 12px 16px; font-size: 13px; }
+.app-shell .search-footer kbd { font-size: 12px; }
+
+@media (max-width: 1050px) {
+  .app-shell .profile-grid { grid-template-columns: minmax(0, 1fr); }
+  .app-shell .entity-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .app-shell .sidebar { width: 58px; flex-basis: 58px; padding: 14px 7px; }
+  .app-shell .sidebar .brand { padding: 0 5px 19px; }
+  .app-shell .sidebar .workspace-switch { min-height: 0; padding: 5px 0; }
+  .app-shell .side-nav a { min-height: 42px; padding: 0; }
+  .app-shell .sidebar-help { min-height: 42px; padding: 12px 0; }
+  .app-shell .sidebar-user { padding: 12px 0 0; }
+  .app-shell .topbar { height: 64px; flex-basis: 64px; padding: 0 12px; }
+  .app-shell .breadcrumbs { min-width: 0; font-size: 14px; gap: 6px; }
+  .app-shell .breadcrumbs span:first-child { max-width: 24vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app-shell .topbar-actions { gap: 7px; }
+  .app-shell .connection-pill { padding: 7px; font-size: 0; }
+  .app-shell .search-trigger { width: 42px; height: 42px; padding: 0; justify-content: center; }
+  .app-shell .search-trigger span,
+  .app-shell .search-trigger kbd { display: none; }
+  .app-shell .workspace-content { padding: 22px 16px; }
+  .app-shell .page-heading h1 { font-size: clamp(34px, 8vw, 40px); }
+  .app-shell .page-heading p { font-size: 17px; }
+  .app-shell .dashboard-stats { gap: 14px; padding: 14px; }
+  .app-shell .stat-icon { width: 34px; height: 34px; }
+  .app-shell .stat-item b { font-size: 32px; }
+  .app-shell .stat-item small { font-size: 14px; }
+  .app-shell .stats-caption { display: none; }
+  .app-shell .graph-workspace { height: calc(100vh - 270px); min-height: 420px; }
+  .app-shell .graph-heading { height: auto; min-height: 56px; align-items: flex-start; gap: 9px; padding: 11px; }
+  .app-shell .graph-heading-left { flex-wrap: wrap; gap: 6px; font-size: 14px; }
+  .app-shell .graph-heading-left > span { font-size: 12px; }
+  .app-shell .graph-legend { flex-wrap: wrap; justify-content: flex-end; gap: 7px; font-size: 12px; }
+  .app-shell .graph-legend span:nth-child(3) { display: none; }
+  .app-shell .graph-body { inset-block-start: 56px; }
+  .app-shell .entity-list { grid-template-columns: minmax(0, 1fr); }
+  .app-shell .directory-toolbar { flex-wrap: wrap; }
+  .app-shell .directory-search { flex: 1 1 100%; width: 100%; }
+  .app-shell .directory-table th,
+  .app-shell .directory-table td { padding: 12px 10px; }
+  .app-shell .directory-table th { font-size: 13px; }
+  .app-shell .directory-table td { font-size: 14px; }
+  .app-shell .table-person { min-width: 160px; }
+  .app-shell .table-person b { font-size: 16px; }
+  .app-shell .table-person small { font-size: 14px; }
+  .app-shell .inspector { width: min(340px, calc(100% - 20px)); top: 62px; right: 10px; }
+}
+
+@media (max-width: 480px) {
+  .app-shell .workspace-content { padding: 18px 12px; }
+  .app-shell .page-heading h1 { font-size: 34px; }
+  .app-shell .page-heading p { font-size: 16px; }
+  .app-shell .heading-actions { flex-wrap: wrap; }
+  .app-shell .small-button { min-height: 40px; font-size: 14px; }
+  .app-shell .graph-heading { flex-direction: column; }
+  .app-shell .graph-legend { justify-content: flex-start; }
+  .app-shell .graph-body { inset-block-start: 78px; }
+  .app-shell .graph-workspace { height: calc(100vh - 285px); min-height: 390px; }
+  .app-shell .graph-hint { max-width: calc(100% - 18px); left: 9px; bottom: 8px; font-size: 12px; }
+  .app-shell .dashboard-stats { align-items: flex-start; gap: 12px; }
+  .app-shell .stat-item { min-width: calc(50% - 8px); }
 }
