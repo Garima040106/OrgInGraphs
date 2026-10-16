@@ -12,7 +12,7 @@ type LoadState<T> = { data: T; error: string };
 export default function DashboardPage() {
   const [graph, setGraph] = useState<LoadState<GraphResponse>>({ data: { nodes: [], edges: [] }, error: "" });
   const [loading, setLoading] = useState(true);
-  const [focus, setFocus] = useState<{ id?: string; type?: string }>({});
+  const [focus, setFocus] = useState<{ id?: string; type?: string; request: number }>({ request: 0 });
 
   async function load() {
     setLoading(true);
@@ -26,8 +26,19 @@ export default function DashboardPage() {
 
   useEffect(() => { void load(); }, []);
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setFocus({ id: params.get("focus") ?? undefined, type: params.get("type") ?? undefined });
+    const readQueryFocus = () => {
+      const params = new URLSearchParams(window.location.search);
+      setFocus((previous) => ({ id: params.get("focus") ?? undefined, type: params.get("type") ?? undefined, request: previous.request + 1 }));
+    };
+    const onGraphFocus = (event: Event) => {
+      const detail = (event as CustomEvent<{ id: string; type: string }>).detail;
+      if (detail?.id && detail.type) {
+        setFocus((previous) => ({ ...detail, request: previous.request + 1 }));
+      }
+    };
+    readQueryFocus();
+    window.addEventListener("oig-graph-focus", onGraphFocus);
+    return () => window.removeEventListener("oig-graph-focus", onGraphFocus);
   }, []);
 
   const failed = [graph.error].filter(Boolean);
@@ -58,8 +69,35 @@ export default function DashboardPage() {
           graph={graph.data}
           focusId={focus.id}
           focusType={focus.type}
+          focusRequest={focus.request}
         />
       )}
+      <section className="workspace-settings" id="settings" aria-labelledby="workspace-settings-title">
+        <div className="workspace-settings-heading">
+          <div><span className="eyebrow"><span className="eyebrow-mark" /> Workspace</span><h2 id="workspace-settings-title">Integrations</h2><p>See which platforms are represented in your company graph.</p></div>
+          <span className="settings-demo-note">Demo connection status</span>
+        </div>
+        <div className="integration-settings-grid">
+          <IntegrationSetting name="Confluence" detail="Knowledge and documentation" status="Connected · demo" connected />
+          <IntegrationSetting name="Slack" detail="Team conversations" status="Coming soon" />
+          <IntegrationSetting name="Jira" detail="Issues and project delivery" status="Coming soon" />
+          <IntegrationSetting name="GitHub" detail="Repositories and pull requests" status="Coming soon" />
+          <IntegrationSetting name="Discord" detail="Community conversations" status="Coming soon" />
+        </div>
+        <p className="settings-source-note">Each graph record displays its source. Demo records are stored in FalkorDB; external platform connections are not active.</p>
+      </section>
     </>
+  );
+}
+
+function IntegrationSetting({ name, detail, status, connected = false }: { name: string; detail: string; status: string; connected?: boolean }) {
+  return (
+    <article className="integration-setting">
+      <div className="integration-setting-mark" aria-hidden="true">{name.slice(0, 1)}</div>
+      <div className="integration-setting-copy"><b>{name}</b><span>{detail}</span></div>
+      <button className={`integration-setting-status ${connected ? "connected" : ""}`} type="button" disabled aria-label={`${name}: ${status}`}>
+        {status}
+      </button>
+    </article>
   );
 }
