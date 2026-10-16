@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -2751,7 +2751,7 @@ body {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .integration-setting-copy b {
@@ -2759,7 +2759,7 @@ body {
   font-size: 11px;
 }
 
-.integration-setting-copy span {
+.integration-setting-copy > span {
   overflow: hidden;
   color: #73746b;
   font-size: 9px;
@@ -2767,26 +2767,135 @@ body {
   white-space: nowrap;
 }
 
-.integration-setting-status {
-  max-width: 110px;
-  padding: 6px 8px;
-  border: 1px solid #E7E4D9;
-  border-radius: 99px;
-  background: #f3f1e8;
-  color: #75766e;
+.integration-setting-logo {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  background: #F5F3EA;
+  overflow: hidden;
+  padding: 4px;
+}
+
+.integration-setting-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+@keyframes integration-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .5; }
+}
+
+/* Status badge: dot + text, lives inside .integration-setting-copy */
+.integration-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 8px;
+  color: #73746b;
+  line-height: 1;
+}
+
+.integration-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #b6b7b0;
+  transition: background 0.28s ease;
+}
+
+.integration-status-dot.is-connected {
+  background: #2E8B56;
+}
+
+.integration-status-dot.is-busy {
+  background: #5A8E70;
+  animation: integration-pulse 1s ease-in-out infinite;
+}
+
+/* Action button: Connect / Disconnect */
+.integration-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  min-width: 112px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 99px;
+  border: 1px solid transparent;
+  font-size: 9px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.01em;
   white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 
-.integration-setting-status:disabled {
+.integration-action-btn:focus-visible {
+  outline: 2px solid #174D35;
+  outline-offset: 2px;
+}
+
+.integration-action-btn:disabled {
   cursor: not-allowed;
-  opacity: .78;
+  opacity: 0.6;
 }
 
-.integration-setting-status.connected {
-  border-color: #D1E7DC;
-  background: #E8F4EC;
+/* Connect: solid dark green */
+.integration-action-btn.is-connect {
+  background: #174D35;
+  color: #fff;
+  border-color: #174D35;
+}
+
+.integration-action-btn.is-connect:hover:not(:disabled) {
+  background: #1E6344;
+  border-color: #1E6344;
+}
+
+.integration-action-btn.is-connect:active:not(:disabled) {
+  background: #133D2A;
+  border-color: #133D2A;
+}
+
+/* Disconnect: outlined ivory-green */
+.integration-action-btn.is-disconnect {
+  background: #F4F9F6;
   color: #174D35;
+  border-color: #C8E2D4;
+}
+
+.integration-action-btn.is-disconnect:hover:not(:disabled) {
+  background: #E8F4EC;
+  border-color: #A8D4BC;
+}
+
+.integration-action-btn.is-disconnect:active:not(:disabled) {
+  background: #DAEEE4;
+}
+
+/* Spinner inside action button */
+.integration-btn-spinner {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+}
+
+.integration-action-btn.is-disconnect .integration-btn-spinner {
+  border-color: rgba(23, 77, 53, 0.2);
+  border-top-color: #174D35;
 }
 
 .settings-source-note {
