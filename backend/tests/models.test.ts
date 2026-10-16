@@ -30,3 +30,25 @@ test('missing credentials and provider failures are represented without logging 
     await assert.rejects(() => model!('system', 'user'), (error: unknown) => error instanceof ModelProviderError && error.code === 'rate-limit' && error.retryable);
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test('Gemini configuration and JSON synthesis use the server-side generateContent API', async () => {
+  const config = modelInstanceConfig('default', { GEMINI_API_KEY: 'gemini-test-secret', GEMINI_MODEL: 'gemini-test-model' });
+  assert.equal(config.provider, 'gemini');
+  assert.equal(config.modelId, 'gemini-test-model');
+  const originalFetch = globalThis.fetch;
+  let request: Request | undefined;
+  globalThis.fetch = async (input, init) => {
+    request = new Request(input, init);
+    return Response.json({ candidates: [{ content: { parts: [{ text: '{"summary":"ok"}' }] } }] });
+  };
+  try {
+    const content = await createModel(config)!('system role', 'user context');
+    assert.equal(content, '{"summary":"ok"}');
+    assert.equal(request?.url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-test-model:generateContent');
+    assert.equal(request?.headers.get('x-goog-api-key'), 'gemini-test-secret');
+    assert.equal(request?.headers.get('authorization'), null);
+    const body = await request?.json() as { systemInstruction: { parts: Array<{ text: string }> }; generationConfig: { responseMimeType: string } };
+    assert.equal(body.systemInstruction.parts[0].text, 'system role');
+    assert.equal(body.generationConfig.responseMimeType, 'application/json');
+  } finally { globalThis.fetch = originalFetch; }
+});

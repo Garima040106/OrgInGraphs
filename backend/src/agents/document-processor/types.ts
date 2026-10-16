@@ -4,7 +4,7 @@ import type { FeatureUpdateModel } from '../feature-update/types.js';
 import type { TicketModel } from '../ticket-identification/types.js';
 
 export type DocumentOutcomeStatus = 'processed' | 'skipped' | 'failed' | 'unresolved';
-export type DocumentRoute = 'ticket-identification' | 'feature-update' | 'unsupported';
+export type DocumentRoute = 'ticket-identification' | 'feature-update' | 'document-indexing' | 'unsupported';
 export interface DocumentOutcome {
   sourceSystem: string;
   sourceRecordId: string;

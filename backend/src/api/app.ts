@@ -6,10 +6,14 @@ import { fetchEntireGraph } from '../graph/entire.js';
 import { fetchProductProgressGraph } from '../product/graph-api.js';
 import { runOrgInGraphsWorkflow } from '../workflow/workflow.js';
 import { ingestionRequestSchema, runIngestionWorkflow, type IngestionWorkflowDependencies } from '../workflow/ingestion-workflow.js';
+import { assistantRequestSchema, runAssistantWorkflow } from '../workflow/assistant-workflow.js';
+import { conversationTurns, createConversation, listConversations, loadAssistantMemory, memoryOwnerId, ownsConversation, saveAssistantTurn } from '../agents/company-assistant/memory.js';
 
 const idSchema = z.string().regex(/^[a-z0-9-]+$/);
+const conversationIdSchema = z.string().uuid();
+const workspaceIdentitySchema = z.string().trim().email().max(254);
 const filterSchema = z.object({ departmentId:idSchema.optional(), teamId:idSchema.optional(), employmentStatus:z.enum(['active','inactive']).optional() });
-const supported = new Set(['Company','Employee','Department','Team','Project','Repository','Service','Document','Decision','Incident','Task','PullRequest','Channel','Message']);
+const supported = new Set(['Company','Employee','Department','Team','Project','Repository','Service','Document','Decision','Incident','Task','PullRequest','Channel','Message','Product','ProductModule','Feature','FeatureRequest','Ticket','Bug','Release','Commit','Comment','Activity','Review']);
 const parse = <T>(schema:z.ZodType<T>, input:unknown): T => schema.parse(input);
 const sendError = (res:Response, error:unknown) => {
   if (error instanceof z.ZodError) return res.status(400).json({ error:'Invalid request', details:error.flatten() });
@@ -29,11 +33,16 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
   const allowedOrigins=new Set((process.env.FRONTEND_ORIGINS??'http://localhost:3000,http://127.0.0.1:3000').split(',').map(origin=>origin.trim()).filter(Boolean));
   app.use((req,res,next)=>{
     const origin=req.headers.origin;
-    if(origin&&allowedOrigins.has(origin)){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Methods','GET,OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');}
+    if(origin&&allowedOrigins.has(origin)){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type,x-orgmind-user-id');}
     if(req.method==='OPTIONS')return res.sendStatus(204);
     return next();
   });
   app.use(express.json());
+  const memoryOwner = (req:Request, res:Response) => {
+    const identity = workspaceIdentitySchema.safeParse(req.header('x-orgmind-user-id'));
+    if (!identity.success) { res.status(401).json({ error: 'Sign in to use persistent assistant conversations.' }); return undefined; }
+    return memoryOwnerId(identity.data);
+  };
   app.get('/health',async (_req,res)=>{ try { await query(graph,'RETURN 1 AS connected'); res.json({status:'ok',database:'connected'}); } catch(error){ console.error(error); res.status(503).json({status:'degraded',database:'unavailable'}); } });
   app.get('/api/graph', async (_req, res) => {
     try {
@@ -85,6 +94,40 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
   app.post('/api/product-progress/tickets', processWorkflow('ticket'));
   app.post('/api/product-progress/activities', processWorkflow('feature-update'));
   app.post('/api/product-progress/workflow', processWorkflow());
+  app.get('/api/assistant/conversations', async (req, res) => {
+    const ownerId = memoryOwner(req, res);
+    if (!ownerId) return;
+    try { return res.json({ conversations: await listConversations(graph, ownerId) }); }
+    catch (error) { return sendError(res, error); }
+  });
+  app.get('/api/assistant/conversations/:conversationId', async (req, res) => {
+    const ownerId = memoryOwner(req, res);
+    if (!ownerId) return;
+    const parsedId = conversationIdSchema.safeParse(req.params.conversationId);
+    if (!parsedId.success) return res.status(400).json({ error: 'Invalid conversation ID.' });
+    try {
+      const turns = await conversationTurns(graph, ownerId, parsedId.data);
+      return turns ? res.json({ conversationId: parsedId.data, turns }) : res.status(404).json({ error: 'Conversation not found.' });
+    } catch (error) { return sendError(res, error); }
+  });
+  app.post('/api/assistant/query', async (req, res) => {
+    const ownerId = memoryOwner(req, res);
+    if (!ownerId) return;
+    const parsed = assistantRequestSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid assistant request', details: parsed.error.flatten() });
+    try {
+      const conversationId = parsed.data.conversationId ?? await createConversation(graph, ownerId, parsed.data.question);
+      if (parsed.data.conversationId && !(await ownsConversation(graph, ownerId, conversationId))) return res.status(404).json({ error: 'Conversation not found.' });
+      const memory = await loadAssistantMemory(graph, ownerId, conversationId);
+      const response = await runAssistantWorkflow({ ...parsed.data, conversationId }, graph, { memory });
+      if (!('answer' in response)) return res.status(503).json(response);
+      const persistedResponse = { ...response, conversationId };
+      await saveAssistantTurn(graph, ownerId, conversationId, parsed.data.question, persistedResponse);
+      return res.json(persistedResponse);
+    } catch {
+      return res.status(503).json({ status: 'failed', errors: ['Assistant workflow failed safely.'] });
+    }
+  });
   app.post('/api/ingestion/process', async (req, res) => {
     try {
       const body = parse(ingestionRequestSchema, req.body);

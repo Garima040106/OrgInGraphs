@@ -8,10 +8,14 @@ const environmentSchema = z.object({
   FALKORDB_PORT: z.coerce.number().int().min(1).max(65_535).default(6379),
   FALKORDB_USERNAME: z.string().optional(),
   FALKORDB_PASSWORD: z.string().optional(),
-  FALKORDB_DATABASE: z.string().min(1).default('orgingraphs'),
+  FALKORDB_DATABASE: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).default('orgingraphs')),
+  FALKORDB_GRAPH: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
   FALKORDB_TLS: z.enum(['true', 'false']).default('false'),
   COMPANY_START_DATE: z.string().date().default('2026-01-01'),
-  CONFLUENCE_INGESTION_ENABLED: z.enum(['true', 'false']).default('false'),
+  CONFLUENCE_INGESTION_ENABLED: z.preprocess((value) => value === '' ? undefined : value, z.enum(['true', 'false']).optional()),
+  CONFLUENCE_BASE_URL: z.preprocess((value) => value === '' ? undefined : value, z.string().url().optional()),
+  CONFLUENCE_EMAIL: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
+  CONFLUENCE_API_TOKEN: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
   MOCK_API_BASE_URL: z.preprocess((value) => value === '' ? undefined : value, z.string().url().optional())
 });
 

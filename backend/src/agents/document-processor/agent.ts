@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { query } from '../../db/falkordb.js';
 import { runFeatureUpdate } from '../feature-update/agent.js';
 import { activityType } from '../feature-update/rules.js';
 import { runTicketIdentification } from '../ticket-identification/agent.js';
@@ -11,6 +13,7 @@ function text(document: NormalizedDocument) {
 
 function route(document: NormalizedDocument): DocumentRoute {
   const value = text(document);
+  if (document.sourceSystem === 'confluence') return 'document-indexing';
   if (document.sourceSystem === 'jira') return 'ticket-identification';
   if (document.sourceSystem === 'github' || document.sourceSystem === 'slack') {
     const activity = activityType(value);
@@ -32,6 +35,14 @@ export async function processDocument(document: NormalizedDocument, options: Doc
   }
   const selectedRoute = route(document);
   if (selectedRoute === 'unsupported') return baseOutcome(document, selectedRoute);
+  if (selectedRoute === 'document-indexing') {
+    if (!options.graph) return { ...baseOutcome(document, selectedRoute), status: 'failed', error: 'Document indexing requires the company graph.' };
+    const id = `doc-${createHash('sha256').update(`${document.sourceSystem}:${document.sourceRecordId}`).digest('hex').slice(0, 20)}`;
+    try {
+      await query(options.graph, 'MERGE (d:Document {id:$id}) SET d += $properties', { id, properties: { title: document.title ?? document.sourceRecordId, content: document.content.slice(0, 100_000), summary: document.summary ?? '', sourceSystem: document.sourceSystem, sourceRecordId: document.sourceRecordId, ...(document.sourceUrl ? { externalUrl: document.sourceUrl } : {}), ...(document.createdAt ? { createdAt: document.createdAt } : {}), ...(document.updatedAt ? { updatedAt: document.updatedAt } : {}), provenance: document.provenance, graphDomain: 'organization' } });
+      return { ...baseOutcome(document, selectedRoute), status: 'processed', entityId: id, unresolvedReferences: [] };
+    } catch { return { ...baseOutcome(document, selectedRoute), status: 'failed', error: 'Document indexing failed safely.' }; }
+  }
   const input = { text: text(document), source: document.sourceSystem, sourceRecordId: document.sourceRecordId, receivedAt: document.occurredAt ?? document.updatedAt ?? document.createdAt, provenance: document.provenance, metadata: document.metadata };
   try {
     if (selectedRoute === 'ticket-identification') {

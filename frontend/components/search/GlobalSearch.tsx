@@ -13,7 +13,7 @@ const iconFor = (type: GraphEntityType) => {
 };
 
 const destination = (result: SearchResult) =>
-  `/dashboard?focus=${encodeURIComponent(result.n.id)}&type=${encodeURIComponent(result.entityType)}`;
+  `/org-graph?${["Product","ProductModule","Feature","FeatureRequest","Ticket","Bug","Release","Commit","Comment","Activity","Review"].includes(result.entityType) ? "mode=product&" : ""}focus=${encodeURIComponent(result.n.id)}&type=${encodeURIComponent(result.entityType)}`;
 
 export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
@@ -69,7 +69,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
     onClose();
     router.push(destination(result));
     window.dispatchEvent(new CustomEvent("oig-graph-focus", {
-      detail: { id: result.n.id, type: result.entityType },
+      detail: { id: result.n.id, type: result.entityType, mode: ["Product","ProductModule","Feature","FeatureRequest","Ticket","Bug","Release","Commit","Comment","Activity","Review"].includes(result.entityType) ? "product" : "team" },
     }));
   }
 

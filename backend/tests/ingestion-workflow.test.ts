@@ -35,3 +35,14 @@ test('rejects invalid input and remains bounded', async () => {
   const invalid = await runIngestionWorkflow({ source: 'unknown' as 'jira' }, { fetcher: async () => { fetches += 1; return { source: 'jira', documents: [] }; } });
   assert.equal(invalid.status, 'failed'); assert.equal(fetches, 0);
 });
+
+test('rejects source records that do not satisfy the normalized ingestion schema', async () => {
+  let processed = false;
+  const result = await runIngestionWorkflow({ source: 'jira' }, {
+    fetcher: async () => ({ source: 'jira', documents: [{ ...doc(), metadata: null } as unknown as NormalizedDocument] }),
+    processor: async () => { processed = true; return []; }
+  });
+  assert.equal(result.status, 'failed');
+  assert.deepEqual(result.errors, ['Fetched records failed the normalized ingestion schema.']);
+  assert.equal(processed, false);
+});

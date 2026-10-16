@@ -1,227 +1,74 @@
-﻿"use client";
+"use client";
 
-import { ArrowUpRight, Plug, Unplug } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowUpRight, CircleAlert, CloudDownload, LoaderCircle, RefreshCw } from "lucide-react";
+import { api, friendlyApiError } from "@/lib/api";
+import type { IngestionResponse, IngestionSource } from "@/lib/types";
 
-// Types
-type ConnectionState =
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "disconnecting";
-
-interface Integration {
-  id: string;
-  name: string;
-  detail: string;
-  logo: string;
-  logoAlt: string;
-}
-
-// Data
-const INTEGRATIONS: Integration[] = [
-  { id: "confluence", name: "Confluence", detail: "Knowledge and documentation",    logo: "/img/confluence.png", logoAlt: "Confluence logo" },
-  { id: "slack",      name: "Slack",      detail: "Team conversations",             logo: "/img/slack.png",      logoAlt: "Slack logo"      },
-  { id: "jira",       name: "Jira",       detail: "Issues and project delivery",    logo: "/img/jira.webp",      logoAlt: "Jira logo"       },
-  { id: "github",     name: "GitHub",     detail: "Repositories and pull requests", logo: "/img/github.png",     logoAlt: "GitHub logo"     },
-  { id: "discord",    name: "Discord",    detail: "Community conversations",        logo: "/img/discord.jpg",    logoAlt: "Discord logo"    },
+const integrations: Array<{ id: IngestionSource; name: string; detail: string; logo: string; logoAlt: string }> = [
+  { id: "confluence", name: "Confluence", detail: "Knowledge pages · server credentials", logo: "/img/confluence.png", logoAlt: "Confluence logo" },
+  { id: "slack", name: "Slack", detail: "Team conversations · backend demo source", logo: "/img/slack.png", logoAlt: "Slack logo" },
+  { id: "jira", name: "Jira", detail: "Issues and delivery · backend demo source", logo: "/img/jira.webp", logoAlt: "Jira logo" },
+  { id: "github", name: "GitHub", detail: "Repositories and pull requests · backend demo source", logo: "/img/github.png", logoAlt: "GitHub logo" },
 ];
 
-// localStorage helpers (safe for SSR)
-const STORAGE_KEY = "orginGraphs_integration_states_v1";
-
-function readStoredState(id: string): ConnectionState {
-  if (typeof window === "undefined") return "disconnected";
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return "disconnected";
-    const map = JSON.parse(raw) as Record<string, string>;
-    const val = map[id];
-    return val === "connected" || val === "disconnected" ? val : "disconnected";
-  } catch {
-    return "disconnected";
-  }
+function integrationRecordPath(outcome: IngestionResponse["outcomes"][number]) {
+  if (!outcome.entityId) return null;
+  const type = outcome.route === "ticket-identification" ? "Ticket" : outcome.route === "feature-update" ? "Activity" : outcome.route === "document-indexing" ? "Document" : "Unknown";
+  return `/org-graph?${type === "Ticket" || type === "Activity" ? "mode=product&" : ""}focus=${encodeURIComponent(outcome.entityId)}&type=${type}`;
 }
 
-function writeStoredState(id: string, state: ConnectionState) {
-  if (state === "connecting" || state === "disconnecting") return;
-  if (typeof window === "undefined") return;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const map: Record<string, string> = raw ? (JSON.parse(raw) as Record<string, string>) : {};
-    map[id] = state;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  } catch {
-    // ignore
-  }
-}
+function IntegrationCard({ integration }: { integration: (typeof integrations)[number] }) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<IngestionResponse | null>(null);
+  const [error, setError] = useState("");
 
-// StatusBadge
-function StatusBadge({ state }: { state: ConnectionState }) {
-  let dotClass = "integration-status-dot";
-  let label: string;
-
-  switch (state) {
-    case "connected":
-      dotClass += " is-connected";
-      label = "Connected \u00b7 Demo";
-      break;
-    case "connecting":
-      dotClass += " is-busy";
-      label = "Connecting\u2026";
-      break;
-    case "disconnecting":
-      dotClass += " is-busy";
-      label = "Disconnecting\u2026";
-      break;
-    default:
-      label = "Disconnected";
+  async function sync() {
+    setLoading(true); setError(""); setResult(null);
+    try { setResult(await api.processIngestion(integration.id)); }
+    catch (cause) { setError(friendlyApiError(cause)); }
+    finally { setLoading(false); }
   }
 
-  return (
-    <span className="integration-status-badge" aria-live="polite" aria-atomic="true">
-      <span className={dotClass} aria-hidden="true" />
-      {label}
-    </span>
-  );
+  return <article className="integration-setting" aria-label={`${integration.name} source`}>
+    <div className="integration-setting-logo" aria-hidden="true">
+      {/* eslint-disable-next-line @next/next/no-img-element */}<img src={integration.logo} alt={integration.logoAlt} />
+    </div>
+    <div className="integration-setting-copy">
+      <b>{integration.name}</b><span>{integration.detail}</span>
+      <span className="integration-status-badge" aria-live="polite"><span className={`integration-status-dot ${error ? "" : result?.status === "processed" ? "is-connected" : loading ? "is-busy" : ""}`} />{error ? "Unavailable" : loading ? "Fetching and processing" : result ? `${result.status} · ${result.fetchedDocumentCount} fetched` : integration.id === "confluence" ? "Server-side source · not yet synced" : "Backend demo source · not yet synced"}</span>
+      <button className="integration-action-btn is-connect" type="button" onClick={() => void sync()} disabled={loading} aria-label={`Fetch and process ${integration.name} records`}>
+        {loading ? <LoaderCircle size={13} className="spin" /> : <CloudDownload size={13} />}{loading ? "Processing…" : "Fetch & process records"}
+      </button>
+    </div>
+    {result && <div className="ingestion-result" aria-live="polite">
+      <b>{result.outcomes.filter((item) => item.status === "processed").length} processed</b>
+      <span>{result.outcomes.filter((item) => item.status === "unresolved").length} need review · {result.outcomes.filter((item) => item.status === "skipped").length} skipped · {result.outcomes.filter((item) => item.status === "failed").length} failed</span>
+      {result.errors.map((item, index) => <span className="ingestion-error" key={`${index}:${item}`}><CircleAlert size={12} />{item}</span>)}
+      {result.outcomes.slice(0, 4).map((outcome) => {
+        const href = integrationRecordPath(outcome);
+        return <div className="ingestion-outcome" key={`${outcome.sourceSystem}:${outcome.sourceRecordId}`}>
+          <span className={`ingestion-status ${outcome.status}`}>{outcome.status}</span>
+          {href ? <Link href={href}>{outcome.sourceRecordId} <ArrowUpRight size={10} /></Link> : <span>{outcome.sourceRecordId}</span>}
+          {!!outcome.unresolvedReferences.length && <small>{outcome.unresolvedReferences.length} unresolved reference(s)</small>}
+          {outcome.error && <small>{outcome.error}</small>}
+        </div>;
+      })}
+      {result.outcomes.length > 4 && <small>Showing 4 of {result.outcomes.length} record outcomes.</small>}
+      {result.status === "empty" && <span>No records were returned by the configured source.</span>}
+    </div>}
+    {error && <div className="ingestion-error" role="alert"><CircleAlert size={13} />{error}<button type="button" className="small-button" onClick={() => void sync()} disabled={loading}><RefreshCw size={11} /> Retry</button></div>}
+  </article>;
 }
 
-// ActionButton
-function ActionButton({
-  integrationName,
-  state,
-  onClick,
-}: {
-  integrationName: string;
-  state: ConnectionState;
-  onClick: () => void;
-}) {
-  const isBusy = state === "connecting" || state === "disconnecting";
-  const isDiscoStyle = state === "connected" || state === "disconnecting";
-  const btnClass = isDiscoStyle
-    ? "integration-action-btn is-disconnect"
-    : "integration-action-btn is-connect";
-
-  let label: string;
-  let leading: React.ReactNode;
-
-  if (state === "connecting") {
-    label   = "Connecting\u2026";
-    leading = <span className="integration-btn-spinner" aria-hidden="true" />;
-  } else if (state === "disconnecting") {
-    label   = "Disconnecting\u2026";
-    leading = <span className="integration-btn-spinner" aria-hidden="true" />;
-  } else if (state === "connected") {
-    label   = "Disconnect";
-    leading = <Unplug size={10} aria-hidden="true" />;
-  } else {
-    label   = "Connect";
-    leading = <Plug size={10} aria-hidden="true" />;
-  }
-
-  return (
-    <button
-      id={`integration-${integrationName.toLowerCase()}-btn`}
-      className={btnClass}
-      type="button"
-      disabled={isBusy}
-      onClick={onClick}
-      aria-label={`${integrationName}: ${label}`}
-    >
-      {leading}
-      <span>{label}</span>
-    </button>
-  );
-}
-
-// IntegrationCard
-function IntegrationCard({ integration }: { integration: Integration }) {
-  const { id, name, detail, logo, logoAlt } = integration;
-
-  // Server renders "disconnected" for all cards (no hydration mismatch).
-  // After mount we restore from localStorage.
-  const [state, setState]     = useState<ConnectionState>("disconnected");
-  const [hydrated, setHydrated] = useState(false);
-  const timerRef              = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setState(readStoredState(id));
-    setHydrated(true);
-  }, [id]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    writeStoredState(id, state);
-  }, [id, state, hydrated]);
-
-  useEffect(() => {
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-
-  const handleClick = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-
-    if (state === "disconnected") {
-      setState("connecting");
-      timerRef.current = setTimeout(
-        () => setState("connected"),
-        1000 + Math.random() * 600,
-      );
-    } else if (state === "connected") {
-      setState("disconnecting");
-      timerRef.current = setTimeout(
-        () => setState("disconnected"),
-        800 + Math.random() * 500,
-      );
-    }
-  };
-
-  return (
-    <article className="integration-setting" aria-label={`${name} integration`}>
-      <div className="integration-setting-logo" aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logo} alt={logoAlt} />
-      </div>
-
-      <div className="integration-setting-copy">
-        <b>{name}</b>
-        <span>{detail}</span>
-        <StatusBadge state={state} />
-      </div>
-
-      <ActionButton integrationName={name} state={state} onClick={handleClick} />
-    </article>
-  );
-}
-
-// Page
 export default function WorkspaceSettingsPage() {
-  return (
-    <section className="workspace-settings" aria-labelledby="workspace-settings-title">
-      <div className="workspace-settings-heading">
-        <div>
-          <span className="eyebrow"><span className="eyebrow-mark" /> Workspace</span>
-          <h1 id="workspace-settings-title">Integrations</h1>
-          <p>See which platforms are represented in your company graph.</p>
-        </div>
-        <span className="settings-demo-note">Demo mode \u2014 connections are simulated</span>
-      </div>
-
-      <div className="integration-settings-grid">
-        {INTEGRATIONS.map((integration) => (
-          <IntegrationCard key={integration.id} integration={integration} />
-        ))}
-      </div>
-
-      <div className="settings-source-note">
-        <span>
-          Each graph record displays its source. Demo records are stored in
-          FalkorDB; external platform connections are not active.
-        </span>
-        <a href="/dashboard">
-          Return to organization graph <ArrowUpRight size={13} />
-        </a>
-      </div>
-    </section>
-  );
+  return <section className="workspace-settings" aria-labelledby="workspace-settings-title">
+    <div className="workspace-settings-heading">
+      <div><span className="eyebrow"><span className="eyebrow-mark" /> Workspace</span><h1 id="workspace-settings-title">Integrations</h1><p>Fetch backend sources and process returned records through the LangGraph ingestion workflow.</p></div>
+      <span className="settings-demo-note">Confluence credentials remain server-side</span>
+    </div>
+    <div className="integration-settings-grid">{integrations.map((integration) => <IntegrationCard key={integration.id} integration={integration} />)}</div>
+    <div className="settings-source-note"><span>Confluence uses the configured Confluence base URL and credentials. Jira, GitHub, and Slack currently use the backend mock source URL. Each response reports actual fetch and processing outcomes; failed or unresolved records are not treated as successful.</span><Link href="/dashboard">Return to organization graph <ArrowUpRight size={13} /></Link></div>
+  </section>;
 }

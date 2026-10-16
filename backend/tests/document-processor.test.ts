@@ -18,21 +18,22 @@ test('routes Jira documents to ticket identification and persists a validated re
   assert.match(outcome.entityId ?? '', /^ticket-[a-f0-9]{16}$/);
 });
 
-test('routes development documents to feature updates and skips Confluence', async () => {
+test('routes development documents to feature updates and indexes Confluence', async () => {
   const update = await processDocument(document({ sourceSystem: 'github', sourceRecordId: 'PR-1', title: 'Add idempotency middleware', content: 'Add idempotency middleware.', metadata: { repository: 'org/checkout', state: 'open' } }), { graph: graph(), useConfiguredModels: false });
   const skipped = await processDocument(document({ sourceSystem: 'confluence', sourceRecordId: 'DOC-1', content: 'Meeting notes' }), { graph: graph(), useConfiguredModels: false });
   assert.equal(update.route, 'feature-update');
   assert.equal(update.status, 'processed');
-  assert.equal(skipped.route, 'unsupported');
-  assert.equal(skipped.status, 'skipped');
+  assert.equal(skipped.route, 'document-indexing');
+  assert.equal(skipped.status, 'processed');
 });
 
-test('normalized Confluence documents are explicitly skipped without graph calls', async () => {
+test('normalized Confluence documents are indexed as source records', async () => {
   let calls = 0;
-  const outcome = await processDocument(document({ sourceSystem: 'confluence', sourceRecordId: 'page-100', title: 'Checkout runbook', content: 'Rollback steps' }), { graph: graph(async () => { calls += 1; return { data: [] }; }) });
-  assert.equal(outcome.route, 'unsupported');
-  assert.equal(outcome.status, 'skipped');
-  assert.equal(calls, 0);
+  const outcome = await processDocument(document({ sourceSystem: 'confluence', sourceRecordId: 'page-100', title: 'Checkout runbook', content: 'Rollback steps', sourceUrl: 'https://wiki.example/pages/100' }), { graph: graph(async (cypher, options) => { calls += 1; assert.match(cypher, /MERGE \(d:Document/); assert.equal((options?.params as Record<string, { sourceRecordId?: string }>)?.properties?.sourceRecordId, 'page-100'); return { data: [] }; }) });
+  assert.equal(outcome.route, 'document-indexing');
+  assert.equal(outcome.status, 'processed');
+  assert.match(outcome.entityId ?? '', /^doc-[a-f0-9]{20}$/);
+  assert.equal(calls, 1);
 });
 
 test('routes relevant GitHub pull requests to feature updates but leaves unrelated documents unsupported', async () => {

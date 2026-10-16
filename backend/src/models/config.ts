@@ -3,9 +3,11 @@ import { z } from 'zod';
 
 const optionalString = z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional());
 const modelEnvironmentSchema = z.object({
-  MODEL_PROVIDER: z.enum(['disabled', 'openai-compatible']).default('disabled'),
+  MODEL_PROVIDER: z.enum(['disabled', 'openai-compatible', 'gemini']).default('disabled'),
   MODEL_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
   MODEL_API_KEY: optionalString,
+  GEMINI_API_KEY: optionalString,
+  GEMINI_MODEL: z.string().min(1).default('gemini-2.5-flash'),
   MODEL_DEFAULT_ID: z.string().min(1).default('gpt-4o-mini'),
   MODEL_TICKET_ID: optionalString,
   MODEL_FEATURE_UPDATE_ID: optionalString,
@@ -34,11 +36,13 @@ export function parseModelEnvironment(input: unknown): ModelEnvironment {
 
 export function modelInstanceConfig(name: ModelInstanceName, input: unknown = process.env): ModelInstanceConfig {
   const env = parseModelEnvironment(input);
+  const provider = env.MODEL_PROVIDER === 'disabled' && env.GEMINI_API_KEY ? 'gemini' : env.MODEL_PROVIDER;
   const modelId = name === 'ticket-identification' ? env.MODEL_TICKET_ID ?? env.MODEL_DEFAULT_ID
     : name === 'feature-update' ? env.MODEL_FEATURE_UPDATE_ID ?? env.MODEL_DEFAULT_ID
       : env.MODEL_DEFAULT_ID;
   const temperature = name === 'ticket-identification' ? env.MODEL_TICKET_TEMPERATURE ?? env.MODEL_DEFAULT_TEMPERATURE
     : name === 'feature-update' ? env.MODEL_FEATURE_UPDATE_TEMPERATURE ?? env.MODEL_DEFAULT_TEMPERATURE
       : env.MODEL_DEFAULT_TEMPERATURE;
-  return { name, provider: env.MODEL_PROVIDER, baseUrl: env.MODEL_BASE_URL.replace(/\/$/, ''), apiKey: env.MODEL_API_KEY, modelId, temperature, timeoutMs: env.MODEL_TIMEOUT_MS };
+  const selectedModel = name === 'default' && provider === 'gemini' && env.MODEL_DEFAULT_ID === 'gpt-4o-mini' ? env.GEMINI_MODEL : modelId;
+  return { name, provider, baseUrl: provider === 'gemini' ? 'https://generativelanguage.googleapis.com/v1beta' : env.MODEL_BASE_URL.replace(/\/$/, ''), apiKey: provider === 'gemini' ? env.GEMINI_API_KEY ?? env.MODEL_API_KEY : env.MODEL_API_KEY, modelId: selectedModel, temperature, timeoutMs: env.MODEL_TIMEOUT_MS };
 }

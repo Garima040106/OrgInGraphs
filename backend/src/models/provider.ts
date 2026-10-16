@@ -9,24 +9,31 @@ export class ModelProviderError extends Error {
 }
 
 type ChatResponse = { choices?: Array<{ message?: { content?: unknown } }> };
+type GeminiResponse = { candidates?: Array<{ content?: { parts?: Array<{ text?: unknown }> } }> };
 
 export function createModel(config: ModelInstanceConfig) {
   if (config.provider === 'disabled') return undefined;
-  if (!config.apiKey) throw new ModelProviderError(`Credentials are missing for model instance ${config.name}`, 'missing-credentials');
+  const apiKey = config.apiKey;
+  if (!apiKey) throw new ModelProviderError(`Credentials are missing for model instance ${config.name}`, 'missing-credentials');
   return async (systemPrompt: string, userPrompt: string): Promise<unknown> => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), config.timeoutMs);
     try {
-      const response = await fetch(`${config.baseUrl}/chat/completions`, {
+      const isGemini = config.provider === 'gemini';
+      const response = await fetch(isGemini ? `${config.baseUrl}/models/${encodeURIComponent(config.modelId)}:generateContent` : `${config.baseUrl}/chat/completions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.apiKey}` },
-        body: JSON.stringify({ model: config.modelId, temperature: config.temperature, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }),
+        headers: { 'Content-Type': 'application/json', ...(isGemini ? { 'x-goog-api-key': apiKey } : { Authorization: `Bearer ${apiKey}` }) },
+        body: JSON.stringify(isGemini
+          ? { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: 'user', parts: [{ text: userPrompt }] }], generationConfig: { temperature: config.temperature, responseMimeType: 'application/json' } }
+          : { model: config.modelId, temperature: config.temperature, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }),
         signal: controller.signal
       });
       if (response.status === 429) throw new ModelProviderError('Model provider rate limit', 'rate-limit', true);
       if (!response.ok) throw new ModelProviderError(`Model provider request failed with status ${response.status}`, 'provider-failure', response.status >= 500);
-      const payload = await response.json() as ChatResponse;
-      const content = payload.choices?.[0]?.message?.content;
+      const payload = await response.json() as ChatResponse & GeminiResponse;
+      const content = isGemini
+        ? payload.candidates?.[0]?.content?.parts?.map((part) => part.text).filter((part): part is string => typeof part === 'string').join('')
+        : payload.choices?.[0]?.message?.content;
       if (typeof content !== 'string' || !content.trim()) throw new ModelProviderError('Model provider returned a malformed response', 'malformed-response');
       return content;
     } catch (error) {
@@ -37,7 +44,7 @@ export function createModel(config: ModelInstanceConfig) {
   };
 }
 
-export function configuredModel(name: 'ticket-identification' | 'feature-update') {
+export function configuredModel(name: 'default' | 'ticket-identification' | 'feature-update') {
   const config = modelInstanceConfig(name);
   if (config.provider === 'disabled' || !config.apiKey) return undefined;
   return async (systemPrompt: string, userPrompt: string) => createModel(config)!(systemPrompt, userPrompt);
