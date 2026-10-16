@@ -31,7 +31,7 @@ import {
 import { api, friendlyApiError } from "@/lib/api";
 import { buildInitialGraph } from "@/lib/graph/layout";
 import { normalizeNeighborhood, type GraphNodeData } from "@/lib/graph/normalize";
-import type { Department, Employee, EntityType, Neighborhood, Project } from "@/lib/types";
+import type { EntityType, GraphResponse, Neighborhood } from "@/lib/types";
 
 type GraphSelection = { entity: GraphNodeData["entity"]; entityType: GraphNodeData["entityType"] };
 
@@ -44,9 +44,9 @@ function EntityCardNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
       <Handle type="target" position={Position.Left} />
       <div className="node-topline">
         {type === "Employee" ? <span className="node-avatar">{initials}</span> : <span className="node-icon"><Icon size={14} /></span>}
-        <div><div className="node-label">{data.label}</div><div className="node-subtitle">{data.subtitle}</div></div>
+        <div className="node-copy"><div className="node-label">{data.label}</div><div className="node-subtitle">{data.subtitle}</div></div>
       </div>
-      <div className="node-type">{type}</div>
+      <div className="node-footer"><span className="node-type">{type}</span><span className="node-pulse" /></div>
       <Handle type="source" position={Position.Right} />
     </div>
   );
@@ -221,7 +221,7 @@ function GraphCanvas({
   return (
     <>
       <div className="graph-heading">
-        <div className="graph-heading-left"><Network size={14} /> Organization graph <span style={{ color: "#9aa2b0", fontWeight: 450 }}>· {nodes.length} connected records · Showing up to {Math.min(totalEmployees, 24)} of {totalEmployees} people</span></div>
+        <div className="graph-heading-left"><span className="graph-title-icon"><Network size={14} /></span><span><strong>Organization graph</strong><small>{nodes.length} records · {totalEmployees} people</small></span></div>
         <div className="graph-legend">
           <span><i className="legend-mark" style={{ background: "#7188e5" }} /> People</span>
           <span><i className="legend-mark" style={{ background: "#9a84dd" }} /> Departments</span>
@@ -265,7 +265,7 @@ function GraphCanvas({
         <div className="graph-hint"><CircleHelp size={11} style={{ verticalAlign: "middle", marginRight: 5 }} />Select a node for context. Expand it to load connected records.</div>
         {selectedNode && (
           <aside className="inspector" aria-label="Selected record details">
-            <div className="inspector-head"><span>Record details</span><button type="button" className="icon-button" onClick={() => setSelectedId(null)} aria-label="Close inspector"><X size={14} /></button></div>
+            <div className="inspector-head"><span><small>SELECTED RECORD</small>Record details</span><button type="button" className="icon-button" onClick={() => setSelectedId(null)} aria-label="Close inspector"><X size={14} /></button></div>
             <div className="inspector-identity">
               <span className={`node-icon ${selectedNode.data.entityType.toLowerCase()}`}><GitBranch size={15} /></span>
               <div><h3>{selectedNode.data.label}</h3><p>{selectedNode.data.entityType} · {selectedNode.data.subtitle}</p></div>
@@ -285,22 +285,20 @@ function GraphCanvas({
           </aside>
         )}
       </div>
-      <span className="sr-only">Initial view includes up to 24 of {totalEmployees} employees. Expand nodes for additional verified connections.</span>
+      <span className="sr-only">Showing all {totalEmployees} employees and their graph connections. Expand nodes for additional verified connections.</span>
     </>
   );
 }
 
 export function OrganizationGraph(props: {
-  employees: Employee[];
-  departments: Department[];
-  projects: Project[];
+  graph: GraphResponse;
   focusId?: string;
   focusType?: string;
   onSelection?: (selection: GraphSelection | null) => void;
 }) {
   const initial = useMemo(
-    () => buildInitialGraph(props.employees, props.departments, props.projects),
-    [props.departments, props.employees, props.projects],
+    () => buildInitialGraph(props.graph),
+    [props.graph],
   );
   return (
     <div className="graph-workspace">
