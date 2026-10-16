@@ -76,8 +76,7 @@ export function AppShell({
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <Brand href="/dashboard" />
-        <div className="sidebar-kicker">Company intelligence</div>
+        <div className="sidebar-kicker">{company}</div>
         <button className="workspace-switch" type="button" aria-label={`${company} workspace`}>
           <span className="workspace-mark">{company.slice(0, 1).toUpperCase()}</span>
           <span><b>{company}</b><small>Company workspace</small></span><ChevronDown size={13} />
