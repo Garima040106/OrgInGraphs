@@ -1,8 +1,9 @@
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import {
-  ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
   Compass,
@@ -10,7 +11,11 @@ import {
   Search,
   Sparkles,
   UsersRound,
+  Menu,
+  X,
 } from "lucide-react";
+
+/* ─── Graph preview illustration ──────────────────────────────────────────── */
 
 function GraphPreview() {
   return (
@@ -31,7 +36,6 @@ function GraphPreview() {
             Organization graph
           </span>
         </div>
-
         <span className="rounded-md border border-slate-200 px-2 py-1 text-[9px] uppercase tracking-wider text-slate-400">
           Illustration
         </span>
@@ -42,8 +46,7 @@ function GraphPreview() {
         <div
           className="absolute inset-0 opacity-70"
           style={{
-            backgroundImage:
-              "radial-gradient(#d9e2f3 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(#d9e2f3 1px, transparent 1px)",
             backgroundSize: "22px 22px",
           }}
         />
@@ -55,11 +58,7 @@ function GraphPreview() {
           preserveAspectRatio="xMidYMid meet"
           aria-hidden="true"
         >
-          <g
-            stroke="#c9d7f0"
-            strokeWidth="1.5"
-            strokeDasharray="4 5"
-          >
+          <g stroke="#c9d7f0" strokeWidth="1.5" strokeDasharray="4 5">
             <path d="M372 191 C300 145 230 118 162 94" />
             <path d="M394 194 C466 144 527 122 601 105" />
             <path d="M368 215 C286 250 243 296 174 330" />
@@ -81,41 +80,27 @@ function GraphPreview() {
             H
           </span>
           <span className="min-w-0">
-            <b className="block text-[11px] font-bold text-slate-700">
-              Hirenova
-            </b>
-            <small className="mt-1 block text-[10px] text-slate-400">
-              Company
-            </small>
+            <b className="block text-[11px] font-bold text-slate-700">Hirenova</b>
+            <small className="mt-1 block text-[10px] text-slate-400">Company</small>
           </span>
-          <span className="ml-auto self-start text-xs text-slate-400">
-            ···
-          </span>
+          <span className="ml-auto self-start text-xs text-slate-400">···</span>
         </div>
 
         {/* Person: Ava */}
-        <div className="absolute left-[9%] top-[16%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)] sm:left-[9%] sm:w-[165px]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">
-            AP
-          </span>
+        <div className="absolute left-[9%] top-[16%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">AP</span>
           <span className="min-w-0">
             <b className="block text-[10px] text-slate-700">Ava Patel</b>
-            <small className="mt-1 block text-[9px] text-slate-400">
-              Engineering
-            </small>
+            <small className="mt-1 block text-[9px] text-slate-400">Engineering</small>
           </span>
         </div>
 
         {/* Person: Noah */}
         <div className="absolute right-[8%] top-[20%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e1f3eb] text-[10px] font-bold text-[#4e9a7a]">
-            NC
-          </span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e1f3eb] text-[10px] font-bold text-[#4e9a7a]">NC</span>
           <span className="min-w-0">
             <b className="block text-[10px] text-slate-700">Noah Chen</b>
-            <small className="mt-1 block text-[9px] text-slate-400">
-              Product
-            </small>
+            <small className="mt-1 block text-[9px] text-slate-400">Product</small>
           </span>
         </div>
 
@@ -125,38 +110,26 @@ function GraphPreview() {
             <Network size={15} />
           </span>
           <span>
-            <b className="block text-[10px] text-slate-700">
-              Payments API
-            </b>
-            <small className="mt-1 block text-[9px] text-slate-400">
-              Project · active
-            </small>
+            <b className="block text-[10px] text-slate-700">Payments API</b>
+            <small className="mt-1 block text-[9px] text-slate-400">Project · active</small>
           </span>
         </div>
 
         {/* Person: Mia */}
         <div className="absolute bottom-[13%] left-[11%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fae9df] text-[10px] font-bold text-[#c77c60]">
-            MR
-          </span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fae9df] text-[10px] font-bold text-[#c77c60]">MR</span>
           <span>
             <b className="block text-[10px] text-slate-700">Mia Rivera</b>
-            <small className="mt-1 block text-[9px] text-slate-400">
-              Design
-            </small>
+            <small className="mt-1 block text-[9px] text-slate-400">Design</small>
           </span>
         </div>
 
         {/* Person: Jonah */}
         <div className="absolute bottom-[14%] right-[7%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e5edfc] text-[10px] font-bold text-[#6585c7]">
-            JL
-          </span>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e5edfc] text-[10px] font-bold text-[#6585c7]">JL</span>
           <span>
             <b className="block text-[10px] text-slate-700">Jonah Lee</b>
-            <small className="mt-1 block text-[9px] text-slate-400">
-              Infrastructure
-            </small>
+            <small className="mt-1 block text-[9px] text-slate-400">Infrastructure</small>
           </span>
         </div>
 
@@ -166,12 +139,8 @@ function GraphPreview() {
             <UsersRound size={15} />
           </span>
           <span>
-            <b className="block text-[10px] text-slate-700">
-              Software Eng.
-            </b>
-            <small className="mt-1 block text-[9px] text-slate-400">
-              Department
-            </small>
+            <b className="block text-[10px] text-slate-700">Software Eng.</b>
+            <small className="mt-1 block text-[9px] text-slate-400">Department</small>
           </span>
         </div>
       </div>
@@ -180,34 +149,88 @@ function GraphPreview() {
       <div className="flex min-h-[40px] flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-4 py-3 text-[9px] text-slate-400 sm:px-5">
         <span>People, projects, decisions — connected.</span>
         <span className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5">
-            <i className="h-2 w-2 rounded-full bg-[#7185ee]" />
-            People
-          </span>
-          <span className="flex items-center gap-1.5">
-            <i className="h-2 w-2 rounded-full bg-[#9b85df]" />
-            Teams
-          </span>
-          <span className="flex items-center gap-1.5">
-            <i className="h-2 w-2 rounded-full bg-[#e2ad67]" />
-            Projects
-          </span>
+          <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#7185ee]" />People</span>
+          <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#9b85df]" />Teams</span>
+          <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#e2ad67]" />Projects</span>
         </span>
       </div>
     </div>
   );
 }
 
+/* ─── Mobile navigation menu ───────────────────────────────────────────────── */
+
+function MobileMenu() {
+  const [open, setOpen] = useState(false);
+
+  const links = [
+    { href: "#features", label: "Features" },
+    { href: "#how-it-works", label: "How it works" },
+    { href: "#company-graph", label: "Company graph" },
+    { href: "#integrations", label: "Integrations" },
+  ];
+
+  return (
+    <div className="lg:hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label={open ? "Close menu" : "Open menu"}
+        aria-expanded={open}
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E7E4D9] bg-[#FFFEF3] text-[#3F403D] transition hover:bg-[#E8F4EC] hover:text-[#174D35]"
+      >
+        {open ? <X size={17} /> : <Menu size={17} />}
+      </button>
+
+      {open && (
+        <nav
+          className="lp-mobile-menu absolute inset-x-3 top-[72px] z-40 flex flex-col gap-1 rounded-2xl border border-[#E7E4D9] bg-[#FFFEF3] p-3 shadow-[0_18px_50px_rgba(25,25,27,.12)]"
+          aria-label="Mobile navigation"
+        >
+          {links.map(({ href, label }) => (
+            <a
+              key={href}
+              href={href}
+              onClick={() => setOpen(false)}
+              className="flex items-center rounded-lg px-4 py-3 text-sm font-medium text-[#3F403D] transition hover:bg-[#E8F4EC] hover:text-[#174D35]"
+            >
+              {label}
+            </a>
+          ))}
+          <div className="mt-2 flex flex-col gap-2 border-t border-[#E7E4D9] pt-3">
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center rounded-lg px-4 py-3 text-sm font-medium text-[#3F403D] transition hover:text-[#174D35]"
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#19191B] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#174D35]"
+            >
+              Get started free <ArrowRight size={15} />
+            </Link>
+          </div>
+        </nav>
+      )}
+    </div>
+  );
+}
+
+/* ─── Page ────────────────────────────────────────────────────────────────── */
+
 export default function Home() {
   return (
     <main className="landing min-h-screen bg-[#FFFEF3] text-[#19191B]">
-      <header className="landing-nav z-50 mx-auto flex min-h-[54px] w-[calc(100%-24px)] max-w-[1240px] items-center justify-between gap-4 rounded-full px-4 sm:min-h-[56px] sm:w-[calc(100%-40px)] sm:px-7">
+
+      {/* ── Navigation ─────────────────────────────────────────────────── */}
+      <header
+        className="landing-nav relative z-50 mx-auto flex min-h-[54px] w-[calc(100%-24px)] max-w-[1240px] items-center justify-between gap-4 rounded-full px-4 sm:min-h-[56px] sm:w-[calc(100%-40px)] sm:px-7"
+        role="banner"
+      >
         {/* Logo */}
-        <Link
-          href="/"
-          aria-label="OrgInGraphs home"
-          className="flex shrink-0 items-center"
-        >
+        <Link href="/" aria-label="OrgInGraphs home" className="flex shrink-0 items-center">
           <Image
             src="/img/logo.png"
             alt="OrgInGraphs"
@@ -219,128 +242,128 @@ export default function Home() {
         </Link>
 
         {/* Desktop navigation */}
-        <nav className="ml-auto hidden items-center gap-7 lg:flex">
-          <a
-            href="#product"
-            className="text-xs font-medium text-[#5F605B] transition-colors hover:text-[#174D35]"
-          >
-            Product
-          </a>
-          <a
-            href="#getting-started"
-            className="text-xs font-medium text-[#5F605B] transition-colors hover:text-[#174D35]"
-          >
-            Getting started
-          </a>
-          <a
-            href="#why-oig"
-            className="text-xs font-medium text-[#5F605B] transition-colors hover:text-[#174D35]"
-          >
-            Company graph
-          </a>
-          <a href="#integrations" className="text-xs font-medium text-[#5F605B] transition-colors hover:text-[#174D35]">Integrations</a>
+        <nav className="ml-auto hidden items-center gap-7 lg:flex" aria-label="Main navigation">
+          <a href="#features"       className="lp-nav-link">Features</a>
+          <a href="#how-it-works"   className="lp-nav-link">How it works</a>
+          <a href="#company-graph"  className="lp-nav-link">Company graph</a>
+          <a href="#integrations"   className="lp-nav-link">Integrations</a>
         </nav>
 
-        {/* Actions */}
-        <div className="flex shrink-0 items-center gap-3 sm:gap-5 lg:ml-8">
+        {/* Desktop actions */}
+        <div className="ml-8 hidden shrink-0 items-center gap-4 lg:flex">
+          <Link href="/login" className="lp-nav-link">Sign in</Link>
           <Link
             href="/login"
-            className="text-xs font-medium text-[#5F605B] transition-colors hover:text-[#174D35] sm:text-sm"
+            id="nav-get-started"
+            className="lp-nav-cta inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-[#19191B] px-4 text-xs font-semibold text-white transition-all hover:bg-[#174D35] hover:-translate-y-px sm:min-h-10 sm:px-5 sm:text-sm"
           >
-            Sign in
-          </Link>
-          <Link
-            href="/login"
-            className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-[#19191B] px-4 text-xs font-semibold text-white transition-all hover:bg-[#174D35] sm:min-h-10 sm:px-5 sm:text-sm"
-          >
-            <span className="hidden text-white min-[380px]:inline">
-              Get started
-            </span>
-            <span className="min-[380px]:hidden">Open</span>
-            <ArrowRight size={15} />
+            Get started free <ArrowRight size={14} />
           </Link>
         </div>
+
+        {/* Mobile burger */}
+        <MobileMenu />
       </header>
 
+      {/* ── Hero ───────────────────────────────────────────────────────── */}
       <div className="landing-hero-shell landing-hero-frame">
-      <section className="landing-hero mx-auto grid w-[calc(100%-40px)] max-w-[1240px] grid-cols-1 gap-12 sm:w-[calc(100%-40px)] lg:grid-cols-[.82fr_1.18fr] lg:items-center lg:gap-12">
-        <div className="landing-hero-copy">
-          <div className="landing-kicker mb-7 flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.18em]">
-            <span />
-            ORGANIZATIONAL INTELLIGENCE · COMPANY GRAPH
+        <section
+          className="landing-hero mx-auto grid w-[calc(100%-40px)] max-w-[1240px] grid-cols-1 gap-12 sm:w-[calc(100%-40px)] lg:grid-cols-[.82fr_1.18fr] lg:items-center lg:gap-12"
+          aria-labelledby="hero-headline"
+        >
+          {/* Copy */}
+          <div className="landing-hero-copy lp-enter-1">
+            <div className="landing-kicker mb-7 flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.18em]">
+              <span />
+              ORGANIZATIONAL INTELLIGENCE · COMPANY GRAPH
+            </div>
+
+            <h1 id="hero-headline">
+              Understand your<br />
+              organization.<br />
+              <em>Connect every insight.</em>
+            </h1>
+
+            <p>
+              Turn your organization's people, departments, projects, and
+              relationships into an intelligent knowledge graph. Explore how
+              your company works, discover connections, and make
+              better-informed decisions.
+            </p>
+
+            <div className="landing-hero-actions mt-8 flex flex-wrap items-center gap-3 sm:gap-5">
+              <Link
+                href="/login"
+                id="hero-get-started"
+                className="landing-hero-cta inline-flex min-h-[52px] items-center gap-3 rounded-full px-5 text-sm font-semibold transition-all hover:-translate-y-0.5"
+              >
+                Get started free
+                <ArrowRight size={17} />
+              </Link>
+
+              <a
+                href="#features"
+                id="hero-explore-platform"
+                className="landing-hero-link inline-flex min-h-[48px] items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors"
+              >
+                Explore the platform
+                <ArrowRight size={16} />
+              </a>
+            </div>
+
+            <div className="landing-hero-proof">
+              <span><i /><i /><i /></span>
+              People, projects, and knowledge — connected.
+            </div>
           </div>
 
-          <h1>
-            Your company
-            <br />
-            has a story.
-            <br />
-            <em>See what connects.</em>
-          </h1>
-
-          <p>
-            Bring people, projects, and decisions into one evolving picture—then make the relationships behind your work easier to see.
-          </p>
-
-          <div className="landing-hero-actions mt-8 flex flex-wrap items-center gap-3 sm:gap-5">
-            <Link
-              href="/login"
-              className="landing-hero-cta inline-flex min-h-[52px] items-center gap-3 rounded-full px-5 text-sm font-semibold transition-all hover:-translate-y-0.5"
-            >
-              Get started
-              <ArrowRight size={17} />
-            </Link>
-
-            <a
-              href="#getting-started"
-              className="landing-hero-link inline-flex min-h-[48px] items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors"
-            >
-              See how it works
-              <ArrowDownRight size={16} />
-            </a>
+          {/* Visual */}
+          <div className="landing-hero-visual lp-enter-2">
+            <div className="landing-preview-heading">
+              <span>
+                <small>ORGINOGRAPHS / LIVE VIEW</small>
+                <b>Company graph</b>
+              </span>
+              <span className="landing-preview-status"><i /> Connected</span>
+            </div>
+            <GraphPreview />
+            <div className="landing-preview-footer">
+              <span>People, teams, projects, and decisions</span>
+              <span>Explore the graph <ArrowUpRight size={12} /></span>
+            </div>
           </div>
-          <div className="landing-hero-proof"><span><i /><i /><i /></span> People, projects, and knowledge—connected.</div>
-        </div>
-
-        <div className="landing-hero-visual">
-          <div className="landing-preview-heading"><span><small>ORGINOGRAPHS / LIVE VIEW</small><b>Company graph</b></span><span className="landing-preview-status"><i /> Connected</span></div>
-          <GraphPreview />
-          <div className="landing-preview-footer"><span>People, teams, projects, and decisions</span><span>Explore the graph <ArrowUpRight size={12} /></span></div>
-        </div>
-      </section>
+        </section>
       </div>
 
-
-      {/* Getting started */}
+      {/* ── How it works (3 steps) ─────────────────────────────────────── */}
       <section
-        id="getting-started"
-        className="mx-auto w-[calc(100%-40px)] max-w-[1240px] border-t border-[#e9e8dc] py-16 sm:py-20"
+        id="how-it-works"
+        className="lp-section mx-auto w-[calc(100%-40px)] max-w-[1240px] border-t border-[#e9e8dc] py-16 sm:py-20"
+        aria-labelledby="how-heading"
       >
         <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-          <div>
+          <div className="lp-reveal">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#71816c]">
               GET STARTED · 3 SIMPLE STEPS
             </div>
-            <h2 className="mt-5 max-w-md font-serif text-4xl leading-tight tracking-[-0.04em] text-[#1d2942] sm:text-5xl">
+            <h2 id="how-heading" className="mt-5 max-w-md font-serif text-4xl leading-tight tracking-[-0.04em] text-[#1d2942] sm:text-5xl">
               Your organization, connected.
             </h2>
             <p className="mt-5 max-w-md text-sm leading-7 text-[#78816f]">
               Start with your workspace, bring your company context together,
               and discover how your people and projects connect.
             </p>
-           <Link
-  href="/login"
-  className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#19191b] px-6 text-sm font-semibold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#174d35]"
->
-  Set up your workspace
-  <ArrowRight size={16} />
-</Link>
+            <Link
+              href="/login"
+              id="how-create-workspace"
+              className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#19191b] px-6 text-sm font-semibold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#174d35]"
+            >
+              Create your workspace
+              <ArrowRight size={16} />
+            </Link>
             <p className="mt-3 text-xs text-[#85877c]">
               Already have a workspace?{" "}
-              <Link
-                href="/login"
-                className="font-semibold text-[#174d35] underline underline-offset-4"
-              >
+              <Link href="/login" className="font-semibold text-[#174d35] underline underline-offset-4">
                 Sign in
               </Link>
             </p>
@@ -350,48 +373,41 @@ export default function Home() {
             {[
               {
                 number: "01",
-                title: "Create your workspace",
-                description:
-                  "Start with your organization name and establish a home for your company knowledge.",
+                title: "Create your organization workspace",
+                description: "Sign up and give your organization a home. Set a workspace name and invite your team.",
                 tag: "YOUR FOUNDATION",
               },
               {
                 number: "02",
-                title: "Bring your company context together",
-                description:
-                  "Add people, departments, and projects. Connect supported tools as integrations become available.",
+                title: "Build your organization graph",
+                description: "Add departments, employees, and projects. Connect relationships between people and the work they own.",
                 tag: "YOUR CONTEXT",
               },
               {
                 number: "03",
-                title: "Explore your organization graph",
-                description:
-                  "Discover relationships between teammates, teams, and projects to find the context behind the work.",
+                title: "Explore your connections",
+                description: "Navigate the graph to understand your organizational structure and discover who works on what — and with whom.",
                 tag: "YOUR INSIGHTS",
               },
-            ].map((step) => (
+            ].map((step, i) => (
               <article
                 key={step.number}
-                className="group rounded-2xl border border-[#e8e7dc] bg-white/70 p-5 transition-all hover:border-[#b7c7b5] hover:bg-white sm:p-6"
+                className="lp-step-card group rounded-2xl border border-[#e8e7dc] bg-white/70 p-5 transition-all hover:border-[#b7c7b5] hover:bg-white sm:p-6"
+                style={{ "--step-i": i } as React.CSSProperties}
               >
                 <div className="flex gap-4 sm:gap-5">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf2e8] text-sm font-bold text-[#315a3e]">
                     {step.number}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[9px] font-bold tracking-[0.15em] text-[#89917f]">
-                      {step.tag}
-                    </div>
-                    <h3 className="mt-2 text-base font-bold tracking-tight text-[#25314b]">
-                      {step.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-[#78816f]">
-                      {step.description}
-                    </p>
+                    <div className="text-[9px] font-bold tracking-[0.15em] text-[#89917f]">{step.tag}</div>
+                    <h3 className="mt-2 text-base font-bold tracking-tight text-[#25314b]">{step.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[#78816f]">{step.description}</p>
                   </div>
                   <ArrowUpRight
                     size={16}
                     className="mt-1 shrink-0 text-[#9ba392] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    aria-hidden="true"
                   />
                 </div>
               </article>
@@ -400,71 +416,59 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why OIG */}
+      {/* ── Feature / Company graph section ───────────────────────────── */}
       <section
-        id="why-oig"
-        className="mx-auto w-[calc(100%-40px)] max-w-[1424px] border-t border-slate-100 py-20 sm:w-[calc(100%-64px)] sm:py-28"
+        id="company-graph"
+        className="lp-section mx-auto w-[calc(100%-40px)] max-w-[1424px] border-t border-slate-100 py-20 sm:w-[calc(100%-64px)] sm:py-28"
+        aria-labelledby="features-heading"
       >
         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7b8bb0]">
           The context gap
         </div>
 
         <div className="mt-7 grid gap-7 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-16">
-          <h2 className="font-serif text-4xl leading-[1.12] tracking-[-0.04em] text-[#1d2942] sm:text-5xl lg:text-6xl">
-            Great work shouldn’t depend on
-            <br className="hidden sm:block" /> knowing who to ask.
+          <h2 id="features-heading" className="font-serif text-4xl leading-[1.12] tracking-[-0.04em] text-[#1d2942] sm:text-5xl lg:text-6xl">
+            Great work shouldn't depend on knowing who to ask.
           </h2>
-
           <div className="max-w-lg">
             <p className="text-base leading-8 text-[#78869e]">
-              Company knowledge is everywhere. OIG brings it together, so
-              people can find the people, projects, and decisions behind the
-              work.
+              Company knowledge is everywhere. OrgInGraphs brings it together
+              so people can find the people, projects, and decisions behind the work.
             </p>
             <a
+              href="#features"
               className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#5267df] transition-colors hover:text-indigo-800"
-              href="#product"
             >
-              Meet your company graph
-              <ArrowRight size={15} />
+              Meet your company graph <ArrowRight size={15} />
             </a>
           </div>
         </div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {/* Feature cards */}
+        <div id="features" className="lp-features mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {/* Feature 1 */}
           <article
-            id="product"
-            className="group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8"
+            className="lp-feature-card group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8"
+            style={{ "--fi": 0 } as React.CSSProperties}
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#edf1ff] text-[#596fe4]">
-              <Compass size={20} />
+              <Compass size={20} aria-hidden="true" />
             </div>
-            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">
-              01 / EXPLORE
-            </div>
-            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">
-              See how the pieces connect.
-            </h3>
+            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">01 / EXPLORE</div>
+            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">See how the pieces connect.</h3>
             <p className="mt-3 text-sm leading-7 text-[#7b899f]">
               Move through a living map of people, teams, and projects. Follow
               the relationships that explain how work actually happens.
             </p>
-
             <div className="relative mt-auto h-[95px] overflow-hidden pt-5">
-              <svg
-                viewBox="0 0 260 90"
-                className="h-full w-full"
-                fill="none"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 260 90" className="h-full w-full" fill="none" aria-hidden="true">
                 <g stroke="#cbd6f3" strokeWidth="1.5">
                   <path d="M35 58 L95 25 L147 56 L210 20 L235 65" />
                   <path d="M95 25 L105 75 L147 56 L210 80" />
                 </g>
                 <g fill="#fff" stroke="#8496e8" strokeWidth="2">
-                  <circle cx="35" cy="58" r="7" />
-                  <circle cx="95" cy="25" r="8" />
+                  <circle cx="35"  cy="58" r="7" />
+                  <circle cx="95"  cy="25" r="8" />
                   <circle cx="147" cy="56" r="10" />
                   <circle cx="210" cy="20" r="7" />
                   <circle cx="235" cy="65" r="6" />
@@ -476,134 +480,161 @@ export default function Home() {
           </article>
 
           {/* Feature 2 */}
-          <article className="group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8">
+          <article
+            className="lp-feature-card group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8"
+            style={{ "--fi": 1 } as React.CSSProperties}
+          >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f0ebff] text-[#8a70d7]">
-              <Search size={20} />
+              <Search size={20} aria-hidden="true" />
             </div>
-            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">
-              02 / DISCOVER
-            </div>
-            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">
-              Find the right person, faster.
-            </h3>
+            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">02 / DISCOVER</div>
+            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">Find the right person, faster.</h3>
             <p className="mt-3 text-sm leading-7 text-[#7b899f]">
               Search beyond titles. Find teammates by what they work on, what
-              they know, and where they’re connected.
+              they know, and where they are connected.
             </p>
-
             <div className="mt-auto space-y-3 pt-6">
               <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-[#fbfcff] px-3 py-2.5 text-xs text-slate-400">
-                <Search size={14} />
-                idempotency
+                <Search size={14} aria-hidden="true" /> idempotency
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">
-                  AP
-                </span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">AP</span>
                 <span>
                   <b className="block text-xs text-slate-700">Ava Patel</b>
-                  <small className="mt-1 block text-[10px] text-slate-400">
-                    Payments · Software Engineering
-                  </small>
+                  <small className="mt-1 block text-[10px] text-slate-400">Payments · Software Engineering</small>
                 </span>
               </div>
             </div>
           </article>
 
           {/* Feature 3 */}
-          <article className="group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8">
+          <article
+            className="lp-feature-card group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8"
+            style={{ "--fi": 2 } as React.CSSProperties}
+          >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff4e5] text-[#c78e45]">
-              <Sparkles size={20} />
+              <Sparkles size={20} aria-hidden="true" />
             </div>
-            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">
-              03 / UNDERSTAND
-            </div>
-            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">
-              Get the context behind the work.
-            </h3>
+            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">03 / UNDERSTAND</div>
+            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">Get the context behind the work.</h3>
             <p className="mt-3 text-sm leading-7 text-[#7b899f]">
               Open any profile or project to see the connections around it and
               build a fuller picture, one step at a time.
             </p>
-
             <div className="mt-auto flex items-center gap-3 rounded-xl border border-slate-100 bg-[#fcfdff] p-3 shadow-sm">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">
-                AP
-              </span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">AP</span>
               <span className="min-w-0 flex-1">
-                <b className="block truncate text-xs text-slate-700">
-                  Ledger reconciliation
-                </b>
-                <small className="mt-1 block text-[10px] text-slate-400">
-                  Owned by Ava · 3 connections
-                </small>
+                <b className="block truncate text-xs text-slate-700">Ledger reconciliation</b>
+                <small className="mt-1 block text-[10px] text-slate-400">Owned by Ava · 3 connections</small>
               </span>
-              <ArrowUpRight size={15} className="text-slate-400" />
+              <ArrowUpRight size={15} className="text-slate-400" aria-hidden="true" />
             </div>
           </article>
         </div>
+
+        {/* Post-feature CTA */}
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+          <Link
+            href="/login"
+            id="features-get-started"
+            className="inline-flex min-h-[48px] items-center gap-3 rounded-full bg-[#19191B] px-6 text-sm font-semibold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#174D35]"
+          >
+            Get started free <ArrowRight size={16} />
+          </Link>
+          <a
+            href="#how-it-works"
+            className="inline-flex min-h-[48px] items-center gap-2 rounded-full border border-[#D9D7CE] px-6 text-sm font-medium text-[#3F403D] transition hover:border-[#174D35] hover:text-[#174D35]"
+          >
+            See how it works
+          </a>
+        </div>
       </section>
 
-      {/* Closing CTA */}
-      <section className="landing-closing mx-auto mb-8 flex w-[calc(100%-40px)] max-w-[1424px] flex-col items-start justify-between gap-8 rounded-3xl px-7 py-12 sm:w-[calc(100%-64px)] sm:px-12 sm:py-16 lg:flex-row lg:items-center">
+      {/* ── Closing CTA ────────────────────────────────────────────────── */}
+      <section
+        className="landing-closing mx-auto mb-8 flex w-[calc(100%-40px)] max-w-[1424px] flex-col items-start justify-between gap-8 rounded-3xl px-7 py-12 sm:w-[calc(100%-64px)] sm:px-12 sm:py-16 lg:flex-row lg:items-center"
+        aria-labelledby="closing-heading"
+      >
         <div>
           <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7b8bb0]">
             START WITH YOUR ORGANIZATION
           </div>
-          <h2 className="mt-5 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#1d2942] sm:text-5xl">
-            Give your team the context
-            <br /> to do its best work.
+          <h2 id="closing-heading" className="mt-5 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#1d2942] sm:text-5xl">
+            Give your team the context<br />to do its best work.
           </h2>
         </div>
 
         <Link
-  href="/login"
-  className="inline-flex min-h-[52px] items-center gap-3 rounded-xl bg-[#202a43] px-5 text-sm font-bold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#34466d]"
->
-  Build your company graph
-  <ArrowRight size={16} />
-</Link>
+          href="/login"
+          id="closing-cta"
+          className="inline-flex min-h-[52px] items-center gap-3 rounded-xl bg-[#202a43] px-5 text-sm font-bold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#34466d]"
+        >
+          Build your company graph <ArrowRight size={16} />
+        </Link>
       </section>
 
-      <section className="integration-marquee" id="integrations" aria-label="Connected platforms">
+      {/* ── Integrations marquee ───────────────────────────────────────── */}
+      <section id="integrations" className="integration-marquee" aria-label="Connected platforms">
         <span className="integration-marquee-label">CONNECTED TO YOUR WORK</span>
         <div className="integration-marquee-window">
           <div className="integration-marquee-track">
             {[0, 1].map((copy) => (
               <div className="integration-marquee-group" key={copy} aria-hidden={copy === 1}>
-                <span>Confluence</span><i>✳</i><span>Jira</span><i>✳</i><span>Slack</span><i>✳</i><span>GitHub</span><i>✳</i><span>FalkorDB</span><i>✳</i>
+                <span>Confluence</span><i>✳</i>
+                <span>Jira</span><i>✳</i>
+                <span>Slack</span><i>✳</i>
+                <span>GitHub</span><i>✳</i>
+                <span>FalkorDB</span><i>✳</i>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <footer className="landing-footer">
+      {/* ── Footer ─────────────────────────────────────────────────────── */}
+      <footer className="landing-footer" role="contentinfo">
         <div>
-              <Link
-                href="/"
-                aria-label="OrgInGraphs home"
-                className="block font-serif text-5xl leading-none tracking-[-0.065em] text-[#20202a] sm:text-6xl lg:text-7xl"
-              >
-                OrgInGraphs
-              </Link>
-              <p className="mt-3 text-sm text-[#7d7c78]">
-                Find the people and context behind the work.
-              </p>
-            </div>
-        <div className="landing-footer-links">
-          <div><small>PRODUCT</small><Link href="/">Home</Link><a href="#product">How it works</a><Link href="/login">Workspace</Link></div>
-          <div><small>EXPLORE</small><a href="#why-oig">Company graph</a><Link href="/login">People and teams</Link><Link href="/login">Projects</Link></div>
-          <div><small>CONNECTED</small><a href="#integrations">Confluence · Jira</a><a href="#integrations">Slack · GitHub</a><a href="#integrations">FalkorDB graph</a></div>
-          <div><small>ABOUT OIG</small><span>Company knowledge, connected.</span><span>Built for teams in motion.</span><span>© 2026 OrgInGraphs</span></div>
+          <Link
+            href="/"
+            aria-label="OrgInGraphs home"
+            className="block font-serif text-5xl leading-none tracking-[-0.065em] text-[#20202a] sm:text-6xl lg:text-7xl"
+          >
+            OrgInGraphs
+          </Link>
+          <p className="mt-3 text-sm text-[#7d7c78]">Find the people and context behind the work.</p>
         </div>
-        <div className="mt-8 border-t border-[#e8e4d8] pt-7 sm:mt-10 sm:pt-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
-            
-            <p className="max-w-xl text-sm leading-6 text-[#7d7c78] sm:text-right">
-              A clearer view of your organization, its knowledge, and how work connects.
-            </p>
+
+        <div className="landing-footer-links">
+          <div>
+            <small>PRODUCT</small>
+            <Link href="/">Home</Link>
+            <a href="#features">How it works</a>
+            <Link href="/login">Workspace</Link>
           </div>
+          <div>
+            <small>EXPLORE</small>
+            <a href="#company-graph">Company graph</a>
+            <Link href="/login">People and teams</Link>
+            <Link href="/login">Projects</Link>
+          </div>
+          <div>
+            <small>CONNECTED</small>
+            <a href="#integrations">Confluence · Jira</a>
+            <a href="#integrations">Slack · GitHub</a>
+            <a href="#integrations">FalkorDB graph</a>
+          </div>
+          <div>
+            <small>ABOUT OIG</small>
+            <span>Company knowledge, connected.</span>
+            <span>Built for teams in motion.</span>
+            <span>© 2026 OrgInGraphs</span>
+          </div>
+        </div>
+
+        <div className="mt-8 border-t border-[#e8e4d8] pt-7 sm:mt-10 sm:pt-8">
+          <p className="text-sm leading-6 text-[#7d7c78] sm:text-right">
+            A clearer view of your organization, its knowledge, and how work connects.
+          </p>
         </div>
       </footer>
     </main>
