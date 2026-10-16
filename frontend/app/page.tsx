@@ -2,18 +2,81 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
-  Compass,
   Network,
-  Search,
-  Sparkles,
   UsersRound,
   Menu,
   X,
 } from "lucide-react";
+
+function LandingCursor() {
+  const dotRef = useRef<HTMLSpanElement>(null);
+  const ringRef = useRef<HTMLSpanElement>(null);
+  const labelRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!finePointer.matches || reducedMotion.matches) return;
+
+    const root = document.querySelector(".landing");
+    if (!root || !dotRef.current || !ringRef.current || !labelRef.current) return;
+    root.classList.add("oig-cursor-enabled");
+
+    let x = -100;
+    let y = -100;
+    let frame = 0;
+    let queuedX = x;
+    let queuedY = y;
+
+    const render = () => {
+      frame = 0;
+      dotRef.current?.style.setProperty("transform", `translate3d(${queuedX}px, ${queuedY}px, 0)`);
+      ringRef.current?.style.setProperty("transform", `translate3d(${queuedX}px, ${queuedY}px, 0)`);
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      x = event.clientX;
+      y = event.clientY;
+      queuedX = x;
+      queuedY = y;
+      if (!frame) frame = window.requestAnimationFrame(render);
+    };
+
+    const onPointerOver = (event: PointerEvent) => {
+      const target = event.target as Element | null;
+      const interactive = target?.closest("a, button, [role='button'], .landing-hero-visual");
+      const graph = target?.closest(".landing-hero-visual");
+      root.classList.toggle("oig-cursor-hover", !!interactive);
+      root.classList.toggle("oig-cursor-graph", !!graph);
+      if (graph) labelRef.current!.textContent = "EXPLORE";
+    };
+
+    const onPointerLeave = () => root.classList.remove("oig-cursor-hover", "oig-cursor-graph");
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerover", onPointerOver, { passive: true });
+    document.documentElement.addEventListener("mouseleave", onPointerLeave);
+
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerover", onPointerOver);
+      document.documentElement.removeEventListener("mouseleave", onPointerLeave);
+      if (frame) window.cancelAnimationFrame(frame);
+      root.classList.remove("oig-cursor-enabled", "oig-cursor-hover", "oig-cursor-graph");
+    };
+  }, []);
+
+  return (
+    <span className="oig-cursor-layer" aria-hidden="true">
+      <span ref={ringRef} className="oig-cursor-ring" />
+      <span ref={dotRef} className="oig-cursor-dot" />
+      <span ref={labelRef} className="oig-cursor-label" />
+    </span>
+  );
+}
 
 /* ─── Graph preview illustration ──────────────────────────────────────────── */
 
@@ -221,8 +284,11 @@ function MobileMenu() {
 /* ─── Page ────────────────────────────────────────────────────────────────── */
 
 export default function Home() {
+  const [activeUspChapter, setActiveUspChapter] = useState(1);
+
   return (
     <main className="landing min-h-screen bg-[#FFFEF3] text-[#19191B]">
+      <LandingCursor />
 
       {/* ── Navigation ─────────────────────────────────────────────────── */}
       <header
@@ -321,10 +387,10 @@ export default function Home() {
           <div className="landing-hero-visual lp-enter-2">
             <div className="landing-preview-heading">
               <span>
-                <small>ORGINOGRAPHS / LIVE VIEW</small>
+                <small>ORGINOGRAPHS / CONCEPT VIEW</small>
                 <b>Company graph</b>
               </span>
-              <span className="landing-preview-status"><i /> Connected</span>
+              <span className="landing-preview-status"><i /> Illustration</span>
             </div>
             <GraphPreview />
             <div className="landing-preview-footer">
@@ -343,22 +409,21 @@ export default function Home() {
       >
         <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
           <div className="lp-reveal">
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#71816c]">
-              GET STARTED · 3 SIMPLE STEPS
+            <div className="how-eyebrow">
+              HOW IT WORKS
             </div>
-            <h2 id="how-heading" className="mt-5 max-w-md font-serif text-4xl leading-tight tracking-[-0.04em] text-[#1d2942] sm:text-5xl">
-              Your organization, connected.
+            <h2 id="how-heading" className="how-heading">
+              From scattered context to a clearer view.
             </h2>
-            <p className="mt-5 max-w-md text-sm leading-7 text-[#78816f]">
-              Start with your workspace, bring your company context together,
-              and discover how your people and projects connect.
+            <p className="how-copy">
+              Bring organizational information together, shape the context, and explore how the pieces connect.
             </p>
             <Link
               href="/login"
               id="how-create-workspace"
               className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#19191b] px-6 text-sm font-semibold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#174d35]"
             >
-              Create your workspace
+              Explore the workspace
               <ArrowRight size={16} />
             </Link>
             <p className="mt-3 text-xs text-[#85877c]">
@@ -373,21 +438,18 @@ export default function Home() {
             {[
               {
                 number: "01",
-                title: "Create your organization workspace",
-                description: "Sign up and give your organization a home. Set a workspace name and invite your team.",
-                tag: "YOUR FOUNDATION",
+                title: "Connect your sources",
+                description: "Bring organizational information in from supported data sources.",
               },
               {
                 number: "02",
-                title: "Build your organization graph",
-                description: "Add departments, employees, and projects. Connect relationships between people and the work they own.",
-                tag: "YOUR CONTEXT",
+                title: "Organize the context",
+                description: "Normalize and process source documents into structured organizational information.",
               },
               {
                 number: "03",
-                title: "Explore your connections",
-                description: "Navigate the graph to understand your organizational structure and discover who works on what — and with whom.",
-                tag: "YOUR INSIGHTS",
+                title: "Explore your company graph",
+                description: "Explore connected people, teams, projects, and other organizational entities.",
               },
             ].map((step, i) => (
               <article
@@ -396,13 +458,12 @@ export default function Home() {
                 style={{ "--step-i": i } as React.CSSProperties}
               >
                 <div className="flex gap-4 sm:gap-5">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf2e8] text-sm font-bold text-[#315a3e]">
+                  <div className="how-number">
                     {step.number}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[9px] font-bold tracking-[0.15em] text-[#89917f]">{step.tag}</div>
-                    <h3 className="mt-2 text-base font-bold tracking-tight text-[#25314b]">{step.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-[#78816f]">{step.description}</p>
+                    <h3 className="how-step-title">{step.title}</h3>
+                    <p className="how-step-description">{step.description}</p>
                   </div>
                   <ArrowUpRight
                     size={16}
@@ -418,118 +479,67 @@ export default function Home() {
 
       {/* ── Feature / Company graph section ───────────────────────────── */}
       <section
-        id="company-graph"
         className="lp-section mx-auto w-[calc(100%-40px)] max-w-[1424px] border-t border-slate-100 py-20 sm:w-[calc(100%-64px)] sm:py-28"
         aria-labelledby="features-heading"
       >
-        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7b8bb0]">
-          The context gap
+        <div className="usp-eyebrow">
+          WHY ORGINOGRAPHS
         </div>
 
-        <div className="mt-7 grid gap-7 lg:grid-cols-[1.2fr_0.8fr] lg:items-end lg:gap-16">
-          <h2 id="features-heading" className="font-serif text-4xl leading-[1.12] tracking-[-0.04em] text-[#1d2942] sm:text-5xl lg:text-6xl">
-            Great work shouldn't depend on knowing who to ask.
+        <div id="features" className="usp-intro">
+          <h2 id="features-heading" className="usp-heading">
+            Your organization is connected.<br />
+            <em>Your tools just don't show it.</em>
           </h2>
-          <div className="max-w-lg">
-            <p className="text-base leading-8 text-[#78869e]">
-              Company knowledge is everywhere. OrgInGraphs brings it together
-              so people can find the people, projects, and decisions behind the work.
+          <div className="usp-intro-copy">
+            <p>
+              Bring organizational context into one connected view, so relationships and dependencies are easier to understand.
             </p>
-            <a
-              href="#features"
-              className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#5267df] transition-colors hover:text-indigo-800"
-            >
-              Meet your company graph <ArrowRight size={15} />
-            </a>
           </div>
         </div>
 
-        {/* Feature cards */}
-        <div id="features" className="lp-features mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {/* Feature 1 */}
-          <article
-            className="lp-feature-card group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8"
-            style={{ "--fi": 0 } as React.CSSProperties}
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#edf1ff] text-[#596fe4]">
-              <Compass size={20} aria-hidden="true" />
+        <div className="usp-composition">
+          <div id="company-graph" className={`usp-graph-panel usp-graph-state-${activeUspChapter}`}>
+            <div className="usp-graph-panel-heading">
+              <span className="usp-index">ORGANIZATIONAL GRAPH</span>
+              <span className="usp-graph-status"><i /> Illustrative view</span>
             </div>
-            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">01 / EXPLORE</div>
-            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">See how the pieces connect.</h3>
-            <p className="mt-3 text-sm leading-7 text-[#7b899f]">
-              Move through a living map of people, teams, and projects. Follow
-              the relationships that explain how work actually happens.
-            </p>
-            <div className="relative mt-auto h-[95px] overflow-hidden pt-5">
-              <svg viewBox="0 0 260 90" className="h-full w-full" fill="none" aria-hidden="true">
-                <g stroke="#cbd6f3" strokeWidth="1.5">
-                  <path d="M35 58 L95 25 L147 56 L210 20 L235 65" />
-                  <path d="M95 25 L105 75 L147 56 L210 80" />
-                </g>
-                <g fill="#fff" stroke="#8496e8" strokeWidth="2">
-                  <circle cx="35"  cy="58" r="7" />
-                  <circle cx="95"  cy="25" r="8" />
-                  <circle cx="147" cy="56" r="10" />
-                  <circle cx="210" cy="20" r="7" />
-                  <circle cx="235" cy="65" r="6" />
-                  <circle cx="105" cy="75" r="6" />
-                  <circle cx="210" cy="80" r="6" />
-                </g>
-              </svg>
-            </div>
-          </article>
+            <svg className="usp-graph-art" viewBox="0 0 620 470" role="img" aria-label="Illustrative graph connecting people, teams, projects, and services">
+              <g className="usp-graph-lines">
+                <path d="M310 235 L156 125 L92 300 L238 390 L310 235 L472 142 L530 310 L382 394 L310 235" />
+                <path d="M156 125 L310 235 L472 142" />
+                <path d="M92 300 L310 235 L530 310" />
+                <path d="M238 390 L310 235 L382 394" />
+              </g>
+              <g className="usp-graph-node usp-graph-node-center"><circle cx="310" cy="235" r="42" /><text x="310" y="231">ORG</text><text x="310" y="247">CONTEXT</text></g>
+              <g className="usp-graph-node usp-graph-node-person"><circle cx="156" cy="125" r="25" /><text x="156" y="130">P</text><text x="156" y="88">PEOPLE</text></g>
+              <g className="usp-graph-node usp-graph-node-team"><circle cx="472" cy="142" r="25" /><text x="472" y="147">T</text><text x="472" y="105">TEAMS</text></g>
+              <g className="usp-graph-node usp-graph-node-project"><circle cx="92" cy="300" r="25" /><text x="92" y="305">P</text><text x="92" y="345">PROJECTS</text></g>
+              <g className="usp-graph-node usp-graph-node-service"><circle cx="530" cy="310" r="25" /><text x="530" y="315">S</text><text x="530" y="355">SERVICES</text></g>
+              <g className="usp-graph-node usp-graph-node-context"><circle cx="238" cy="390" r="21" /><text x="238" y="395">D</text><text x="238" y="430">DECISIONS</text></g>
+              <g className="usp-graph-node usp-graph-node-context"><circle cx="382" cy="394" r="21" /><text x="382" y="399">C</text><text x="382" y="434">CONTEXT</text></g>
+            </svg>
+            <p className="usp-graph-caption">A connected view of the entities and relationships behind the work.</p>
+          </div>
 
-          {/* Feature 2 */}
-          <article
-            className="lp-feature-card group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8"
-            style={{ "--fi": 1 } as React.CSSProperties}
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f0ebff] text-[#8a70d7]">
-              <Search size={20} aria-hidden="true" />
-            </div>
-            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">02 / DISCOVER</div>
-            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">Find the right person, faster.</h3>
-            <p className="mt-3 text-sm leading-7 text-[#7b899f]">
-              Search beyond titles. Find teammates by what they work on, what
-              they know, and where they are connected.
-            </p>
-            <div className="mt-auto space-y-3 pt-6">
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-[#fbfcff] px-3 py-2.5 text-xs text-slate-400">
-                <Search size={14} aria-hidden="true" /> idempotency
-              </div>
-              <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">AP</span>
-                <span>
-                  <b className="block text-xs text-slate-700">Ava Patel</b>
-                  <small className="mt-1 block text-[10px] text-slate-400">Payments · Software Engineering</small>
-                </span>
-              </div>
-            </div>
-          </article>
-
-          {/* Feature 3 */}
-          <article
-            className="lp-feature-card group relative flex min-h-[355px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(28,40,70,0.07)] sm:p-8"
-            style={{ "--fi": 2 } as React.CSSProperties}
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff4e5] text-[#c78e45]">
-              <Sparkles size={20} aria-hidden="true" />
-            </div>
-            <div className="mt-7 text-[10px] font-bold tracking-[0.16em] text-[#8997b1]">03 / UNDERSTAND</div>
-            <h3 className="mt-3 text-xl font-bold tracking-tight text-[#25314b]">Get the context behind the work.</h3>
-            <p className="mt-3 text-sm leading-7 text-[#7b899f]">
-              Open any profile or project to see the connections around it and
-              build a fuller picture, one step at a time.
-            </p>
-            <div className="mt-auto flex items-center gap-3 rounded-xl border border-slate-100 bg-[#fcfdff] p-3 shadow-sm">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">AP</span>
-              <span className="min-w-0 flex-1">
-                <b className="block truncate text-xs text-slate-700">Ledger reconciliation</b>
-                <small className="mt-1 block text-[10px] text-slate-400">Owned by Ava · 3 connections</small>
-              </span>
-              <ArrowUpRight size={15} className="text-slate-400" aria-hidden="true" />
-            </div>
-          </article>
+          <div className="usp-chapters" aria-label="OrgInGraphs capabilities">
+            <button type="button" className={`usp-chapter ${activeUspChapter === 1 ? "usp-chapter-active" : ""}`} aria-pressed={activeUspChapter === 1} onClick={() => setActiveUspChapter(1)}>
+              <span className="usp-chapter-number">01</span>
+              <div><h3>One connected company brain</h3><p>Connect people, teams, departments, projects, services, and decisions in a knowledge graph.</p></div>
+            </button>
+            <button type="button" className={`usp-chapter ${activeUspChapter === 2 ? "usp-chapter-active" : ""}`} aria-pressed={activeUspChapter === 2} onClick={() => setActiveUspChapter(2)}>
+              <span className="usp-chapter-number">02</span>
+              <div><h3>Context across disconnected tools</h3><p>Bring information from supported organizational sources into a more connected view.</p></div>
+            </button>
+            <button type="button" className={`usp-chapter ${activeUspChapter === 3 ? "usp-chapter-active" : ""}`} aria-pressed={activeUspChapter === 3} onClick={() => setActiveUspChapter(3)}>
+              <span className="usp-chapter-number">03</span>
+              <div><h3>Trace relationships, not just records</h3><p>Explore how organizational entities relate to one another instead of viewing isolated records.</p></div>
+            </button>
+            <button type="button" className={`usp-chapter ${activeUspChapter === 4 ? "usp-chapter-active" : ""}`} aria-pressed={activeUspChapter === 4} onClick={() => setActiveUspChapter(4)}>
+              <span className="usp-chapter-number">04</span>
+              <div><h3>Discover organizational knowledge</h3><p>Make existing connections and organizational context easier to explore.</p></div>
+            </button>
+          </div>
         </div>
 
         {/* Post-feature CTA */}
@@ -556,12 +566,13 @@ export default function Home() {
         aria-labelledby="closing-heading"
       >
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7b8bb0]">
-            START WITH YOUR ORGANIZATION
+          <div className="closing-eyebrow">
+            YOUR ORGANIZATION, IN CONTEXT
           </div>
-          <h2 id="closing-heading" className="mt-5 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#1d2942] sm:text-5xl">
-            Give your team the context<br />to do its best work.
+          <h2 id="closing-heading" className="closing-heading">
+            See the bigger picture.
           </h2>
+          <p className="closing-copy">Explore the people, projects, and relationships that make your organization work.</p>
         </div>
 
         <Link
@@ -569,7 +580,7 @@ export default function Home() {
           id="closing-cta"
           className="inline-flex min-h-[52px] items-center gap-3 rounded-xl bg-[#202a43] px-5 text-sm font-bold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#34466d]"
         >
-          Build your company graph <ArrowRight size={16} />
+          Explore the company graph <ArrowRight size={16} />
         </Link>
       </section>
 
@@ -608,7 +619,7 @@ export default function Home() {
           <div>
             <small>PRODUCT</small>
             <Link href="/">Home</Link>
-            <a href="#features">How it works</a>
+            <a href="#how-it-works">How it works</a>
             <Link href="/login">Workspace</Link>
           </div>
           <div>
@@ -618,10 +629,10 @@ export default function Home() {
             <Link href="/login">Projects</Link>
           </div>
           <div>
-            <small>CONNECTED</small>
-            <a href="#integrations">Confluence · Jira</a>
-            <a href="#integrations">Slack · GitHub</a>
-            <a href="#integrations">FalkorDB graph</a>
+            <small>SOURCES</small>
+            <a href="#integrations">Source systems</a>
+            <a href="#company-graph">Company graph</a>
+            <a href="#how-it-works">How it works</a>
           </div>
           <div>
             <small>ABOUT OIG</small>
