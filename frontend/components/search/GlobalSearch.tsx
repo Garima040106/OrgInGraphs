@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BriefcaseBusiness, Building2, Search, UserRound, X } from "lucide-react";
 import { api, entityName, friendlyApiError } from "@/lib/api";
-import type { EntityType, SearchResult } from "@/lib/types";
+import type { GraphEntityType, SearchResult } from "@/lib/types";
 
-const iconFor = (type: EntityType) => {
+const iconFor = (type: GraphEntityType) => {
   if (type === "Employee") return UserRound;
   if (type === "Department" || type === "Team") return Building2;
   return BriefcaseBusiness;

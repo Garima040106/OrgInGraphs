@@ -30,8 +30,9 @@ import {
 } from "lucide-react";
 import { api, friendlyApiError } from "@/lib/api";
 import { buildInitialGraph } from "@/lib/graph/layout";
-import { normalizeNeighborhood, toGraphNode, type GraphNodeData } from "@/lib/graph/normalize";
-import type { EntityType, GraphResponse, Neighborhood } from "@/lib/types";
+import { graphRootId, normalizeNeighborhood, organizationGraph, toGraphNode, type GraphNodeData } from "@/lib/graph/normalize";
+import { useExpandableGraph } from "@/lib/graph/useExpandableGraph";
+import type { GraphEntityType, GraphResponse, Neighborhood } from "@/lib/types";
 
 type GraphSelection = { entity: GraphNodeData["entity"]; entityType: GraphNodeData["entityType"] };
 
@@ -55,16 +56,16 @@ function EntityCardNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
         <button
           className="node-expand-button"
           type="button"
-          title={data.isExpanded ? "Already expanded" : `Expand connections for ${data.label}`}
-          aria-label={data.isExpanded ? `${data.label} is already expanded` : `Expand connections for ${data.label}`}
-          disabled={data.isExpanded || data.isExpanding}
+          title={data.isExpanded ? `Collapse connections for ${data.label}` : `Expand connections for ${data.label}`}
+          aria-label={data.isExpanded ? `Collapse connections for ${data.label}` : `Expand connections for ${data.label}`}
+          disabled={data.isExpanding}
           onClick={(event) => {
             event.stopPropagation();
             data.onExpand?.();
           }}
         >
           {data.isExpanding ? <span className="spinner" /> : <ChevronRight size={12} />}
-          {data.isExpanding ? "Loading" : data.isExpanded ? "Expanded" : "Expand"}
+          {data.isExpanding ? "Loading" : data.isExpanded ? "Collapse" : "Expand"}
         </button>
       </div>
       <Handle id="target-right" type="target" position={Position.Right} />
@@ -94,10 +95,12 @@ function entitySource(entity: GraphNodeData["entity"]): string {
   return "FalkorDB";
 }
 
-function GraphCanvas({
+export function GraphRenderer({
   initialNodes,
   initialEdges,
+  fullGraph,
   totalEmployees,
+  graphMode,
   onSelection,
   focusId,
   focusType,
@@ -105,25 +108,24 @@ function GraphCanvas({
 }: {
   initialNodes: Node<GraphNodeData>[];
   initialEdges: Edge[];
+  fullGraph: GraphResponse;
   totalEmployees: number;
+  graphMode: "team" | "product";
   onSelection?: (selection: GraphSelection | null) => void;
   focusId?: string;
   focusType?: string;
   focusRequest: number;
 }) {
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
+  const { nodes, edges, expandedIds, expandingId, toggle: toggleExpansion, replace: replaceGraph, reset: resetExpandableGraph } = useExpandableGraph(fullGraph, initialNodes, initialEdges);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [expandingId, setExpandingId] = useState<string | null>(null);
   const [panelError, setPanelError] = useState("");
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 
   useEffect(() => {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
+    setSelectedId(null);
+    setPanelError("");
   }, [initialEdges, initialNodes]);
 
   const selectedNode = nodes.find((node) => node.id === selectedId) ?? null;
@@ -175,11 +177,12 @@ function GraphCanvas({
       void api.neighborhood(focusType, focusId).then((data) => {
         const root = data.nodes.find((node) => node.id === focusId);
         if (!root) return;
-        const rootEntity = { ...root, entityType: root.entityType ?? focusType as EntityType };
+        const rootEntity = { ...root, entityType: root.entityType ?? focusType as GraphEntityType };
         const rootNode = toGraphNode(rootEntity, { x: 900, y: 360 });
         const normalized = normalizeNeighborhood(data, rootEntity, [...nodes, rootNode], rootNode.position);
-        setNodes((previous) => [...previous, rootNode, ...normalized.nodes]);
-        setEdges((previous) => [...previous, ...normalized.edges]);
+        // Focus navigation is intentionally additive; ordinary graph expansion remains hook-owned.
+        // This preserves existing search/deep-link behavior without changing the graph data source.
+        replaceGraph([rootNode, ...normalized.nodes], normalized.edges);
         setSelectedId(root.id);
         window.setTimeout(() => void fitView({ nodes: [rootNode], duration: 500, padding: .45 }), 100);
       }).catch((error: unknown) => setPanelError(friendlyApiError(error)));
@@ -193,31 +196,21 @@ function GraphCanvas({
   }, []);
 
   async function expandNode(nodeToExpand: Node<GraphNodeData>) {
-    if (expandedIds.has(nodeToExpand.id) || expandingId) return;
+    if (expandingId) return;
     const type = nodeToExpand.data.entityType;
     if (type === "Unknown") {
       setPanelError("The API did not return an entity type for this record, so its neighborhood cannot be loaded safely.");
       return;
     }
-    setExpandingId(nodeToExpand.id);
     setPanelError("");
     try {
-      const neighborhood: Neighborhood = await api.neighborhood(type, nodeToExpand.id);
-      const normalized = normalizeNeighborhood(neighborhood, nodeToExpand.data.entity, nodes, nodeToExpand.position);
-      setNodes((previous) => [...previous, ...normalized.nodes]);
-      setEdges((previous) => {
-        const ids = new Set(previous.map((edge) => edge.id));
-        return [...previous, ...normalized.edges.filter((edge) => !ids.has(edge.id))];
-      });
-      setExpandedIds((previous) => new Set(previous).add(nodeToExpand.id));
-      if (!normalized.nodes.length && !normalized.edges.length) setPanelError("There are no new connections to show for this record.");
-      if (normalized.nodes.length) {
-        window.setTimeout(() => void fitView({ nodes: [nodeToExpand, ...normalized.nodes], duration: 450, padding: .24 }), 50);
+      const toggled = toggleExpansion(nodeToExpand.id);
+      if (toggled) {
+        window.setTimeout(() => void fitView({ duration: 450, padding: .24 }), 50);
       }
     } catch (error) {
       setPanelError(friendlyApiError(error));
     } finally {
-      setExpandingId(null);
     }
   }
 
@@ -232,10 +225,8 @@ function GraphCanvas({
   }), [edges, selectedId]);
 
   function resetGraph() {
-    setNodes(initialNodes);
-    setEdges(initialEdges);
+    resetExpandableGraph();
     setSelectedId(null);
-    setExpandedIds(new Set());
     setPanelError("");
     window.setTimeout(() => void fitView({ duration: 500, padding: .16 }), 40);
   }
@@ -254,11 +245,9 @@ function GraphCanvas({
   return (
     <>
       <div className="graph-heading">
-        <div className="graph-heading-left"><span className="graph-title-icon"><Network size={14} /></span><span><strong>Organization graph</strong><small>{nodes.length} records · {totalEmployees} people</small></span></div>
+        <div className="graph-heading-left"><span className="graph-title-icon"><Network size={14} /></span><span><strong>{graphMode === "product" ? "Product progress graph" : "Organization graph"}</strong><small>{nodes.length} records{graphMode === "team" ? ` · ${totalEmployees} people` : ""}</small></span></div>
         <div className="graph-legend">
-          <span><i className="legend-mark" style={{ background: "#7188e5" }} /> People</span>
-          <span><i className="legend-mark" style={{ background: "#9a84dd" }} /> Departments</span>
-          <span><i className="legend-mark" style={{ background: "#d8a76c" }} /> Projects</span>
+          {graphMode === "team" ? <><span><i className="legend-mark" style={{ background: "#7188e5" }} /> People</span><span><i className="legend-mark" style={{ background: "#9a84dd" }} /> Departments</span><span><i className="legend-mark" style={{ background: "#d8a76c" }} /> Projects</span></> : <><span><i className="legend-mark" style={{ background: "#6d80dc" }} /> Products</span><span><i className="legend-mark" style={{ background: "#d89b6c" }} /> Work items</span><span><i className="legend-mark" style={{ background: "#8e9bb7" }} /> People / teams</span></>}
           <button type="button" className="icon-button" title="Reset graph" aria-label="Reset graph" onClick={resetGraph}><RotateCcw size={13} /></button>
         </div>
       </div>
@@ -296,7 +285,7 @@ function GraphCanvas({
             <Controls showInteractive={false} position="bottom-right" />
             <MiniMap position="top-right" pannable zoomable nodeColor={(node) => {
               const type = (node.data as GraphNodeData).entityType;
-              return type === "Employee" ? "#9ca9e8" : type === "Department" ? "#b8a8df" : type === "Project" ? "#dfbd8c" : "#b9c3d4";
+              return type === "Employee" ? "#9ca9e8" : type === "Department" ? "#b8a8df" : type === "Project" ? "#dfbd8c" : graphMode === "product" && type === "Product" ? "#6d80dc" : graphMode === "product" && ["Feature", "Ticket", "Bug", "PullRequest", "Release"].includes(type) ? "#d89b6c" : "#b9c3d4";
             }} />
             <div className="graph-fit-actions">
               <button className="small-button" type="button" onClick={() => void fitView({ duration: 400, padding: .16 })}><Expand size={12} /> Fit</button>
@@ -317,9 +306,9 @@ function GraphCanvas({
             </div>
             <div className="inspector-source"><span>Record source</span><b>{entitySource(selectedNode.data.entity)}</b></div>
             <div className="inspector-actions">
-              <button className="small-button" type="button" onClick={() => void expandNode(selectedNode)} disabled={!!expandingId || expandedIds.has(selectedNode.id)}>
+              <button className="small-button" type="button" onClick={() => void expandNode(selectedNode)} disabled={!!expandingId}>
                 {expandingId === selectedNode.id ? <span className="spinner" /> : <Network size={12} />}
-                {expandingId === selectedNode.id ? "Loading" : expandedIds.has(selectedNode.id) ? "Expanded" : "Expand"}
+                {expandingId === selectedNode.id ? "Loading" : expandedIds.has(selectedNode.id) ? "Collapse" : "Expand"}
               </button>
               {path && <Link href={path} className="small-button">Open profile <ArrowUpRight size={11} /></Link>}
             </div>
@@ -338,22 +327,26 @@ function GraphCanvas({
 
 export function OrganizationGraph(props: {
   graph: GraphResponse;
+  graphMode?: "team" | "product";
   focusId?: string;
   focusType?: string;
   focusRequest: number;
   onSelection?: (selection: GraphSelection | null) => void;
 }) {
+  const sourceGraph = useMemo(() => props.graphMode === "product" ? props.graph : organizationGraph(props.graph), [props.graph, props.graphMode]);
   const initial = useMemo(
-    () => buildInitialGraph(props.graph),
-    [props.graph],
+    () => buildInitialGraph(sourceGraph),
+    [sourceGraph],
   );
   return (
     <div className="graph-workspace">
       <ReactFlowProvider>
-        <GraphCanvas
+        <GraphRenderer
           initialNodes={initial.nodes}
           initialEdges={initial.edges}
+          fullGraph={sourceGraph}
           totalEmployees={initial.totalEmployees}
+          graphMode={props.graphMode ?? "team"}
           focusId={props.focusId}
           focusType={props.focusType}
           focusRequest={props.focusRequest}

@@ -70,6 +70,7 @@ const query = (params: Record<string, string | undefined>) => {
 export const api = {
   health: () => request<Health>("/health"),
   graph: () => request<GraphResponse>("/api/graph"),
+  productProgressGraph: () => request<GraphResponse>("/api/product-progress/graph"),
   company: () => request<Entity>("/api/company"),
   employees: (filters: { departmentId?: string; teamId?: string; employmentStatus?: string } = {}) =>
     request<Employee[]>(`/api/employees${query(filters)}`),

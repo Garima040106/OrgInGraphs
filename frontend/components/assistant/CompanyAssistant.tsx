@@ -4,7 +4,7 @@ import { useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Bot, Send, Sparkles, UserRound, X } from "lucide-react";
 import { api, entityName } from "@/lib/api";
-import type { Entity, EntityType, SearchResult } from "@/lib/types";
+import type { Entity, GraphEntityType, SearchResult } from "@/lib/types";
 
 type Message = { role: "assistant" | "user"; content: string; sources?: SearchResult[] };
 
@@ -36,7 +36,7 @@ export function CompanyAssistant({
 }: {
   open: boolean;
   onClose: () => void;
-  selected?: { entity: Entity; entityType: EntityType | "Unknown" } | null;
+  selected?: { entity: Entity; entityType: GraphEntityType | "Unknown" } | null;
 }) {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "I can look up verified company records using search and detail data. I don't generate answers beyond what the workspace data supports." },

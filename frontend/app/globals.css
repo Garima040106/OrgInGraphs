@@ -76,6 +76,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .status-dot { height: 6px; width: 6px; border-radius: 50%; background: #43b487; }
 .visual-chip { margin-left: auto; padding: 4px 7px; border: 1px solid #e7eaf0; border-radius: 5px; text-transform: uppercase; letter-spacing: .08em; font-size: 8px; color: #949bad; }
 .graph-preview { height: 376px; position: relative; overflow: hidden; background-image: radial-gradient(#e3e7ef 0.8px, transparent .8px); background-size: 18px 18px; }
+.graph-mode-switch { display: inline-flex; align-items: center; gap: 2px; padding: 3px; margin: 0 0 10px; border: 1px solid #e2e5ec; border-radius: 9px; background: #f7f8fb; }
+.graph-mode-option { border: 0; border-radius: 6px; padding: 6px 10px; color: #7a8394; background: transparent; font: inherit; font-size: 11px; font-weight: 650; cursor: pointer; }
+.graph-mode-option:hover { color: #4f5d79; }
+.graph-mode-option.active { color: #33416a; background: #fff; box-shadow: 0 1px 3px rgba(36, 51, 86, .12); }
 .graph-lines { inset: 0; position: absolute; width: 100%; height: 100%; }
 .graph-lines path { fill: none; stroke: #cbd3e6; stroke-width: 1.15; stroke-dasharray: 4 5; }
 .preview-node { position: absolute; height: 48px; display: flex; align-items: center; gap: 9px; min-width: 136px; border: 1px solid #e5e9f0; border-radius: 7px; padding: 7px 9px; background: rgba(255,255,255,.96); box-shadow: 0 5px 15px rgba(36,49,74,.07); }

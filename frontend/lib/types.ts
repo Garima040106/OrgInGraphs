@@ -14,6 +14,9 @@ export type EntityType =
   | "Channel"
   | "Message";
 
+export type ProductEntityType = "Product" | "ProductModule" | "Feature" | "FeatureRequest" | "Ticket" | "Bug" | "Release" | "Commit" | "Comment" | "Activity" | "Review";
+export type GraphEntityType = EntityType | ProductEntityType;
+
 export type GraphApiNode = {
   id: string;
   labels: string[];
@@ -37,7 +40,7 @@ export type Entity = Record<string, unknown> & {
   id: string;
   name?: string;
   title?: string;
-  entityType?: EntityType;
+  entityType?: GraphEntityType;
 };
 
 export type Employee = Entity & {
@@ -87,7 +90,7 @@ export type ProjectDetail = Project & {
 };
 
 export type Neighborhood = {
-  nodes: Array<Entity & { entityType?: EntityType }>;
+  nodes: Array<Entity & { entityType?: GraphEntityType }>;
   edges: Array<{
     from: string;
     to: string;
@@ -97,7 +100,7 @@ export type Neighborhood = {
 };
 
 export type SearchResult = {
-  entityType: EntityType;
+  entityType: GraphEntityType;
   n: Entity;
 };
 

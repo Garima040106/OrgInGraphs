@@ -21,7 +21,7 @@ import { Brand } from "@/components/Brand";
 import { CompanyAssistant } from "@/components/assistant/CompanyAssistant";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { api } from "@/lib/api";
-import type { Entity, EntityType, Health } from "@/lib/types";
+import type { Entity, GraphEntityType, Health } from "@/lib/types";
 
 const navigation = [
   { href: "/dashboard", label: "Overview", icon: Compass },
@@ -42,7 +42,7 @@ export function AppShell({
   const [workspace, setWorkspace] = useState("Demo workspace");
   const [company, setCompany] = useState("Company workspace");
   const [health, setHealth] = useState<Health | null>(null);
-  const [selected, setSelected] = useState<{ entity: Entity; entityType: EntityType | "Unknown" } | null>(null);
+  const [selected, setSelected] = useState<{ entity: Entity; entityType: GraphEntityType | "Unknown" } | null>(null);
 
   useEffect(() => {
     const email = window.localStorage.getItem("oig-demo-workspace");
@@ -117,10 +117,10 @@ export function AppShell({
   );
 }
 
-function SelectionSync({ onSelection }: { onSelection: (value: { entity: Entity; entityType: EntityType | "Unknown" } | null) => void }) {
+function SelectionSync({ onSelection }: { onSelection: (value: { entity: Entity; entityType: GraphEntityType | "Unknown" } | null) => void }) {
   useEffect(() => {
     const listener = (event: Event) => {
-      const detail = (event as CustomEvent<{ entity: Entity; entityType: EntityType | "Unknown" } | null>).detail;
+      const detail = (event as CustomEvent<{ entity: Entity; entityType: GraphEntityType | "Unknown" } | null>).detail;
       onSelection(detail);
     };
     window.addEventListener("oig-graph-selection", listener);

@@ -8,23 +8,25 @@ import { api, friendlyApiError } from "@/lib/api";
 import type { GraphResponse } from "@/lib/types";
 
 type LoadState<T> = { data: T; error: string };
+type GraphMode = "team" | "product";
 
 export default function DashboardPage() {
   const [graph, setGraph] = useState<LoadState<GraphResponse>>({ data: { nodes: [], edges: [] }, error: "" });
   const [loading, setLoading] = useState(true);
+  const [graphMode, setGraphMode] = useState<GraphMode>("team");
   const [focus, setFocus] = useState<{ id?: string; type?: string; request: number }>({ request: 0 });
 
-  async function load() {
+  async function load(mode: GraphMode = graphMode) {
     setLoading(true);
     try {
-      setGraph({ data: await api.graph(), error: "" });
+      setGraph({ data: mode === "team" ? await api.graph() : await api.productProgressGraph(), error: "" });
     } catch (error) {
       setGraph({ data: { nodes: [], edges: [] }, error: friendlyApiError(error) });
     }
     setLoading(false);
   }
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(graphMode); }, [graphMode]);
   useEffect(() => {
     const readQueryFocus = () => {
       const params = new URLSearchParams(window.location.search);
@@ -54,7 +56,7 @@ export default function DashboardPage() {
         <div className="heading-actions"><button className="small-button primary-action" type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={12} /> Refresh data</button><Link className="small-button" href="/people"><UsersRound size={12} /> Browse people</Link></div>
       </div>
       {failed.map((message, index) => <div className="error-banner" key={`${message}:${index}`}><CircleAlert size={14} /><span>{message} Confirm the backend is running and FalkorDB is seeded.</span><button className="small-button" type="button" onClick={() => void load()} disabled={loading}><RefreshCw size={12} /> Retry</button></div>)}
-      <section className="dashboard-stats" aria-label="Organization totals">
+      <section className="dashboard-stats" aria-label={graphMode === "team" ? "Organization totals" : "Product Progress totals"}>
         <div className="stat-item metric-people"><span className="stat-icon"><UsersRound size={14} /></span><span><small className="metric-label">People</small><b>{loading ? "—" : employees.length}</b><small>{loading ? "Loading" : `${activeEmployees} active`}</small></span></div>
         <span className="stats-divider" />
         <div className="stat-item metric-departments"><span className="stat-icon"><Building2 size={14} /></span><span><small className="metric-label">Structure</small><b>{loading ? "—" : departments.length}</b><small>Departments</small></span></div>
@@ -62,11 +64,16 @@ export default function DashboardPage() {
         <div className="stat-item metric-projects"><span className="stat-icon"><BriefcaseBusiness size={14} /></span><span><small className="metric-label">Delivery</small><b>{loading ? "—" : projects.length}</b><small>Projects</small></span></div>
         <span className="stats-caption"><Network size={12} style={{ verticalAlign: "middle", marginRight: 5 }} />Graph relationships are loaded from company records</span>
       </section>
+      <div className="graph-mode-switch" role="group" aria-label="Graph progress view">
+        <button type="button" className={`graph-mode-option ${graphMode === "team" ? "active" : ""}`} aria-pressed={graphMode === "team"} onClick={() => setGraphMode("team")}>Team Progress</button>
+        <button type="button" className={`graph-mode-option ${graphMode === "product" ? "active" : ""}`} aria-pressed={graphMode === "product"} onClick={() => setGraphMode("product")}>Product Progress</button>
+      </div>
       {loading ? (
         <div className="graph-workspace" aria-label="Loading organization graph"><div className="graph-heading"><div className="loading-skeleton" style={{ width: 180, height: 12 }} /></div><div style={{ padding: 26, display: "grid", gridTemplateColumns: "repeat(3,minmax(100px,1fr))", gap: 14, marginTop: 52 }}>{Array.from({ length: 9 }, (_, index) => <div className="loading-skeleton" style={{ height: 67 }} key={index} />)}</div></div>
       ) : (
         <OrganizationGraph
           graph={graph.data}
+          graphMode={graphMode}
           focusId={focus.id}
           focusType={focus.type}
           focusRequest={focus.request}
