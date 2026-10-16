@@ -5,7 +5,7 @@ import type { GraphNode, SeedData } from '../types/seed.js';
 export async function connectGraph(): Promise<{ db: FalkorDB; graph: Graph }> {
   if (!env.FALKORDB_PASSWORD || env.FALKORDB_HOST === 'your-falkordb-cloud-host') throw new Error('FalkorDB credentials are not configured');
   const db = await FalkorDB.connect({ socket:{host:env.FALKORDB_HOST,port:env.FALKORDB_PORT,tls:env.FALKORDB_TLS === 'true',connectTimeout:10000}, ...(env.FALKORDB_USERNAME ? {username:env.FALKORDB_USERNAME} : {}), password:env.FALKORDB_PASSWORD });
-  return { db, graph: db.selectGraph(env.FALKORDB_DATABASE) };
+  return { db, graph: db.selectGraph(env.FALKORDB_GRAPH ?? env.FALKORDB_DATABASE) };
 }
 export async function query(graph: Graph, cypher: string, params: Record<string, unknown> = {}) { return graph.query(cypher,{params: params as Record<string, string | number | boolean | null>}); }
 export async function seedGraph(graph: Graph, data: SeedData) {

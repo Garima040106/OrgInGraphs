@@ -1,7 +1,7 @@
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
 import { z } from 'zod';
 import { runMockFetcher } from '../agents/mock-fetcher/agent.js';
-import { mockSources, type MockFetcherRequest, type NormalizedDocument } from '../agents/mock-fetcher/types.js';
+import { mockSources, normalizedDocumentSchema, type MockFetcherRequest, type NormalizedDocument } from '../agents/mock-fetcher/types.js';
 import { processDocuments } from '../agents/document-processor/agent.js';
 import type { DocumentOutcome, DocumentProcessorOptions } from '../agents/document-processor/types.js';
 import { env } from '../config/env.js';
@@ -44,7 +44,10 @@ export function createIngestionWorkflow(dependencies: IngestionWorkflowDependenc
       if (state.status === 'failed') return {};
       try {
         const result = await fetcher(state.request);
-        return result.documents.length ? { documents: result.documents, status: 'fetched' as const, errors: [] } : { documents: [], status: 'empty' as const, errors: [] };
+        if (result.source !== state.request.source) return { status: 'failed' as const, errors: ['Source connector returned records for a different source.'] };
+        const validated = z.array(normalizedDocumentSchema).safeParse(result.documents);
+        if (!validated.success || validated.data.some((document) => document.sourceSystem !== result.source)) return { status: 'failed' as const, errors: ['Fetched records failed the normalized ingestion schema.'] };
+        return validated.data.length ? { documents: validated.data, status: 'fetched' as const, errors: [] } : { documents: [], status: 'empty' as const, errors: [] };
       } catch (error) { return { status: 'failed' as const, errors: [safeError(error, 'Mock API fetch failed.')] }; }
     })
     .addNode('process', async (state) => {

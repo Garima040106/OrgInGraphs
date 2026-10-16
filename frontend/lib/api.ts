@@ -10,6 +10,10 @@ import type {
   ProjectDetail,
   GraphResponse,
   SearchResult,
+  IngestionSource,
+  IngestionResponse,
+  AssistantQuery,
+  AssistantResponse,
 } from "@/lib/types";
 
 const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
@@ -31,20 +35,24 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ? AbortSignal.any([controller.signal, options.signal])
     : controller.signal;
   try {
+    const identity = typeof window !== "undefined" ? window.localStorage.getItem("oig-demo-workspace") ?? "demo@hirenova.example" : "demo@hirenova.example";
     const response = await fetch(`${baseUrl}${path}`, {
       ...options,
       signal,
-      headers: { Accept: "application/json", ...options.headers },
+      headers: { Accept: "application/json", "x-orgmind-user-id": identity, ...options.headers },
       cache: "no-store",
     });
     const payload: unknown = await response.json().catch(() => null);
     if (!response.ok) {
+      const workflowErrors = typeof payload === "object" && payload !== null && "errors" in payload && Array.isArray(payload.errors)
+        ? payload.errors.filter((item): item is string => typeof item === "string").join(" ")
+        : "";
       const message =
         typeof payload === "object" && payload !== null && "error" in payload && typeof payload.error === "string"
           ? payload.error
-          : response.status === 503
+          : workflowErrors || (response.status === 503
             ? "The company data service is temporarily unavailable."
-            : `Request failed (${response.status}).`;
+            : `Request failed (${response.status}).`);
       throw new ApiError(message, response.status);
     }
     if (payload === null) throw new ApiError("The server returned an empty response.", response.status);
@@ -83,6 +91,16 @@ export const api = {
     request<Neighborhood>(`/api/graph/neighborhood/${encodeURIComponent(type)}/${encodeURIComponent(id)}`),
   search: (term: string, signal?: AbortSignal) =>
     request<SearchResult[]>(`/api/search${query({ q: term })}`, { signal }),
+  processIngestion: (source: IngestionSource, limit = 20) => request<IngestionResponse>("/api/ingestion/process", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source, limit }),
+  }),
+  assistantQuery: (input: AssistantQuery) => request<AssistantResponse>("/api/assistant/query", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
+  }),
+  assistantConversations: () => request<{ conversations: import("@/lib/types").AssistantConversation[] }>("/api/assistant/conversations"),
+  assistantConversation: (id: string) => request<{ conversationId: string; turns: import("@/lib/types").AssistantTurn[] }>(`/api/assistant/conversations/${encodeURIComponent(id)}`),
 };
 
 export function entityName(entity: Entity): string {

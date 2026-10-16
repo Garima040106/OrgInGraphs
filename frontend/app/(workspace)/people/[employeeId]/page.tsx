@@ -28,7 +28,7 @@ export default function EmployeeProfilePage() {
   const active = String(employee.employmentStatus ?? "").toLowerCase() === "active";
   return (
     <>
-      <div className="page-heading"><div><Link className="detail-link" href="/people"><ArrowLeft size={12} /> People</Link><h1 style={{ marginTop: 9 }}>{employee.name ?? employee.id}</h1><p>Employee profile from company records.</p></div><Link className="small-button" href={`/dashboard?focus=${encodeURIComponent(employee.id)}&type=Employee`}><Network size={12} /> Explore in graph</Link></div>
+      <div className="page-heading"><div><Link className="detail-link" href="/people"><ArrowLeft size={12} /> People</Link><h1 style={{ marginTop: 9 }}>{employee.name ?? employee.id}</h1><p>Employee profile from company records.</p></div><Link className="small-button" href={`/org-graph?focus=${encodeURIComponent(employee.id)}&type=Employee`}><Network size={12} /> Explore in graph</Link></div>
       <div className="profile-grid">
         <section className="profile-main-card">
           <div className="profile-person"><span className="user-avatar">{String(employee.name ?? employee.id).split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase()}</span><div><h2>{employee.name ?? employee.id}</h2><p>{employee.jobTitle ?? "Employee"} · {employee.employeeId ?? employee.id}</p></div><span className={`status-badge ${active ? "" : "inactive"}`} style={{ marginLeft: "auto" }}><i className="status-dot" />{String(employee.employmentStatus ?? "unknown")}</span></div>
@@ -51,7 +51,7 @@ export default function EmployeeProfilePage() {
           <div className="detail-section-title"><Building2 size={10} style={{ verticalAlign: "middle", marginRight: 5 }} />Organization</div>
           {detail.department && <Link className="related-row" href={`/departments/${encodeURIComponent(detail.department.id)}`}><Building2 size={14} color="#8976c5" /><span>{entityName(detail.department)}<small>Department</small></span></Link>}
           {detail.team && <div className="related-row"><UsersRound size={14} color="#7483cc" /><span>{entityName(detail.team)}<small>Team</small></span></div>}
-          <Link className="small-button" style={{ width: "100%", marginTop: 10 }} href={`/dashboard?focus=${encodeURIComponent(employee.id)}&type=Employee`}><BriefcaseBusiness size={12} /> Open company graph</Link>
+          <Link className="small-button" style={{ width: "100%", marginTop: 10 }} href={`/org-graph?focus=${encodeURIComponent(employee.id)}&type=Employee`}><BriefcaseBusiness size={12} /> Open company graph</Link>
         </aside>
       </div>
     </>

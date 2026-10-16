@@ -10,9 +10,18 @@ import {
   ChevronDown,
   CircleHelp,
   Command,
-  Compass,
+  Home,
+  SearchCheck,
+  FileClock,
+  ChartNoAxesCombined,
   Network,
   Search,
+  FileText,
+  CircleAlert,
+  MessagesSquare,
+  Plug,
+  RefreshCw,
+  Lightbulb,
   Settings2,
   Sparkles,
   UsersRound,
@@ -24,11 +33,19 @@ import { api } from "@/lib/api";
 import type { Entity, GraphEntityType, Health } from "@/lib/types";
 
 const navigation = [
-  { href: "/dashboard", label: "Overview", icon: Compass },
-  { href: "/dashboard", label: "Organization graph", icon: Network },
-  { href: "/people", label: "People", icon: UsersRound },
-  { href: "/departments", label: "Departments", icon: Building2 },
-  { href: "/projects", label: "Projects", icon: BriefcaseBusiness },
+  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "assistant", label: "Investigate", icon: SearchCheck, action: true },
+  { href: "/org-graph", label: "Knowledge Graph", icon: Network },
+  { href: "/dashboard#decisions", label: "Decisions", icon: FileClock },
+  { href: "assistant", label: "Impact Analysis", icon: ChartNoAxesCombined, action: true },
+  { href: "/people", label: "People & Expertise", icon: UsersRound },
+  { href: "/projects", label: "Projects & Services", icon: BriefcaseBusiness },
+  { href: "/dashboard#documents", label: "Documents", icon: FileText },
+  { href: "/dashboard#tickets", label: "Tickets", icon: CircleAlert },
+  { href: "/dashboard#conversations", label: "Conversations", icon: MessagesSquare },
+  { href: "/settings", label: "Integrations", icon: Plug },
+  { href: "/settings", label: "Sync & Data", icon: RefreshCw },
+  { href: "/dashboard#insights", label: "Proactive Insights", icon: Lightbulb },
 ];
 
 export function AppShell({
@@ -70,12 +87,14 @@ export function AppShell({
       pathname.startsWith("/departments") ? "Departments" :
         pathname.startsWith("/projects") ? "Projects" :
           pathname === "/settings" ? "Workspace settings" :
-          pathname === "/dashboard" ? "Organization graph" : "Workspace";
+          pathname === "/dashboard" ? "Overview" :
+          pathname === "/org-graph" ? "Organization graph" : "Workspace";
   const connection = health?.status === "ok";
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${assistantOpen ? "assistant-open" : ""}`}>
       <aside className="sidebar">
+        <Brand href="/dashboard" />
         <div className="sidebar-kicker">{company}</div>
         <button className="workspace-switch" type="button" aria-label={`${company} workspace`}>
           <span className="workspace-mark">{company.slice(0, 1).toUpperCase()}</span>
@@ -83,16 +102,18 @@ export function AppShell({
         </button>
         <div className="nav-section-label">WORKSPACE</div>
         <nav className="side-nav" aria-label="Workspace navigation">
-          {navigation.map(({ href, label, icon: Icon }, index) => {
-            const active = index === 0 || index === 1
+          {navigation.map(({ href, label, icon: Icon }) => {
+            const isAction = href === "assistant";
+            const target = href.split("#")[0];
+            const active = !isAction && (href === "/dashboard"
               ? pathname === "/dashboard"
-              : pathname.startsWith(href);
-            return <Link href={href} className={active ? "active" : ""} key={`${label}:${index}`} aria-current={active ? "page" : undefined}><Icon size={15} /><span>{label}</span></Link>;
+              : !href.includes("#") && (pathname === target || pathname.startsWith(`${target}/`)));
+            if (isAction) return <button type="button" className="side-nav-action" key={label} onClick={() => setAssistantOpen(true)}><Icon size={15} /><span>{label}</span></button>;
+            return <Link href={href} className={active ? "active" : ""} key={label} aria-current={active ? "page" : undefined}><Icon size={15} /><span>{label}</span></Link>;
           })}
         </nav>
-        <div className="nav-section-label">PREFERENCES</div>
-        <nav className="side-nav"><Link href="/settings" className={pathname === "/settings" ? "active" : ""} aria-current={pathname === "/settings" ? "page" : undefined}><Settings2 size={15} /><span>Workspace settings</span></Link></nav>
         <div className="sidebar-bottom">
+          <nav className="side-nav sidebar-settings-nav" aria-label="Preferences"><Link href="/settings" className={pathname === "/settings" ? "active" : ""} aria-current={pathname === "/settings" ? "page" : undefined}><Settings2 size={15} /><span>Settings</span></Link></nav>
           <div className="sidebar-help"><CircleHelp size={14} /><span>Help center</span></div>
           <div className="sidebar-user"><span className="user-avatar">{workspace.slice(0, 2).toUpperCase()}</span><div><b title={workspace}>{workspace}</b><small>Demo access</small></div><ArrowDownUp size={13} color="#98a0af" /></div>
         </div>
@@ -103,13 +124,13 @@ export function AppShell({
           <div className="topbar-actions">
             <div className={`connection-pill ${connection ? "" : "offline"}`} title={connection ? "Backend connected" : "Backend unavailable"}><span className="status-dot" /><span>{connection ? "Connected" : health ? "Offline" : "Checking"}</span></div>
             <button className="search-trigger" type="button" onClick={() => setSearchOpen(true)}><Search size={13} /><span>Search your organization</span><kbd><Command size={9} /> K</kbd></button>
-            <button className="topbar-user" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open OIG Intelligence"><Sparkles size={13} /></button>
+            <button className="topbar-user" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open Ask OrgMind"><Sparkles size={13} /></button>
           </div>
         </header>
         <main className="workspace-content">{children}</main>
       </div>
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <button className="assistant-launch" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open OIG Intelligence"><Sparkles size={14} /> OIG Intelligence</button>
+      <button className="assistant-launch" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open Ask OrgMind"><Sparkles size={14} /> Ask OrgMind</button>
       <CompanyAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} selected={selected} />
       <SelectionSync onSelection={(value) => setSelected(value)} />
     </div>

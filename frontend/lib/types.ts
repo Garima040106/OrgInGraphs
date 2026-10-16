@@ -108,3 +108,39 @@ export type Health = {
   status: "ok" | "degraded";
   database: "connected" | "unavailable";
 };
+
+export type IngestionSource = "confluence" | "jira" | "github" | "slack";
+export type IngestionOutcome = {
+  sourceSystem: string;
+  sourceRecordId: string;
+  status: "processed" | "skipped" | "failed" | "unresolved";
+  route: "ticket-identification" | "feature-update" | "document-indexing" | "unsupported";
+  entityId?: string;
+  unresolvedReferences: Array<{ text: string; kind: string; status: string; candidates?: string[] }>;
+  error?: string;
+};
+export type IngestionResponse = {
+  status: "received" | "failed" | "fetched" | "processed" | "empty";
+  source?: string;
+  fetchedDocumentCount: number;
+  outcomes: IngestionOutcome[];
+  errors: string[];
+};
+
+export type AssistantQuery = { question: string; conversationId?: string; context?: { entityId: string; entityType: EntityType } };
+export type AssistantConversation = { id: string; title: string; createdAt: string; updatedAt: string };
+export type AssistantTurn = { role: "user" | "assistant"; content: string; response?: AssistantResponse; createdAt: string };
+export type AssistantResponse = {
+  conversationId?: string;
+  answer: {
+    type: "company_overview" | "entity_lookup" | "ownership_lookup" | "decision_investigation" | "impact_analysis" | "knowledge_graph_query" | "general_explanation";
+    title: string; summary: string;
+    findings: Array<{ text: string; confidence: "confirmed" | "inferred" | "unknown"; citationIds: string[] }>;
+    citations: Array<{ entityId: string; entityType: EntityType; title: string; sourceSystem?: string; sourceRecordId?: string; sourceUrl?: string; excerpt?: string }>;
+    related_entities: Array<Entity & { entityType: EntityType }>;
+    suggested_actions: Array<{ label: string; type: "open_entity" | "show_dependencies" | "investigate"; entityId: string }>;
+    uncertainty: string;
+  };
+  ui: { component: string; layout: "compact" | "split"; interactions: Array<{ type: "open_entity" | "show_dependencies" | "investigate"; entityId: string }>; graph: Neighborhood };
+  execution: { status: "completed" | "partial" | "failed"; stages: Array<{ name: string; status: "completed" | "fallback" | "skipped" | "failed" }>; errors: string[] };
+};

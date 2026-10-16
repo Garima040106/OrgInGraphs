@@ -56,8 +56,38 @@ function configuredBase(value: string | undefined): URL {
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) throw new MockFetcherError('invalid-configuration', 'Mock API base URL must be an HTTP(S) URL without embedded credentials.');
   return url;
 }
+async function fetchConfluenceDocuments(limit: number, timeoutMs: number): Promise<NormalizedDocument[]> {
+  if (env.CONFLUENCE_INGESTION_ENABLED === 'false') throw new MockFetcherError('missing-configuration', 'Confluence ingestion is disabled.');
+  if (!env.CONFLUENCE_BASE_URL || !env.CONFLUENCE_EMAIL || !env.CONFLUENCE_API_TOKEN) throw new MockFetcherError('missing-configuration', 'Confluence base URL and server-side credentials are required.');
+  const base = configuredBase(env.CONFLUENCE_BASE_URL);
+  const url = new URL(base);
+  url.pathname = `${base.pathname.replace(/\/$/, '')}/rest/api/content/search`;
+  url.searchParams.set('cql', 'type=page'); url.searchParams.set('limit', String(Math.max(1, Math.min(100, Math.floor(limit))))); url.searchParams.set('expand', 'body.storage,version,space');
+  const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let response: Response;
+  try {
+    const authorization = Buffer.from(`${env.CONFLUENCE_EMAIL}:${env.CONFLUENCE_API_TOKEN}`).toString('base64');
+    response = await fetch(url, { headers: { Accept: 'application/json', Authorization: `Basic ${authorization}` }, signal: controller.signal });
+  } catch (error) { if (error instanceof Error && error.name === 'AbortError') throw new MockFetcherError('timeout', 'Confluence request timed out.', true); throw new MockFetcherError('http-error', 'Confluence request failed.', true); }
+  finally { clearTimeout(timeout); }
+  if (!response.ok) throw new MockFetcherError('http-error', `Confluence returned HTTP ${response.status}.`, response.status >= 500 || response.status === 429);
+  let payload: unknown; try { payload = await response.json(); } catch { throw new MockFetcherError('malformed-response', 'Confluence returned invalid JSON.'); }
+  const records = payloadRecords(payload, 'confluence');
+  if (!records.length) throw new MockFetcherError('empty-result', 'Confluence returned no pages.');
+  return records.slice(0, limit).map((entry) => {
+    if (!isRecord(entry)) throw new MockFetcherError('malformed-response', 'Confluence returned a non-object page.');
+    const links = isRecord(entry._links) ? entry._links : {};
+    const webui = text(links.webui);
+    const basePath = base.pathname.replace(/\/$/, '');
+    const sourcePath = webui ? (webui.startsWith(`${basePath}/`) ? webui : `${basePath}/${webui.replace(/^\/+/, '')}`) : undefined;
+    const sourceUrl = sourcePath ? new URL(sourcePath, base.origin).toString() : undefined;
+    const normalized = normalizeRecord({ ...entry, id: entry.id, url: sourceUrl, provenance: 'external-verified' }, 'confluence');
+    return { ...normalized, provenance: 'external-verified', synthetic: false };
+  });
+}
 export async function fetchMockDocuments(source: MockSource, options: { baseUrl?: string; limit?: number; timeoutMs?: number } = {}): Promise<NormalizedDocument[]> {
   if (!mockSources.includes(source)) throw new MockFetcherError('unsupported-source', 'Unsupported mock source.');
+  if (source === 'confluence' && !options.baseUrl && !env.MOCK_API_BASE_URL) return fetchConfluenceDocuments(options.limit ?? 20, options.timeoutMs ?? 10_000);
   const url = configuredBase(options.baseUrl ?? env.MOCK_API_BASE_URL);
   url.pathname = `${url.pathname.replace(/\/$/, '')}${MOCK_ENDPOINTS[source]}`;
   if (options.limit !== undefined) url.searchParams.set('limit', String(Math.max(1, Math.min(100, Math.floor(options.limit)))));
