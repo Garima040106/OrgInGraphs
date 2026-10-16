@@ -6,7 +6,13 @@ export type GraphNodeData = {
   entityType: EntityType | "Unknown";
   label: string;
   subtitle: string;
+  onExpand?: () => void;
+  isExpanded?: boolean;
+  isExpanding?: boolean;
 };
+
+const NODE_COLUMN_GAP = 300;
+const NODE_ROW_GAP = 150;
 
 const knownTypes = new Set<EntityType>([
   "Company",
@@ -40,13 +46,9 @@ export function normalizeGraph(graph: GraphResponse): {
   nodes: Node<GraphNodeData>[];
   edges: Edge[];
 } {
-  const nodes = graph.nodes.map((node, index) => {
-    const columns = 6;
-    return toGraphNode(graphEntity(node), {
-      x: 80 + (index % columns) * 250,
-      y: 70 + Math.floor(index / columns) * 155,
-    });
-  });
+  const company = graph.nodes.find((node) => node.labels.includes("Company"));
+  const startingNodes = company ? [company] : graph.nodes.slice(0, 1);
+  const nodes = startingNodes.map((node) => toGraphNode(graphEntity(node), { x: 900, y: 360 }));
   const nodeIds = new Set(nodes.map((node) => node.id));
   const edges = graph.edges
     .filter((edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target))
@@ -54,7 +56,6 @@ export function normalizeGraph(graph: GraphResponse): {
       id: edge.id,
       source: edge.source,
       target: edge.target,
-      label: edge.type.replaceAll("_", " ").toLowerCase(),
       type: "smoothstep",
       animated: false,
       data: { relationshipType: edge.type, properties: edge.properties },
@@ -87,44 +88,65 @@ export function toGraphNode(
 export function normalizeNeighborhood(
   neighborhood: Neighborhood,
   origin: Entity,
-  existingIds: Set<string>,
-  currentCount: number,
+  existingNodes: Node<GraphNodeData>[],
   originPosition = { x: 400, y: 300 },
 ): { nodes: Node<GraphNodeData>[]; edges: Edge[] } {
-  const angleStep = (Math.PI * 2) / Math.max(neighborhood.nodes.length, 1);
+  const existingIds = new Set(existingNodes.map((node) => node.id));
   const addedIds = new Set<string>();
-  const nodes = neighborhood.nodes
-    .filter((entity) => {
-      if (entity.id === origin.id || existingIds.has(entity.id) || addedIds.has(entity.id)) return false;
-      addedIds.add(entity.id);
-      return true;
-    })
-    .map((entity) => {
-      const originalIndex = neighborhood.nodes.findIndex((item) => item.id === entity.id);
-      const angle = originalIndex * angleStep;
-      const radius = 270 + (currentCount % 3) * 30;
-      return toGraphNode(entity, {
-        x: originPosition.x + Math.round(Math.cos(angle) * radius),
-        y: originPosition.y + Math.round(Math.sin(angle) * radius),
-      });
-    });
+  const entities = neighborhood.nodes.filter((entity) => {
+    if (entity.id === origin.id || existingIds.has(entity.id) || addedIds.has(entity.id)) return false;
+    addedIds.add(entity.id);
+    return true;
+  });
+  const occupied = [...existingNodes.map((node) => node.position)];
+  const nodes = entities.map((entity) => {
+    const position = nextExpansionPosition(originPosition, occupied);
+    occupied.push(position);
+    return toGraphNode(entity, position);
+  });
   const validIds = new Set([...existingIds, origin.id, ...nodes.map((node) => node.id)]);
+  const positions = new Map([
+    ...existingNodes.map((node) => [node.id, node.position] as const),
+    [origin.id, originPosition] as const,
+    ...nodes.map((node) => [node.id, node.position] as const),
+  ]);
   const edgeIds = new Set<string>();
   const edges = neighborhood.edges
     .filter((edge) => validIds.has(edge.from) && validIds.has(edge.to))
-    .map((edge) => ({
-      id: `${edge.from}:${edge.type}:${edge.to}`,
-      source: edge.from,
-      target: edge.to,
-      label: edge.type.replaceAll("_", " ").toLowerCase(),
-      type: "smoothstep",
-      animated: false,
-      data: { direction: edge.direction ?? "unknown" },
-    }))
+    .map((edge) => {
+      const sourcePosition = positions.get(edge.from) ?? originPosition;
+      const targetPosition = positions.get(edge.to) ?? originPosition;
+      const flowsLeft = sourcePosition.x > targetPosition.x;
+      return {
+        id: `${edge.from}:${edge.type}:${edge.to}`,
+        source: edge.from,
+        target: edge.to,
+        sourceHandle: flowsLeft ? "source-left" : "source-right",
+        targetHandle: flowsLeft ? "target-right" : "target-left",
+        type: "smoothstep",
+        animated: false,
+        data: { direction: edge.direction ?? "unknown" },
+      };
+    })
     .filter((edge) => {
       if (edgeIds.has(edge.id)) return false;
       edgeIds.add(edge.id);
       return true;
     });
   return { nodes, edges };
+}
+
+function nextExpansionPosition(
+  origin: { x: number; y: number },
+  occupied: Array<{ x: number; y: number }>,
+): { x: number; y: number } {
+  const x = origin.x + NODE_COLUMN_GAP;
+  for (let row = 0; ; row += 1) {
+    const offset = row === 0 ? 0 : Math.ceil(row / 2) * (row % 2 === 1 ? 1 : -1);
+    const position = { x, y: origin.y + offset * NODE_ROW_GAP };
+    const collides = occupied.some(
+      (point) => Math.abs(point.x - position.x) < 240 && Math.abs(point.y - position.y) < 125,
+    );
+    if (!collides) return position;
+  }
 }

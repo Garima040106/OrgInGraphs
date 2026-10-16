@@ -12,7 +12,7 @@ type LoadState<T> = { data: T; error: string };
 export default function DashboardPage() {
   const [graph, setGraph] = useState<LoadState<GraphResponse>>({ data: { nodes: [], edges: [] }, error: "" });
   const [loading, setLoading] = useState(true);
-  const [focus, setFocus] = useState<{ id?: string; type?: string }>({});
+  const [focus, setFocus] = useState<{ id?: string; type?: string; request: number }>({ request: 0 });
 
   async function load() {
     setLoading(true);
@@ -26,8 +26,19 @@ export default function DashboardPage() {
 
   useEffect(() => { void load(); }, []);
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setFocus({ id: params.get("focus") ?? undefined, type: params.get("type") ?? undefined });
+    const readQueryFocus = () => {
+      const params = new URLSearchParams(window.location.search);
+      setFocus((previous) => ({ id: params.get("focus") ?? undefined, type: params.get("type") ?? undefined, request: previous.request + 1 }));
+    };
+    const onGraphFocus = (event: Event) => {
+      const detail = (event as CustomEvent<{ id: string; type: string }>).detail;
+      if (detail?.id && detail.type) {
+        setFocus((previous) => ({ ...detail, request: previous.request + 1 }));
+      }
+    };
+    readQueryFocus();
+    window.addEventListener("oig-graph-focus", onGraphFocus);
+    return () => window.removeEventListener("oig-graph-focus", onGraphFocus);
   }, []);
 
   const failed = [graph.error].filter(Boolean);
@@ -58,6 +69,7 @@ export default function DashboardPage() {
           graph={graph.data}
           focusId={focus.id}
           focusType={focus.type}
+          focusRequest={focus.request}
         />
       )}
     </>
