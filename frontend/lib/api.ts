@@ -8,6 +8,7 @@ import type {
   Neighborhood,
   Project,
   ProjectDetail,
+  GraphResponse,
   SearchResult,
 } from "@/lib/types";
 
@@ -68,6 +69,7 @@ const query = (params: Record<string, string | undefined>) => {
 
 export const api = {
   health: () => request<Health>("/health"),
+  graph: () => request<GraphResponse>("/api/graph"),
   company: () => request<Entity>("/api/company"),
   employees: (filters: { departmentId?: string; teamId?: string; employmentStatus?: string } = {}) =>
     request<Employee[]>(`/api/employees${query(filters)}`),

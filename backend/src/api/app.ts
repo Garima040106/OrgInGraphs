@@ -2,6 +2,7 @@ import express, { type Request, type Response } from 'express';
 import { z } from 'zod';
 import type { Graph } from 'falkordb';
 import { query, rows } from '../db/falkordb.js';
+import { fetchEntireGraph } from '../graph/entire.js';
 
 const idSchema = z.string().regex(/^[a-z0-9-]+$/);
 const filterSchema = z.object({ departmentId:idSchema.optional(), teamId:idSchema.optional(), employmentStatus:z.enum(['active','inactive']).optional() });
@@ -24,6 +25,14 @@ export function createApp(graph:Graph) {
   });
   app.use(express.json());
   app.get('/health',async (_req,res)=>{ try { await query(graph,'RETURN 1 AS connected'); res.json({status:'ok',database:'connected'}); } catch(error){ console.error(error); res.status(503).json({status:'degraded',database:'unavailable'}); } });
+  app.get('/api/graph', async (_req, res) => {
+    try {
+      return res.json(await fetchEntireGraph(graph));
+    } catch (error) {
+      console.error('Unable to fetch complete graph:', error);
+      return res.status(500).json({ error: 'Unable to fetch graph' });
+    }
+  });
   app.get('/api/company',async (_req,res)=>{try{const result=await query(graph,'MATCH (n:Company) RETURN n'); const company=rows(result)[0]?.n; return company?res.json(company):res.status(404).json({error:'Company not found'});}catch(e){return sendError(res,e);}});
   app.get('/api/employees',async (req,res)=>{try{const f=parse(filterSchema,req.query); const conditions:string[]=[]; const params:Record<string,unknown>={}; for(const key of ['departmentId','teamId','employmentStatus'] as const) if(f[key]){conditions.push(`e.${key} = $${key}`);params[key]=f[key];} const result=await query(graph,`MATCH (e:Employee)${conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''} RETURN e ORDER BY e.name`,params); return res.json(rows(result).map(r=>r.e));}catch(e){return sendError(res,e);}});
   app.get('/api/employees/:employeeId',async(req,res)=>{try{const id=parse(idSchema,req.params.employeeId);const result=await query(graph,'MATCH (e:Employee {id:$id}) OPTIONAL MATCH (e)-[:REPORTS_TO]->(m:Employee) OPTIONAL MATCH (d:Department)<-[:WORKS_IN]-(e) OPTIONAL MATCH (t:Team)<-[:MEMBER_OF]-(e) OPTIONAL MATCH (e)-[:WORKS_ON|OWNS]->(p:Project) RETURN e,m,d,t,collect(p) AS projects',{id});const r=rows(result)[0];if(!r)return res.status(404).json({error:'Employee not found'});const reports=rows(await query(graph,'MATCH (e:Employee {id:$id})<-[:REPORTS_TO]-(direct:Employee) RETURN direct',{id}));return res.json({employee:r.e,manager:r.m??null,directReports:reports.map(x=>x.direct),department:r.d??null,team:r.t??null,skills:r.e.skills??[],projects:r.projects??[]});}catch(e){return sendError(res,e);}});

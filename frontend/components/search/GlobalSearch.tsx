@@ -12,12 +12,8 @@ const iconFor = (type: EntityType) => {
   return BriefcaseBusiness;
 };
 
-const destination = (result: SearchResult) => {
-  if (result.entityType === "Employee") return `/people/${encodeURIComponent(result.n.id)}`;
-  if (result.entityType === "Department") return `/departments/${encodeURIComponent(result.n.id)}`;
-  if (result.entityType === "Project") return `/projects/${encodeURIComponent(result.n.id)}`;
-  return `/dashboard?focus=${encodeURIComponent(result.n.id)}&type=${encodeURIComponent(result.entityType)}`;
-};
+const destination = (result: SearchResult) =>
+  `/dashboard?focus=${encodeURIComponent(result.n.id)}&type=${encodeURIComponent(result.entityType)}`;
 
 export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
@@ -72,6 +68,9 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
   function select(result: SearchResult) {
     onClose();
     router.push(destination(result));
+    window.dispatchEvent(new CustomEvent("oig-graph-focus", {
+      detail: { id: result.n.id, type: result.entityType },
+    }));
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
