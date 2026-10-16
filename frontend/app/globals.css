@@ -2215,6 +2215,7 @@ body {
   margin-bottom: 20px;
 }
 
+.workspace-settings-heading h1,
 .workspace-settings-heading h2 {
   margin: 7px 0 0;
   color: #19191B;
@@ -2316,6 +2317,19 @@ body {
   color: #73746b;
   font-size: 9px;
   line-height: 1.6;
+}
+
+.settings-source-note a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 10px;
+  color: #174D35;
+  font-weight: 600;
+}
+
+.settings-source-note a:hover {
+  text-decoration: underline;
 }
 
 .entity-node {
