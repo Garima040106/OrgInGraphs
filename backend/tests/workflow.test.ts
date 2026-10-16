@@ -46,7 +46,7 @@ test('current workflow does not invoke Confluence or make external requests for 
   try {
     assert.equal(confluenceIngestionEnabled, false);
     assert.deepEqual(await disabledConfluenceIngestionAgent.ingest({ sourceRecordId: 'offline-1', content: 'Confluence content' }), { status: 'disabled', sourceRecordId: 'offline-1' });
-    const result = await runOrgInGraphsWorkflow({ text: 'Bug: checkout timeout', type: 'ticket', source: 'user-input', sourceRecordId: 'offline-workflow-1', receivedAt: '2026-01-01T00:00:00.000Z' });
+    const result = await runOrgInGraphsWorkflow({ text: 'Bug: checkout timeout', type: 'ticket', source: 'user-input', sourceRecordId: 'offline-workflow-1', receivedAt: '2026-01-01T00:00:00.000Z' }, { models: {} });
     assert.equal(result.eventType, 'ticket-identification');
     assert.equal(fetchCalls, 0);
   } finally { globalThis.fetch = originalFetch; }

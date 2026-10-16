@@ -15,6 +15,7 @@ import {
   productRelationshipQuery
 } from '../src/product/queries.js';
 import { generateProductSeedData } from '../src/product/seed.js';
+import { verifyProductSeed } from '../src/product/seed-verification.js';
 import { generateSeedData } from '../src/seed/generate.js';
 import { validateProductSeedAgainstOrganization } from '../src/product/validate.js';
 
@@ -69,4 +70,21 @@ test('Product Progress seed is deterministic, connected, and preserves organizat
   assert.ok(first.edges.every((relationship) => relationship.properties?.graphDomain === 'product-progress'));
   assert.ok(first.edges.some((relationship) => relationship.from === 'emp-04'));
   assert.ok(first.edges.some((relationship) => relationship.from === 'eng'));
+});
+
+test('Product Progress seed verification accepts the selected graph and rejects incomplete writes', async () => {
+  const seed = generateProductSeedData('2026-01-01');
+  const completeGraph = {
+    query: async (cypher: string) => cypher.includes('count(r)')
+      ? { data: [{ count: seed.edges.length }] }
+      : { data: seed.nodes.map((node) => ({ id: node.id })) }
+  } as never;
+  assert.deepEqual(await verifyProductSeed(completeGraph, seed), { nodeCount: 25, relationshipCount: 45 });
+
+  const incompleteGraph = {
+    query: async (cypher: string) => cypher.includes('count(r)')
+      ? { data: [{ count: 1 }] }
+      : { data: [{ id: seed.nodes[0].id }] }
+  } as never;
+  await assert.rejects(() => verifyProductSeed(incompleteGraph, seed), /Product Progress seed verification failed/);
 });

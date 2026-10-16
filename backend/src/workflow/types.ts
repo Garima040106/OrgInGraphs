@@ -1,6 +1,8 @@
 import type { Graph } from 'falkordb';
 import type { FeatureUpdateState } from '../agents/feature-update/types.js';
 import type { TicketIdentificationState } from '../agents/ticket-identification/types.js';
+import type { TicketModel } from '../agents/ticket-identification/types.js';
+import type { FeatureUpdateModel } from '../agents/feature-update/types.js';
 
 export const workflowEventKinds = ['auto', 'ticket', 'feature-update'] as const;
 export type WorkflowEventKind = (typeof workflowEventKinds)[number];
@@ -30,6 +32,9 @@ export interface WorkflowGraphState {
   errors: WorkflowError[];
   steps: number;
   graph?: Graph;
+  ticketModel?: TicketModel;
+  featureUpdateModel?: FeatureUpdateModel;
+  deterministicModels?: boolean;
 }
 
 export interface WorkflowError {

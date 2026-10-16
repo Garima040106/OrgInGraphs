@@ -3,6 +3,9 @@ import { runFeatureUpdate } from '../agents/feature-update/agent.js';
 import { runTicketIdentification } from '../agents/ticket-identification/agent.js';
 import type { FeatureUpdateState } from '../agents/feature-update/types.js';
 import type { TicketIdentificationState } from '../agents/ticket-identification/types.js';
+import type { TicketModel } from '../agents/ticket-identification/types.js';
+import type { FeatureUpdateModel } from '../agents/feature-update/types.js';
+import { configuredTicketModel, configuredFeatureUpdateModel } from '../models/agents.js';
 import { classifyWorkflowInput, establishProvenance } from './classify.js';
 import { validateWorkflowInput } from './validate.js';
 import type { WorkflowError, WorkflowGraphState, WorkflowInputEvent, WorkflowResponse, WorkflowRoute } from './types.js';
@@ -46,16 +49,16 @@ async function routeAndProcess(state: WorkflowGraphState): Promise<WorkflowGraph
   const input = state.input;
   if (state.route === 'ticket-identification') {
     const ticketInput = { text: input.text, source: input.source, sourceRecordId: input.sourceRecordId, receivedAt: input.receivedAt };
-    const ticketState = await runTicketIdentification(ticketInput, { graph: state.graph });
+    const ticketState = await runTicketIdentification(ticketInput, { graph: state.graph, model: state.ticketModel, useConfiguredModel: !state.deterministicModels });
     return { ...state, ticketState, phase: 'processed', steps: state.steps + 1 };
   }
   const featureInput = { text: input.text, source: input.source, sourceRecordId: input.sourceRecordId, receivedAt: input.receivedAt };
-  const featureUpdateState = await runFeatureUpdate(featureInput, { graph: state.graph });
+  const featureUpdateState = await runFeatureUpdate(featureInput, { graph: state.graph, model: state.featureUpdateModel, useConfiguredModel: !state.deterministicModels });
   return { ...state, featureUpdateState, phase: 'processed', steps: state.steps + 1 };
 }
 
-export async function runOrgInGraphsWorkflow(input: unknown, options: { graph?: WorkflowGraphState['graph'] } = {}): Promise<WorkflowResponse> {
-  let state: WorkflowGraphState = { input: input as WorkflowInputEvent, phase: 'received', errors: [], steps: 0, graph: options.graph };
+export async function runOrgInGraphsWorkflow(input: unknown, options: { graph?: WorkflowGraphState['graph']; models?: { ticket?: TicketModel; featureUpdate?: FeatureUpdateModel } } = {}): Promise<WorkflowResponse> {
+  let state: WorkflowGraphState = { input: input as WorkflowInputEvent, phase: 'received', errors: [], steps: 0, graph: options.graph, ticketModel: options.models?.ticket, featureUpdateModel: options.models?.featureUpdate, deterministicModels: Boolean(options.models) };
   try {
     state = { ...state, input: validateWorkflowInput(input), phase: 'validated', provenance: establishProvenance(validateWorkflowInput(input)), steps: 1 };
     const route: WorkflowRoute = classifyWorkflowInput(state.input);

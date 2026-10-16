@@ -56,9 +56,9 @@ export async function persistNode(state: TicketIdentificationState): Promise<Tic
 }
 
 /** Each function is a LangGraph-compatible state node: state in, state out. */
-export async function runTicketIdentification(input: TicketInput, options: { graph?: TicketIdentificationState['graph']; model?: TicketModel } = {}) {
+export async function runTicketIdentification(input: TicketInput, options: { graph?: TicketIdentificationState['graph']; model?: TicketModel; useConfiguredModel?: boolean } = {}) {
   let state: TicketIdentificationState = { input, ambiguities: [], errors: [], persisted: false, graph: options.graph };
-  state = await identifyNode(state, options.model ?? configuredTicketModel());
+  state = await identifyNode(state, options.model ?? (options.useConfiguredModel === false ? undefined : configuredTicketModel()));
   state = await resolveNode(state);
   state = validateNode(state);
   state = await persistNode(state);

@@ -59,9 +59,9 @@ export async function persistUpdateNode(state: FeatureUpdateState): Promise<Feat
 }
 
 /** State-in/state-out nodes can be wired directly into a LangGraph StateGraph. */
-export async function runFeatureUpdate(input: FeatureUpdateInput, options: { graph?: FeatureUpdateState['graph']; model?: FeatureUpdateModel } = {}) {
+export async function runFeatureUpdate(input: FeatureUpdateInput, options: { graph?: FeatureUpdateState['graph']; model?: FeatureUpdateModel; useConfiguredModel?: boolean } = {}) {
   let state: FeatureUpdateState = { input, ambiguities: [], unresolved: [], errors: [], persisted: false, graph: options.graph };
-  state = await identifyUpdateNode(state, options.model ?? configuredFeatureUpdateModel());
+  state = await identifyUpdateNode(state, options.model ?? (options.useConfiguredModel === false ? undefined : configuredFeatureUpdateModel()));
   state = await resolveUpdateNode(state);
   state = validateUpdateNode(state);
   state = await persistUpdateNode(state);
