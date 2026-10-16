@@ -3294,3 +3294,108 @@ body {
     font-size: 8px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Landing page — motion & UX additions
+   All entrance animations are gated behind prefers-reduced-motion so that
+   users who prefer reduced motion still see the content immediately.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Nav link base style */
+.lp-nav-link {
+  font-size: 12px;
+  font-weight: 550;
+  color: #5F605B;
+  transition: color 0.15s;
+}
+.lp-nav-link:hover { color: #174D35; }
+
+/* Section scroll-offset accounting for fixed nav */
+.lp-section,
+#how-it-works,
+#company-graph,
+#features,
+#integrations {
+  scroll-margin-top: 80px;
+}
+
+/* Mobile menu overlay */
+.lp-mobile-menu {
+  position: fixed;
+}
+
+/* Post-feature CTA alignment */
+.lp-features + div {
+  text-align: center;
+}
+
+/* ── Keyframes ────────────────────────────────────────────────────────── */
+
+@keyframes lp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lp-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Hero entrance animations ─────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .lp-enter-1 {
+    animation: lp-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.05s;
+  }
+
+  .lp-enter-2 {
+    animation: lp-fade-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.2s;
+  }
+
+  /* Feature cards: staggered reveal on scroll using CSS custom property */
+  .lp-feature-card {
+    animation: lp-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.08s + var(--fi, 0) * 0.12s);
+  }
+
+  /* Step cards */
+  .lp-step-card {
+    animation: lp-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.1s + var(--step-i, 0) * 0.1s);
+  }
+
+  /* Reveal class for section headings */
+  .lp-reveal {
+    animation: lp-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.08s;
+  }
+}
+
+/* ── Button micro-interactions ─────────────────────────────────────────── */
+
+/* Primary CTA press */
+.landing-hero-cta:active,
+#hero-get-started:active,
+#features-get-started:active,
+#closing-cta:active,
+#how-create-workspace:active,
+#nav-get-started:active {
+  transform: translateY(1px);
+  opacity: 0.9;
+}
+
+/* Secondary / outline CTA focus */
+#hero-explore-platform:focus-visible,
+.lp-nav-link:focus-visible {
+  outline: 2px solid #D1E7DC;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
