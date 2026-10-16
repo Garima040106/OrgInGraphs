@@ -227,6 +227,12 @@ export default function Home() {
             Product
           </a>
           <a
+            href="#getting-started"
+            className="text-xs font-medium text-[#5F605B] transition-colors hover:text-[#174D35]"
+          >
+            Getting started
+          </a>
+          <a
             href="#why-oig"
             className="text-xs font-medium text-[#5F605B] transition-colors hover:text-[#174D35]"
           >
@@ -248,7 +254,7 @@ export default function Home() {
             className="inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-[#19191B] px-4 text-xs font-semibold text-white transition-all hover:bg-[#174D35] sm:min-h-10 sm:px-5 sm:text-sm"
           >
             <span className="hidden text-white min-[380px]:inline">
-              Open dashboard
+              Get started
             </span>
             <span className="min-[380px]:hidden">Open</span>
             <ArrowRight size={15} />
@@ -281,15 +287,15 @@ export default function Home() {
               href="/login"
               className="landing-hero-cta inline-flex min-h-[52px] items-center gap-3 rounded-full px-5 text-sm font-semibold transition-all hover:-translate-y-0.5"
             >
-              Enter the experience
+              Get started
               <ArrowRight size={17} />
             </Link>
 
             <a
-              href="#product"
+              href="#getting-started"
               className="landing-hero-link inline-flex min-h-[48px] items-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors"
             >
-              Explore the product
+              See how it works
               <ArrowDownRight size={16} />
             </a>
           </div>
@@ -303,6 +309,96 @@ export default function Home() {
         </div>
       </section>
       </div>
+
+
+      {/* Getting started */}
+      <section
+        id="getting-started"
+        className="mx-auto w-[calc(100%-40px)] max-w-[1240px] border-t border-[#e9e8dc] py-16 sm:py-20"
+      >
+        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#71816c]">
+              GET STARTED · 3 SIMPLE STEPS
+            </div>
+            <h2 className="mt-5 max-w-md font-serif text-4xl leading-tight tracking-[-0.04em] text-[#1d2942] sm:text-5xl">
+              Your organization, connected.
+            </h2>
+            <p className="mt-5 max-w-md text-sm leading-7 text-[#78816f]">
+              Start with your workspace, bring your company context together,
+              and discover how your people and projects connect.
+            </p>
+           <Link
+  href="/login"
+  className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-full bg-[#19191b] px-6 text-sm font-semibold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#174d35]"
+>
+  Set up your workspace
+  <ArrowRight size={16} />
+</Link>
+            <p className="mt-3 text-xs text-[#85877c]">
+              Already have a workspace?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-[#174d35] underline underline-offset-4"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              {
+                number: "01",
+                title: "Create your workspace",
+                description:
+                  "Start with your organization name and establish a home for your company knowledge.",
+                tag: "YOUR FOUNDATION",
+              },
+              {
+                number: "02",
+                title: "Bring your company context together",
+                description:
+                  "Add people, departments, and projects. Connect supported tools as integrations become available.",
+                tag: "YOUR CONTEXT",
+              },
+              {
+                number: "03",
+                title: "Explore your organization graph",
+                description:
+                  "Discover relationships between teammates, teams, and projects to find the context behind the work.",
+                tag: "YOUR INSIGHTS",
+              },
+            ].map((step) => (
+              <article
+                key={step.number}
+                className="group rounded-2xl border border-[#e8e7dc] bg-white/70 p-5 transition-all hover:border-[#b7c7b5] hover:bg-white sm:p-6"
+              >
+                <div className="flex gap-4 sm:gap-5">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#edf2e8] text-sm font-bold text-[#315a3e]">
+                    {step.number}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] font-bold tracking-[0.15em] text-[#89917f]">
+                      {step.tag}
+                    </div>
+                    <h3 className="mt-2 text-base font-bold tracking-tight text-[#25314b]">
+                      {step.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-[#78816f]">
+                      {step.description}
+                    </p>
+                  </div>
+                  <ArrowUpRight
+                    size={16}
+                    className="mt-1 shrink-0 text-[#9ba392] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Why OIG */}
       <section
@@ -452,21 +548,21 @@ export default function Home() {
       <section className="landing-closing mx-auto mb-8 flex w-[calc(100%-40px)] max-w-[1424px] flex-col items-start justify-between gap-8 rounded-3xl px-7 py-12 sm:w-[calc(100%-64px)] sm:px-12 sm:py-16 lg:flex-row lg:items-center">
         <div>
           <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7b8bb0]">
-            Make the first week count
+            START WITH YOUR ORGANIZATION
           </div>
           <h2 className="mt-5 font-serif text-4xl leading-tight tracking-[-0.04em] text-[#1d2942] sm:text-5xl">
-            Give every new teammate
-            <br /> a place to start.
+            Give your team the context
+            <br /> to do its best work.
           </h2>
         </div>
 
         <Link
-          href="/login"
-          className="inline-flex min-h-[52px] items-center gap-3 rounded-xl bg-[#202a43] px-5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-[#34466d]"
-        >
-          Explore your organization
-          <ArrowRight size={16} />
-        </Link>
+  href="/login"
+  className="inline-flex min-h-[52px] items-center gap-3 rounded-xl bg-[#202a43] px-5 text-sm font-bold !text-white transition-all hover:-translate-y-0.5 hover:bg-[#34466d]"
+>
+  Build your company graph
+  <ArrowRight size={16} />
+</Link>
       </section>
 
       <section className="integration-marquee" id="integrations" aria-label="Connected platforms">
@@ -483,17 +579,31 @@ export default function Home() {
       </section>
 
       <footer className="landing-footer">
+        <div>
+              <Link
+                href="/"
+                aria-label="OrgInGraphs home"
+                className="block font-serif text-5xl leading-none tracking-[-0.065em] text-[#20202a] sm:text-6xl lg:text-7xl"
+              >
+                OrgInGraphs
+              </Link>
+              <p className="mt-3 text-sm text-[#7d7c78]">
+                Find the people and context behind the work.
+              </p>
+            </div>
         <div className="landing-footer-links">
           <div><small>PRODUCT</small><Link href="/">Home</Link><a href="#product">How it works</a><Link href="/login">Workspace</Link></div>
           <div><small>EXPLORE</small><a href="#why-oig">Company graph</a><Link href="/login">People and teams</Link><Link href="/login">Projects</Link></div>
           <div><small>CONNECTED</small><a href="#integrations">Confluence · Jira</a><a href="#integrations">Slack · GitHub</a><a href="#integrations">FalkorDB graph</a></div>
           <div><small>ABOUT OIG</small><span>Company knowledge, connected.</span><span>Built for teams in motion.</span><span>© 2026 OrgInGraphs</span></div>
         </div>
-        <div className="landing-footer-bottom">
-          <Link href="/" aria-label="OrgInGraphs home">
-            <Image src="/img/logo.png" alt="OrgInGraphs" width={125} height={40} className="h-9 w-[125px] object-contain object-left" />
-          </Link>
-          <span>Find the people and context behind the work.</span>
+        <div className="mt-8 border-t border-[#e8e4d8] pt-7 sm:mt-10 sm:pt-8">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
+            
+            <p className="max-w-xl text-sm leading-6 text-[#7d7c78] sm:text-right">
+              A clearer view of your organization, its knowledge, and how work connects.
+            </p>
+          </div>
         </div>
       </footer>
     </main>
