@@ -37,15 +37,15 @@ const navigation = [
   { href: "assistant", label: "Investigate", icon: SearchCheck, action: true },
   { href: "/org-graph", label: "Knowledge Graph", icon: Network },
   { href: "/dashboard#decisions", label: "Decisions", icon: FileClock },
-  { href: "assistant", label: "Impact Analysis", icon: ChartNoAxesCombined, action: true },
+  { href: "/impact-analysis", label: "Impact Analysis", icon: ChartNoAxesCombined },
   { href: "/people", label: "People & Expertise", icon: UsersRound },
   { href: "/projects", label: "Projects & Services", icon: BriefcaseBusiness },
-  { href: "/dashboard#documents", label: "Documents", icon: FileText },
-  { href: "/dashboard#tickets", label: "Tickets", icon: CircleAlert },
-  { href: "/dashboard#conversations", label: "Conversations", icon: MessagesSquare },
-  { href: "/settings", label: "Integrations", icon: Plug },
-  { href: "/settings", label: "Sync & Data", icon: RefreshCw },
-  { href: "/dashboard#insights", label: "Proactive Insights", icon: Lightbulb },
+  { href: "/documents", label: "Documents", icon: FileText },
+  { href: "/tickets", label: "Tickets", icon: CircleAlert },
+  { href: "/conversations", label: "Conversations", icon: MessagesSquare },
+  { href: "/integrations", label: "Integrations", icon: Plug },
+  { href: "/sync-data", label: "Sync & Data", icon: RefreshCw },
+  { href: "/proactive-insights", label: "Proactive Insights", icon: Lightbulb },
 ];
 
 export function AppShell({
@@ -86,6 +86,13 @@ export function AppShell({
     pathname.startsWith("/people") ? "People" :
       pathname.startsWith("/departments") ? "Departments" :
         pathname.startsWith("/projects") ? "Projects" :
+          pathname === "/impact-analysis" ? "Impact Analysis" :
+            pathname === "/documents" ? "Documents" :
+              pathname === "/tickets" ? "Tickets" :
+                pathname === "/conversations" ? "Conversations" :
+                  pathname === "/integrations" ? "Integrations" :
+                    pathname === "/sync-data" ? "Sync & Data" :
+                        pathname === "/proactive-insights" ? "Proactive Insights" :
           pathname === "/settings" ? "Workspace settings" :
           pathname === "/dashboard" ? "Overview" :
           pathname === "/org-graph" ? "Organization graph" : "Workspace";
