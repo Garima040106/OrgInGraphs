@@ -14,6 +14,8 @@ import type {
   IngestionResponse,
   AssistantQuery,
   AssistantResponse,
+  DashboardResponse,
+  SourceRecordResponse,
 } from "@/lib/types";
 
 const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
@@ -77,6 +79,8 @@ const query = (params: Record<string, string | undefined>) => {
 
 export const api = {
   health: () => request<Health>("/health"),
+  dashboard: () => request<DashboardResponse>("/api/dashboard"),
+  dashboardSummary: () => request<Pick<DashboardResponse, "company" | "sourceCounts" | "totals">>("/api/dashboard/summary"),
   graph: () => request<GraphResponse>("/api/graph"),
   productProgressGraph: () => request<GraphResponse>("/api/product-progress/graph"),
   company: () => request<Entity>("/api/company"),
@@ -96,12 +100,16 @@ export const api = {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ source, limit }),
   }),
+  documents: (params: { q?: string; limit?: number; offset?: number } = {}) => request<SourceRecordResponse>(`/api/documents${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`),
+  tickets: (params: { q?: string; limit?: number; offset?: number } = {}) => request<SourceRecordResponse>(`/api/tickets${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`),
+  conversations: (params: { q?: string; limit?: number; offset?: number } = {}) => request<SourceRecordResponse>(`/api/conversations${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`),
+  proactiveInsights: (params: { q?: string; limit?: number; offset?: number } = {}) => request<SourceRecordResponse>(`/api/proactive-insights${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`),
   assistantQuery: (input: AssistantQuery) => request<AssistantResponse>("/api/assistant/query", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
   }),
-  organizationQuery: (input: { query: string; topK?: number; threshold?: number; orgId?: string }) => request<import("@/lib/types").OrganizationRagResponse>("/api/organization/query", {
+  organizationQuery: (input: { query: string; history?: { query: string; answer: string }[]; topK?: number; threshold?: number; orgId?: string }) => request<import("@/lib/types").OrganizationRagResponse>("/api/organization/query", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
-  }, 45_000),
+  }, 120_000),
   assistantConversations: () => request<{ conversations: import("@/lib/types").AssistantConversation[] }>("/api/assistant/conversations"),
   assistantConversation: (id: string) => request<{ conversationId: string; turns: import("@/lib/types").AssistantTurn[] }>(`/api/assistant/conversations/${encodeURIComponent(id)}`),
 };

@@ -28,7 +28,7 @@ export function createModel(config: ModelInstanceConfig) {
         headers: { 'Content-Type': 'application/json', ...(isGemini ? { 'x-goog-api-key': apiKey } : { Authorization: `Bearer ${apiKey}` }) },
         body: JSON.stringify(isGemini
           ? { systemInstruction: { parts: [{ text: systemPrompt }] }, contents: [{ role: 'user', parts: [{ text: userPrompt }] }], generationConfig: { temperature: config.temperature, responseMimeType: 'application/json', maxOutputTokens: 800 } }
-          : { model: config.modelId, temperature: config.temperature, max_tokens: 800, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }),
+          : { model: config.modelId, temperature: config.temperature, max_tokens: 800, ...(config.responseFormat === 'text' ? {} : { response_format: { type: 'json_object' } }), messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }] }),
         signal: controller.signal
       });
       if (response.status === 429) throw new ModelProviderError('Model provider rate limit', 'rate-limit', true);

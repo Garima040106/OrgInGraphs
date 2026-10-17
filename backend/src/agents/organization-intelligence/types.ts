@@ -70,6 +70,10 @@ export interface IngestionResult {
 
 export const ragQueryInputSchema = z.object({
   query: z.string().trim().min(1).max(4000),
+  history: z.array(z.object({
+    query: z.string().trim().min(1).max(4000),
+    answer: z.string().trim().max(8000)
+  }).strict()).max(4).optional().default([]),
   topK: z.number().int().min(1).max(20).optional().default(5),
   threshold: z.number().min(0).max(1).optional().default(0.1),
   orgId: z.string().trim().min(1).max(100).optional().default('hirenova'),
@@ -104,6 +108,7 @@ export interface RAGResponse {
   agent: 'organization-intelligence';
   status: 'completed' | 'partial' | 'failed';
   uncertainty?: string;
+  errors?: string[];
 }
 
 export interface VectorStoreDocumentEntry {

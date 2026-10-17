@@ -1,3 +1,5 @@
+import { SourceLibrary } from "@/components/sources/SourceLibrary";
+
 export default function ConversationsPage() {
-  return <h1>Conversations</h1>;
+  return <SourceLibrary kind="conversations" />;
 }

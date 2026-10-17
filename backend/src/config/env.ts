@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './load-env.js';
 import { z } from 'zod';
 
 const environmentSchema = z.object({
@@ -16,6 +16,10 @@ const environmentSchema = z.object({
   CONFLUENCE_BASE_URL: z.preprocess((value) => value === '' ? undefined : value, z.string().url().optional()),
   CONFLUENCE_EMAIL: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
   CONFLUENCE_API_TOKEN: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
+  CONFLUENCE_API_KEY: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
+  JIRA_API_KEY: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
+  GITHUB_API_KEY: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
+  SLACK_API_KEY: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
   MOCK_API_BASE_URL: z.preprocess((value) => value === '' ? undefined : value, z.string().url().optional()),
   GEMINI_API_KEY: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
   GEMINI_EMBEDDING_MODEL: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).default('gemini-embedding-001')),

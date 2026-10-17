@@ -4,6 +4,7 @@ import type { DiscoveredSource, DocumentChunk, IngestionResult, IngestionStats, 
 import { discoverRouteSources } from '../sources/routes-catalog.js';
 import { loadDocumentationSources } from '../sources/docs-loader.js';
 import { extractDatabaseSources } from '../sources/database-extractor.js';
+import { loadSeedGraphSources } from '../sources/seed-graph-loader.js';
 import { chunkSource } from '../chunking/chunker.js';
 import { GeminiEmbeddingService } from '../embeddings/gemini-embeddings.js';
 import { PersistentVectorStore } from '../vector-store/persistent-store.js';
@@ -69,7 +70,8 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
       if (state.status === 'failed') return {};
       try {
         const docs = loadDocumentationSources(config.docsDir);
-        return { docSources: docs };
+        const seedSources = loadSeedGraphSources();
+        return { docSources: [...docs, ...seedSources] };
       } catch (error) {
         return {
           status: 'failed' as const,
@@ -222,9 +224,12 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
               chunkIds: chunks.map((c) => c.id),
               updatedAt: new Date().toISOString()
             },
-            chunks
+            chunks,
+            false
           );
         }
+
+        store.save();
 
         // Clean stale sources only when a full re-scan was conducted
         if (!config.selectedSources || config.selectedSources.length === 0) {

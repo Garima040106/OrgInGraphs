@@ -36,6 +36,15 @@ export type GraphResponse = {
   edges: GraphApiEdge[];
 };
 
+export type DashboardResponse = {
+  company: Entity | null;
+  organization: GraphResponse;
+  productProgress: GraphResponse;
+  sourceCounts: Record<"confluence" | "jira" | "slack" | "github", number>;
+  totals: { entities: number; people: number; teams: number; services: number; decisions: number };
+};
+export type SourceRecordResponse = { source: string; items: GraphApiNode[]; total: number; limit: number; offset: number };
+
 export type Entity = Record<string, unknown> & {
   id: string;
   name?: string;
@@ -149,6 +158,7 @@ export type OrganizationRagResponse = {
   agent: "organization-intelligence";
   status: "completed" | "partial" | "failed";
   uncertainty?: string;
+  errors?: string[];
 };
 
 export type AssistantQuery = { question: string; conversationId?: string; context?: { entityId: string; entityType: EntityType } };

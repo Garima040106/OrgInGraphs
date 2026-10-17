@@ -1,3 +1,5 @@
+import { SourceLibrary } from "@/components/sources/SourceLibrary";
+
 export default function DocumentsPage() {
-  return <h1>Documents</h1>;
+  return <SourceLibrary kind="documents" />;
 }

@@ -1,0 +1,4449 @@
+{
+  "nodes": [
+    {
+      "id": "hirenova",
+      "labels": [
+        "Company"
+      ],
+      "properties": {
+        "id": "hirenova",
+        "name": "Hirenova",
+        "foundedAt": "2023-01-01",
+        "companyStartDate": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "company-hirenova",
+        "externalUrl": "https://example.com/hirenova",
+        "createdAt": "2023-01-01"
+      }
+    },
+    {
+      "id": "swe",
+      "labels": [
+        "Department"
+      ],
+      "properties": {
+        "id": "swe",
+        "name": "Software Engineering",
+        "slug": "swe",
+        "createdAt": "2023-01-01",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "dept-swe"
+      }
+    },
+    {
+      "id": "eng",
+      "labels": [
+        "Team"
+      ],
+      "properties": {
+        "id": "eng",
+        "name": "Software Engineering Team",
+        "departmentId": "swe",
+        "createdAt": "2023-01-01",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "team-eng"
+      }
+    },
+    {
+      "id": "devops",
+      "labels": [
+        "Department"
+      ],
+      "properties": {
+        "id": "devops",
+        "name": "DevOps & Reliability",
+        "slug": "devops",
+        "createdAt": "2023-02-12",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "dept-devops"
+      }
+    },
+    {
+      "id": "platform",
+      "labels": [
+        "Team"
+      ],
+      "properties": {
+        "id": "platform",
+        "name": "DevOps & Reliability Team",
+        "departmentId": "devops",
+        "createdAt": "2023-02-12",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "team-platform"
+      }
+    },
+    {
+      "id": "paymentintegration",
+      "labels": [
+        "Department"
+      ],
+      "properties": {
+        "id": "paymentintegration",
+        "name": "Payment Integration",
+        "slug": "paymentintegration",
+        "createdAt": "2023-03-26",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "dept-paymentintegration"
+      }
+    },
+    {
+      "id": "payments",
+      "labels": [
+        "Team"
+      ],
+      "properties": {
+        "id": "payments",
+        "name": "Payment Integration Team",
+        "departmentId": "paymentintegration",
+        "createdAt": "2023-03-26",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "team-payments"
+      }
+    },
+    {
+      "id": "product",
+      "labels": [
+        "Department"
+      ],
+      "properties": {
+        "id": "product",
+        "name": "Product",
+        "slug": "product",
+        "createdAt": "2023-05-07",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "dept-product"
+      }
+    },
+    {
+      "id": "product-team",
+      "labels": [
+        "Team"
+      ],
+      "properties": {
+        "id": "product-team",
+        "name": "Product Team",
+        "departmentId": "product",
+        "createdAt": "2023-05-07",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "team-product-team"
+      }
+    },
+    {
+      "id": "design",
+      "labels": [
+        "Department"
+      ],
+      "properties": {
+        "id": "design",
+        "name": "Design",
+        "slug": "design",
+        "createdAt": "2023-06-18",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "dept-design"
+      }
+    },
+    {
+      "id": "design-team",
+      "labels": [
+        "Team"
+      ],
+      "properties": {
+        "id": "design-team",
+        "name": "Design Team",
+        "departmentId": "design",
+        "createdAt": "2023-06-18",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "team-design-team"
+      }
+    },
+    {
+      "id": "security",
+      "labels": [
+        "Department"
+      ],
+      "properties": {
+        "id": "security",
+        "name": "Security",
+        "slug": "security",
+        "createdAt": "2023-07-30",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "dept-security"
+      }
+    },
+    {
+      "id": "security-team",
+      "labels": [
+        "Team"
+      ],
+      "properties": {
+        "id": "security-team",
+        "name": "Security Team",
+        "departmentId": "security",
+        "createdAt": "2023-07-30",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "team-security-team"
+      }
+    },
+    {
+      "id": "customer-success",
+      "labels": [
+        "Department"
+      ],
+      "properties": {
+        "id": "customer-success",
+        "name": "Customer Success",
+        "slug": "customer-success",
+        "createdAt": "2023-09-10",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "dept-customer-success"
+      }
+    },
+    {
+      "id": "success",
+      "labels": [
+        "Team"
+      ],
+      "properties": {
+        "id": "success",
+        "name": "Customer Success Team",
+        "departmentId": "customer-success",
+        "createdAt": "2023-09-10",
+        "updatedAt": "2026-01-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "team-success"
+      }
+    },
+    {
+      "id": "emp-00",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-00",
+        "employeeId": "HN-0001",
+        "name": "Ava Patel",
+        "email": "ava.patel@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/0.png",
+        "jobTitle": "Software Engineer",
+        "departmentId": "swe",
+        "teamId": "eng",
+        "joinedAt": "2023-01-21",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-0",
+        "createdAt": "2023-01-21",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-01",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-01",
+        "employeeId": "HN-0002",
+        "name": "Noah Williams",
+        "email": "noah.williams@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/1.png",
+        "jobTitle": "Senior Software Engineer",
+        "departmentId": "devops",
+        "teamId": "platform",
+        "managerId": "emp-00",
+        "joinedAt": "2023-03-09",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-1",
+        "createdAt": "2023-03-09",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-02",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-02",
+        "employeeId": "HN-0003",
+        "name": "Mia Chen",
+        "email": "mia.chen@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/2.png",
+        "jobTitle": "Staff Engineer",
+        "departmentId": "paymentintegration",
+        "teamId": "payments",
+        "managerId": "emp-00",
+        "joinedAt": "2023-04-25",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-2",
+        "createdAt": "2023-04-25",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-03",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-03",
+        "employeeId": "HN-0004",
+        "name": "Liam Johnson",
+        "email": "liam.johnson@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/3.png",
+        "jobTitle": "Engineering Manager",
+        "departmentId": "product",
+        "teamId": "product-team",
+        "managerId": "emp-00",
+        "joinedAt": "2023-06-11",
+        "employmentStatus": "RESIGNED",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-3",
+        "createdAt": "2023-06-11",
+        "updatedAt": "2026-01-01",
+        "leftAt": "2024-01-17",
+        "departureReason": "career transition"
+      }
+    },
+    {
+      "id": "emp-04",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-04",
+        "employeeId": "HN-0005",
+        "name": "Sofia Garcia",
+        "email": "sofia.garcia@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/4.png",
+        "jobTitle": "Product Manager",
+        "departmentId": "design",
+        "teamId": "design-team",
+        "managerId": "emp-00",
+        "joinedAt": "2023-07-28",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-4",
+        "createdAt": "2023-07-28",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-05",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-05",
+        "employeeId": "HN-0006",
+        "name": "Ethan Brown",
+        "email": "ethan.brown@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/5.png",
+        "jobTitle": "SRE",
+        "departmentId": "security",
+        "teamId": "security-team",
+        "managerId": "emp-01",
+        "joinedAt": "2023-09-13",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-5",
+        "createdAt": "2023-09-13",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-06",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-06",
+        "employeeId": "HN-0007",
+        "name": "Isha Mehta",
+        "email": "isha.mehta@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/6.png",
+        "jobTitle": "Security Engineer",
+        "departmentId": "customer-success",
+        "teamId": "success",
+        "managerId": "emp-01",
+        "joinedAt": "2023-10-30",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-6",
+        "createdAt": "2023-10-30",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-07",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-07",
+        "employeeId": "HN-0008",
+        "name": "Lucas Martin",
+        "email": "lucas.martin@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/7.png",
+        "jobTitle": "Product Designer",
+        "departmentId": "swe",
+        "teamId": "eng",
+        "managerId": "emp-01",
+        "joinedAt": "2023-12-16",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-7",
+        "createdAt": "2023-12-16",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-08",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-08",
+        "employeeId": "HN-0009",
+        "name": "Zoe Davis",
+        "email": "zoe.davis@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/8.png",
+        "jobTitle": "Customer Success Manager",
+        "departmentId": "devops",
+        "teamId": "platform",
+        "managerId": "emp-01",
+        "joinedAt": "2024-02-01",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-8",
+        "createdAt": "2024-02-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-09",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-09",
+        "employeeId": "HN-0010",
+        "name": "Arjun Rao",
+        "email": "arjun.rao@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/9.png",
+        "jobTitle": "Software Engineer",
+        "departmentId": "paymentintegration",
+        "teamId": "payments",
+        "managerId": "emp-02",
+        "joinedAt": "2024-03-19",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-9",
+        "createdAt": "2024-03-19",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-10",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-10",
+        "employeeId": "HN-0011",
+        "name": "Emma Wilson",
+        "email": "emma.wilson@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/10.png",
+        "jobTitle": "Senior Software Engineer",
+        "departmentId": "product",
+        "teamId": "product-team",
+        "managerId": "emp-02",
+        "joinedAt": "2024-05-05",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-10",
+        "createdAt": "2024-05-05",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-11",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-11",
+        "employeeId": "HN-0012",
+        "name": "Oliver Taylor",
+        "email": "oliver.taylor@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/11.png",
+        "jobTitle": "Staff Engineer",
+        "departmentId": "design",
+        "teamId": "design-team",
+        "managerId": "emp-02",
+        "joinedAt": "2024-06-21",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-11",
+        "createdAt": "2024-06-21",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-12",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-12",
+        "employeeId": "HN-0013",
+        "name": "Nora Singh",
+        "email": "nora.singh@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/12.png",
+        "jobTitle": "Engineering Manager",
+        "departmentId": "security",
+        "teamId": "security-team",
+        "managerId": "emp-02",
+        "joinedAt": "2024-08-07",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-12",
+        "createdAt": "2024-08-07",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-13",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-13",
+        "employeeId": "HN-0014",
+        "name": "Mateo Anderson",
+        "email": "mateo.anderson@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/13.png",
+        "jobTitle": "Product Manager",
+        "departmentId": "customer-success",
+        "teamId": "success",
+        "managerId": "emp-03",
+        "joinedAt": "2024-09-23",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-13",
+        "createdAt": "2024-09-23",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-14",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-14",
+        "employeeId": "HN-0015",
+        "name": "Leah Thomas",
+        "email": "leah.thomas@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/14.png",
+        "jobTitle": "SRE",
+        "departmentId": "swe",
+        "teamId": "eng",
+        "managerId": "emp-03",
+        "joinedAt": "2024-11-09",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-14",
+        "createdAt": "2024-11-09",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-15",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-15",
+        "employeeId": "HN-0016",
+        "name": "Henry Moore",
+        "email": "henry.moore@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/15.png",
+        "jobTitle": "Security Engineer",
+        "departmentId": "devops",
+        "teamId": "platform",
+        "managerId": "emp-03",
+        "joinedAt": "2024-12-26",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-15",
+        "createdAt": "2024-12-26",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-16",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-16",
+        "employeeId": "HN-0017",
+        "name": "Anika Shah",
+        "email": "anika.shah@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/16.png",
+        "jobTitle": "Product Designer",
+        "departmentId": "paymentintegration",
+        "teamId": "payments",
+        "managerId": "emp-03",
+        "joinedAt": "2025-02-11",
+        "employmentStatus": "OFFBOARDED",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-16",
+        "createdAt": "2025-02-11",
+        "updatedAt": "2026-01-01",
+        "leftAt": "2025-08-10",
+        "departureReason": "role eliminated during team restructuring"
+      }
+    },
+    {
+      "id": "emp-17",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-17",
+        "employeeId": "HN-0018",
+        "name": "James Jackson",
+        "email": "james.jackson@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/17.png",
+        "jobTitle": "Customer Success Manager",
+        "departmentId": "product",
+        "teamId": "product-team",
+        "managerId": "emp-04",
+        "joinedAt": "2025-03-30",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-17",
+        "createdAt": "2025-03-30",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-18",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-18",
+        "employeeId": "HN-0019",
+        "name": "Maya White",
+        "email": "maya.white@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/18.png",
+        "jobTitle": "Software Engineer",
+        "departmentId": "design",
+        "teamId": "design-team",
+        "managerId": "emp-04",
+        "joinedAt": "2025-05-16",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-18",
+        "createdAt": "2025-05-16",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-19",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-19",
+        "employeeId": "HN-0020",
+        "name": "Daniel Harris",
+        "email": "daniel.harris@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/19.png",
+        "jobTitle": "Senior Software Engineer",
+        "departmentId": "security",
+        "teamId": "security-team",
+        "managerId": "emp-04",
+        "joinedAt": "2025-07-02",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-19",
+        "createdAt": "2025-07-02",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-20",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-20",
+        "employeeId": "HN-0021",
+        "name": "Priya Kumar",
+        "email": "priya.kumar@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/20.png",
+        "jobTitle": "Staff Engineer",
+        "departmentId": "customer-success",
+        "teamId": "success",
+        "managerId": "emp-04",
+        "joinedAt": "2025-08-18",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-20",
+        "createdAt": "2025-08-18",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-21",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-21",
+        "employeeId": "HN-0022",
+        "name": "Benjamin Clark",
+        "email": "benjamin.clark@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/21.png",
+        "jobTitle": "Engineering Manager",
+        "departmentId": "swe",
+        "teamId": "eng",
+        "managerId": "emp-05",
+        "joinedAt": "2025-10-04",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-21",
+        "createdAt": "2025-10-04",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-22",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-22",
+        "employeeId": "HN-0023",
+        "name": "Sara Lewis",
+        "email": "sara.lewis@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/22.png",
+        "jobTitle": "Product Manager",
+        "departmentId": "devops",
+        "teamId": "platform",
+        "managerId": "emp-05",
+        "joinedAt": "2025-11-20",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-22",
+        "createdAt": "2025-11-20",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-23",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-23",
+        "employeeId": "HN-0024",
+        "name": "William Young",
+        "email": "william.young@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/23.png",
+        "jobTitle": "SRE",
+        "departmentId": "paymentintegration",
+        "teamId": "payments",
+        "managerId": "emp-05",
+        "joinedAt": "2023-02-11",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-23",
+        "createdAt": "2023-02-11",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-24",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-24",
+        "employeeId": "HN-0025",
+        "name": "Riya Walker",
+        "email": "riya.walker@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/24.png",
+        "jobTitle": "Security Engineer",
+        "departmentId": "product",
+        "teamId": "product-team",
+        "managerId": "emp-05",
+        "joinedAt": "2023-03-30",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-24",
+        "createdAt": "2023-03-30",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-25",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-25",
+        "employeeId": "HN-0026",
+        "name": "Michael Hall",
+        "email": "michael.hall@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/25.png",
+        "jobTitle": "Product Designer",
+        "departmentId": "design",
+        "teamId": "design-team",
+        "managerId": "emp-06",
+        "joinedAt": "2023-05-16",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-25",
+        "createdAt": "2023-05-16",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-26",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-26",
+        "employeeId": "HN-0027",
+        "name": "Tara Allen",
+        "email": "tara.allen@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/26.png",
+        "jobTitle": "Customer Success Manager",
+        "departmentId": "security",
+        "teamId": "security-team",
+        "managerId": "emp-06",
+        "joinedAt": "2023-07-02",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-26",
+        "createdAt": "2023-07-02",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-27",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-27",
+        "employeeId": "HN-0028",
+        "name": "Alexander King",
+        "email": "alexander.king@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/27.png",
+        "jobTitle": "Software Engineer",
+        "departmentId": "customer-success",
+        "teamId": "success",
+        "managerId": "emp-06",
+        "joinedAt": "2023-08-18",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-27",
+        "createdAt": "2023-08-18",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-28",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-28",
+        "employeeId": "HN-0029",
+        "name": "Neha Wright",
+        "email": "neha.wright@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/28.png",
+        "jobTitle": "Senior Software Engineer",
+        "departmentId": "swe",
+        "teamId": "eng",
+        "managerId": "emp-06",
+        "joinedAt": "2023-10-04",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-28",
+        "createdAt": "2023-10-04",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-29",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-29",
+        "employeeId": "HN-0030",
+        "name": "Sebastian Scott",
+        "email": "sebastian.scott@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/29.png",
+        "jobTitle": "Staff Engineer",
+        "departmentId": "devops",
+        "teamId": "platform",
+        "managerId": "emp-07",
+        "joinedAt": "2023-11-20",
+        "employmentStatus": "RESIGNED",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-29",
+        "createdAt": "2023-11-20",
+        "updatedAt": "2026-01-01",
+        "leftAt": "2024-07-17",
+        "departureReason": "relocated internationally"
+      }
+    },
+    {
+      "id": "emp-30",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-30",
+        "employeeId": "HN-0031",
+        "name": "Diya Green",
+        "email": "diya.green@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/30.png",
+        "jobTitle": "Engineering Manager",
+        "departmentId": "paymentintegration",
+        "teamId": "payments",
+        "managerId": "emp-07",
+        "joinedAt": "2024-01-06",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-30",
+        "createdAt": "2024-01-06",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-31",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-31",
+        "employeeId": "HN-0032",
+        "name": "Jack Baker",
+        "email": "jack.baker@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/31.png",
+        "jobTitle": "Product Manager",
+        "departmentId": "product",
+        "teamId": "product-team",
+        "managerId": "emp-07",
+        "joinedAt": "2024-02-22",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-31",
+        "createdAt": "2024-02-22",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-32",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-32",
+        "employeeId": "HN-0033",
+        "name": "Elena Adams",
+        "email": "elena.adams@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/32.png",
+        "jobTitle": "SRE",
+        "departmentId": "design",
+        "teamId": "design-team",
+        "managerId": "emp-07",
+        "joinedAt": "2024-04-09",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-32",
+        "createdAt": "2024-04-09",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-33",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-33",
+        "employeeId": "HN-0034",
+        "name": "David Nelson",
+        "email": "david.nelson@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/33.png",
+        "jobTitle": "Security Engineer",
+        "departmentId": "security",
+        "teamId": "security-team",
+        "managerId": "emp-08",
+        "joinedAt": "2024-05-26",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-33",
+        "createdAt": "2024-05-26",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-34",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-34",
+        "employeeId": "HN-0035",
+        "name": "Meera Hill",
+        "email": "meera.hill@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/34.png",
+        "jobTitle": "Product Designer",
+        "departmentId": "customer-success",
+        "teamId": "success",
+        "managerId": "emp-08",
+        "joinedAt": "2024-07-12",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-34",
+        "createdAt": "2024-07-12",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-35",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-35",
+        "employeeId": "HN-0036",
+        "name": "Leo Ramirez",
+        "email": "leo.ramirez@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/35.png",
+        "jobTitle": "Customer Success Manager",
+        "departmentId": "swe",
+        "teamId": "eng",
+        "managerId": "emp-08",
+        "joinedAt": "2024-08-28",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-35",
+        "createdAt": "2024-08-28",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-36",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-36",
+        "employeeId": "HN-0037",
+        "name": "Aanya Campbell",
+        "email": "aanya.campbell@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/36.png",
+        "jobTitle": "Software Engineer",
+        "departmentId": "devops",
+        "teamId": "platform",
+        "managerId": "emp-08",
+        "joinedAt": "2024-10-14",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-36",
+        "createdAt": "2024-10-14",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-37",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-37",
+        "employeeId": "HN-0038",
+        "name": "Owen Mitchell",
+        "email": "owen.mitchell@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/37.png",
+        "jobTitle": "Senior Software Engineer",
+        "departmentId": "paymentintegration",
+        "teamId": "payments",
+        "managerId": "emp-09",
+        "joinedAt": "2024-11-30",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-37",
+        "createdAt": "2024-11-30",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-38",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-38",
+        "employeeId": "HN-0039",
+        "name": "Kavya Roberts",
+        "email": "kavya.roberts@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/38.png",
+        "jobTitle": "Staff Engineer",
+        "departmentId": "product",
+        "teamId": "product-team",
+        "managerId": "emp-09",
+        "joinedAt": "2025-01-16",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-38",
+        "createdAt": "2025-01-16",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-39",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-39",
+        "employeeId": "HN-0040",
+        "name": "Samuel Carter",
+        "email": "samuel.carter@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/39.png",
+        "jobTitle": "Engineering Manager",
+        "departmentId": "design",
+        "teamId": "design-team",
+        "managerId": "emp-09",
+        "joinedAt": "2025-03-04",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-39",
+        "createdAt": "2025-03-04",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-40",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-40",
+        "employeeId": "HN-0041",
+        "name": "Nina Phillips",
+        "email": "nina.phillips@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/40.png",
+        "jobTitle": "Product Manager",
+        "departmentId": "security",
+        "teamId": "security-team",
+        "managerId": "emp-09",
+        "joinedAt": "2025-04-20",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-40",
+        "createdAt": "2025-04-20",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-41",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-41",
+        "employeeId": "HN-0042",
+        "name": "Logan Evans",
+        "email": "logan.evans@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/41.png",
+        "jobTitle": "SRE",
+        "departmentId": "customer-success",
+        "teamId": "success",
+        "managerId": "emp-10",
+        "joinedAt": "2025-06-06",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-41",
+        "createdAt": "2025-06-06",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-42",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-42",
+        "employeeId": "HN-0043",
+        "name": "Aditi Turner",
+        "email": "aditi.turner@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/42.png",
+        "jobTitle": "Security Engineer",
+        "departmentId": "swe",
+        "teamId": "eng",
+        "managerId": "emp-10",
+        "joinedAt": "2025-07-23",
+        "employmentStatus": "RESIGNED",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-42",
+        "createdAt": "2025-07-23",
+        "updatedAt": "2026-01-01",
+        "leftAt": "2025-10-21",
+        "departureReason": "accepted an opportunity at another company"
+      }
+    },
+    {
+      "id": "emp-43",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-43",
+        "employeeId": "HN-0044",
+        "name": "Matthew Torres",
+        "email": "matthew.torres@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/43.png",
+        "jobTitle": "Product Designer",
+        "departmentId": "devops",
+        "teamId": "platform",
+        "managerId": "emp-10",
+        "joinedAt": "2025-09-08",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-43",
+        "createdAt": "2025-09-08",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-44",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-44",
+        "employeeId": "HN-0045",
+        "name": "Ivy Parker",
+        "email": "ivy.parker@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/44.png",
+        "jobTitle": "Customer Success Manager",
+        "departmentId": "paymentintegration",
+        "teamId": "payments",
+        "managerId": "emp-10",
+        "joinedAt": "2025-10-25",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-44",
+        "createdAt": "2025-10-25",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-45",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-45",
+        "employeeId": "HN-0046",
+        "name": "Rohan Collins",
+        "email": "rohan.collins@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/45.png",
+        "jobTitle": "Software Engineer",
+        "departmentId": "product",
+        "teamId": "product-team",
+        "managerId": "emp-11",
+        "joinedAt": "2025-12-11",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-45",
+        "createdAt": "2025-12-11",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-46",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-46",
+        "employeeId": "HN-0047",
+        "name": "Grace Edwards",
+        "email": "grace.edwards@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/46.png",
+        "jobTitle": "Senior Software Engineer",
+        "departmentId": "design",
+        "teamId": "design-team",
+        "managerId": "emp-11",
+        "joinedAt": "2023-03-04",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-46",
+        "createdAt": "2023-03-04",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-47",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-47",
+        "employeeId": "HN-0048",
+        "name": "Kiran Stewart",
+        "email": "kiran.stewart@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/47.png",
+        "jobTitle": "Staff Engineer",
+        "departmentId": "security",
+        "teamId": "security-team",
+        "managerId": "emp-11",
+        "joinedAt": "2023-04-20",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-47",
+        "createdAt": "2023-04-20",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-48",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-48",
+        "employeeId": "HN-0049",
+        "name": "Jacob Sanchez",
+        "email": "jacob.sanchez@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/48.png",
+        "jobTitle": "Engineering Manager",
+        "departmentId": "customer-success",
+        "teamId": "success",
+        "managerId": "emp-11",
+        "joinedAt": "2023-06-06",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-48",
+        "createdAt": "2023-06-06",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-49",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-49",
+        "employeeId": "HN-0050",
+        "name": "Anaya Morris",
+        "email": "anaya.morris@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/49.png",
+        "jobTitle": "Product Manager",
+        "departmentId": "swe",
+        "teamId": "eng",
+        "managerId": "emp-12",
+        "joinedAt": "2023-07-23",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-49",
+        "createdAt": "2023-07-23",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-50",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-50",
+        "employeeId": "HN-0051",
+        "name": "Caleb Rogers",
+        "email": "caleb.rogers@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/50.png",
+        "jobTitle": "SRE",
+        "departmentId": "devops",
+        "teamId": "platform",
+        "managerId": "emp-12",
+        "joinedAt": "2023-09-08",
+        "employmentStatus": "active",
+        "seniority": "staff",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-50",
+        "createdAt": "2023-09-08",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-51",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-51",
+        "employeeId": "HN-0052",
+        "name": "Pooja Reed",
+        "email": "pooja.reed@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/51.png",
+        "jobTitle": "Security Engineer",
+        "departmentId": "paymentintegration",
+        "teamId": "payments",
+        "managerId": "emp-12",
+        "joinedAt": "2023-10-25",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-51",
+        "createdAt": "2023-10-25",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-52",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-52",
+        "employeeId": "HN-0053",
+        "name": "Mason Cook",
+        "email": "mason.cook@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/52.png",
+        "jobTitle": "Product Designer",
+        "departmentId": "product",
+        "teamId": "product-team",
+        "managerId": "emp-12",
+        "joinedAt": "2023-12-11",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-52",
+        "createdAt": "2023-12-11",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-53",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-53",
+        "employeeId": "HN-0054",
+        "name": "Simran Morgan",
+        "email": "simran.morgan@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/53.png",
+        "jobTitle": "Customer Success Manager",
+        "departmentId": "design",
+        "teamId": "design-team",
+        "managerId": "emp-13",
+        "joinedAt": "2024-01-27",
+        "employmentStatus": "active",
+        "seniority": "mid",
+        "skills": [
+          "typescript",
+          "systems",
+          "communication"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-53",
+        "createdAt": "2024-01-27",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-54",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-54",
+        "employeeId": "HN-0055",
+        "name": "Eli Bell",
+        "email": "eli.bell@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/54.png",
+        "jobTitle": "Software Engineer",
+        "departmentId": "security",
+        "teamId": "security-team",
+        "managerId": "emp-13",
+        "joinedAt": "2024-03-14",
+        "employmentStatus": "active",
+        "seniority": "senior",
+        "skills": [
+          "typescript"
+        ],
+        "location": "Remote",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-54",
+        "createdAt": "2024-03-14",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "emp-55",
+      "labels": [
+        "Employee"
+      ],
+      "properties": {
+        "id": "emp-55",
+        "employeeId": "HN-0056",
+        "name": "Zara Murphy",
+        "email": "zara.murphy@example.com",
+        "profilePictureUrl": "https://images.example.com/hirenova/55.png",
+        "jobTitle": "Senior Software Engineer",
+        "departmentId": "customer-success",
+        "teamId": "success",
+        "managerId": "emp-13",
+        "joinedAt": "2024-04-30",
+        "employmentStatus": "OFFBOARDED",
+        "seniority": "staff",
+        "skills": [
+          "typescript",
+          "systems"
+        ],
+        "location": "Bengaluru",
+        "sourceSystem": "seed",
+        "sourceRecordId": "employee-55",
+        "createdAt": "2024-04-30",
+        "updatedAt": "2026-01-01",
+        "leftAt": "2025-02-24",
+        "departureReason": "performance expectations not met"
+      }
+    },
+    {
+      "id": "ledger-reconciliation",
+      "labels": [
+        "Project"
+      ],
+      "properties": {
+        "id": "ledger-reconciliation",
+        "name": "ledger reconciliation",
+        "status": "completed",
+        "ownerId": "emp-01",
+        "validFrom": "2023-07-20",
+        "sourceSystem": "seed",
+        "sourceRecordId": "ledger-reconciliation",
+        "externalUrl": "https://example.com/project/ledger-reconciliation",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "instant-refunds",
+      "labels": [
+        "Project"
+      ],
+      "properties": {
+        "id": "instant-refunds",
+        "name": "instant refunds",
+        "status": "completed",
+        "ownerId": "emp-02",
+        "validFrom": "2024-03-26",
+        "sourceSystem": "seed",
+        "sourceRecordId": "instant-refunds",
+        "externalUrl": "https://example.com/project/instant-refunds",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "reliability-foundation",
+      "labels": [
+        "Project"
+      ],
+      "properties": {
+        "id": "reliability-foundation",
+        "name": "reliability foundation",
+        "status": "active",
+        "ownerId": "emp-03",
+        "validFrom": "2024-12-01",
+        "sourceSystem": "seed",
+        "sourceRecordId": "reliability-foundation",
+        "externalUrl": "https://example.com/project/reliability-foundation",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "payments-api",
+      "labels": [
+        "Service"
+      ],
+      "properties": {
+        "id": "payments-api",
+        "name": "payments-api",
+        "teamId": "eng",
+        "status": "operational",
+        "sourceSystem": "seed",
+        "sourceRecordId": "payments-api",
+        "externalUrl": "https://example.com/service/payments-api",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "checkout-web",
+      "labels": [
+        "Service"
+      ],
+      "properties": {
+        "id": "checkout-web",
+        "name": "checkout-web",
+        "teamId": "platform",
+        "status": "operational",
+        "sourceSystem": "seed",
+        "sourceRecordId": "checkout-web",
+        "externalUrl": "https://example.com/service/checkout-web",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "platform-runtime",
+      "labels": [
+        "Service"
+      ],
+      "properties": {
+        "id": "platform-runtime",
+        "name": "platform-runtime",
+        "teamId": "payments",
+        "status": "operational",
+        "sourceSystem": "seed",
+        "sourceRecordId": "platform-runtime",
+        "externalUrl": "https://example.com/service/platform-runtime",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "payment-core",
+      "labels": [
+        "Repository"
+      ],
+      "properties": {
+        "id": "payment-core",
+        "name": "payment-core",
+        "projectId": "ledger-reconciliation",
+        "sourceSystem": "seed",
+        "sourceRecordId": "payment-core",
+        "externalUrl": "https://example.com/repository/payment-core",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "platform-infra",
+      "labels": [
+        "Repository"
+      ],
+      "properties": {
+        "id": "platform-infra",
+        "name": "platform-infra",
+        "projectId": "reliability-foundation",
+        "sourceSystem": "seed",
+        "sourceRecordId": "platform-infra",
+        "externalUrl": "https://example.com/repository/platform-infra",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "customer-portal",
+      "labels": [
+        "Repository"
+      ],
+      "properties": {
+        "id": "customer-portal",
+        "name": "customer-portal",
+        "projectId": "instant-refunds",
+        "sourceSystem": "seed",
+        "sourceRecordId": "customer-portal",
+        "externalUrl": "https://example.com/repository/customer-portal",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "doc-idempotency",
+      "labels": [
+        "Document"
+      ],
+      "properties": {
+        "id": "doc-idempotency",
+        "title": "Idempotent payment commands",
+        "authorId": "emp-02",
+        "projectId": "ledger-reconciliation",
+        "validFrom": "2023-11-17",
+        "content": "Decision record for safe retries.",
+        "sourceSystem": "seed",
+        "sourceRecordId": "doc-idempotency",
+        "externalUrl": "https://example.com/document/doc-idempotency",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "decision-idempotency",
+      "labels": [
+        "Decision"
+      ],
+      "properties": {
+        "id": "decision-idempotency",
+        "title": "Use idempotency keys for payment writes",
+        "documentId": "doc-idempotency",
+        "validFrom": "2023-11-22",
+        "status": "accepted",
+        "sourceSystem": "seed",
+        "sourceRecordId": "decision-idempotency",
+        "externalUrl": "https://example.com/decision/decision-idempotency",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "incident-duplicate-charge",
+      "labels": [
+        "Incident"
+      ],
+      "properties": {
+        "id": "incident-duplicate-charge",
+        "title": "Duplicate charge regression",
+        "severity": "high",
+        "occurredAt": "2024-07-04",
+        "serviceId": "payments-api",
+        "resolvedAt": "2024-07-07",
+        "sourceSystem": "seed",
+        "sourceRecordId": "incident-duplicate-charge",
+        "externalUrl": "https://example.com/incident/incident-duplicate-charge",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "payments-eng",
+      "labels": [
+        "Channel"
+      ],
+      "properties": {
+        "id": "payments-eng",
+        "name": "#payments-eng",
+        "purpose": "Payment engineering collaboration",
+        "sourceSystem": "seed",
+        "sourceRecordId": "payments-eng",
+        "externalUrl": "https://example.com/channel/payments-eng",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "msg-idempotency",
+      "labels": [
+        "Message"
+      ],
+      "properties": {
+        "id": "msg-idempotency",
+        "text": "The idempotency decision is ready for implementation.",
+        "authorId": "emp-02",
+        "channelId": "payments-eng",
+        "occurredAt": "2023-11-23",
+        "sourceSystem": "seed",
+        "sourceRecordId": "msg-idempotency",
+        "externalUrl": "https://example.com/message/msg-idempotency",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "task-idempotency",
+      "labels": [
+        "Task"
+      ],
+      "properties": {
+        "id": "task-idempotency",
+        "title": "Implement idempotency middleware",
+        "status": "done",
+        "projectId": "ledger-reconciliation",
+        "assigneeId": "emp-03",
+        "createdAt": "2023-11-24",
+        "sourceSystem": "seed",
+        "sourceRecordId": "task-idempotency",
+        "externalUrl": "https://example.com/task/task-idempotency",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "pr-idempotency",
+      "labels": [
+        "PullRequest"
+      ],
+      "properties": {
+        "id": "pr-idempotency",
+        "title": "Add idempotency middleware",
+        "status": "merged",
+        "repositoryId": "payment-core",
+        "authorId": "emp-03",
+        "mergedAt": "2023-12-02",
+        "sourceSystem": "seed",
+        "sourceRecordId": "pr-idempotency",
+        "externalUrl": "https://example.com/pullrequest/pr-idempotency",
+        "createdAt": "2026-01-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "product-orbit",
+      "labels": [
+        "Product"
+      ],
+      "properties": {
+        "id": "product-orbit",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "product-orbit",
+        "name": "Orbit Checkout",
+        "status": "active",
+        "priority": "P0",
+        "description": "Fictional checkout orchestration product for reliable payment experiences.",
+        "createdAt": "2025-07-30",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "module-payment-methods",
+      "labels": [
+        "ProductModule"
+      ],
+      "properties": {
+        "id": "module-payment-methods",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "module-payment-methods",
+        "name": "Payment Methods",
+        "status": "active",
+        "createdAt": "2025-08-01",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "module-risk-controls",
+      "labels": [
+        "ProductModule"
+      ],
+      "properties": {
+        "id": "module-risk-controls",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "module-risk-controls",
+        "name": "Risk Controls",
+        "status": "active",
+        "createdAt": "2025-08-04",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "module-checkout-ui",
+      "labels": [
+        "ProductModule"
+      ],
+      "properties": {
+        "id": "module-checkout-ui",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "module-checkout-ui",
+        "name": "Checkout UI",
+        "status": "active",
+        "createdAt": "2025-08-07",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "feature-smart-retry",
+      "labels": [
+        "Feature"
+      ],
+      "properties": {
+        "id": "feature-smart-retry",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "feature-smart-retry",
+        "name": "Smart payment retry",
+        "status": "in-progress",
+        "priority": "P0",
+        "ownerId": "emp-03",
+        "createdAt": "2025-08-17",
+        "updatedAt": "2025-11-09"
+      }
+    },
+    {
+      "id": "feature-wallet-routing",
+      "labels": [
+        "Feature"
+      ],
+      "properties": {
+        "id": "feature-wallet-routing",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "feature-wallet-routing",
+        "name": "Wallet routing rules",
+        "status": "released",
+        "priority": "P1",
+        "ownerId": "emp-12",
+        "createdAt": "2025-08-11",
+        "updatedAt": "2025-11-27"
+      }
+    },
+    {
+      "id": "request-saved-cards",
+      "labels": [
+        "FeatureRequest"
+      ],
+      "properties": {
+        "id": "request-saved-cards",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "request-saved-cards",
+        "title": "Remember preferred cards",
+        "status": "triaged",
+        "priority": "P1",
+        "requestedBy": "emp-47",
+        "createdAt": "2025-08-27",
+        "updatedAt": "2025-09-12"
+      }
+    },
+    {
+      "id": "request-receipt-locale",
+      "labels": [
+        "FeatureRequest"
+      ],
+      "properties": {
+        "id": "request-receipt-locale",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "request-receipt-locale",
+        "title": "Localized payment receipts",
+        "status": "accepted",
+        "priority": "P2",
+        "requestedBy": "emp-51",
+        "createdAt": "2025-09-02",
+        "updatedAt": "2025-09-28"
+      }
+    },
+    {
+      "id": "ticket-retry-policy",
+      "labels": [
+        "Ticket"
+      ],
+      "properties": {
+        "id": "ticket-retry-policy",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "ticket-retry-policy",
+        "title": "Add retry policy evaluator",
+        "status": "in-progress",
+        "priority": "P0",
+        "assigneeId": "emp-04",
+        "createdAt": "2025-09-10",
+        "updatedAt": "2025-09-30"
+      }
+    },
+    {
+      "id": "ticket-wallet-fallback",
+      "labels": [
+        "Ticket"
+      ],
+      "properties": {
+        "id": "ticket-wallet-fallback",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "ticket-wallet-fallback",
+        "title": "Add wallet fallback routing",
+        "status": "done",
+        "priority": "P1",
+        "assigneeId": "emp-13",
+        "createdAt": "2025-09-22",
+        "updatedAt": "2025-10-12"
+      }
+    },
+    {
+      "id": "ticket-receipt-locale",
+      "labels": [
+        "Ticket"
+      ],
+      "properties": {
+        "id": "ticket-receipt-locale",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "ticket-receipt-locale",
+        "title": "Prepare locale-aware receipt template",
+        "status": "todo",
+        "priority": "P2",
+        "assigneeId": "emp-21",
+        "createdAt": "2025-10-10",
+        "updatedAt": "2025-10-30"
+      }
+    },
+    {
+      "id": "task-idempotency-audit",
+      "labels": [
+        "Task"
+      ],
+      "properties": {
+        "id": "task-idempotency-audit",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "task-idempotency-audit",
+        "title": "Audit retry idempotency boundaries",
+        "status": "done",
+        "priority": "P0",
+        "assigneeId": "emp-02",
+        "createdAt": "2025-09-06",
+        "updatedAt": "2025-09-17"
+      }
+    },
+    {
+      "id": "bug-double-retry",
+      "labels": [
+        "Bug"
+      ],
+      "properties": {
+        "id": "bug-double-retry",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "bug-double-retry",
+        "title": "Retry can submit twice after timeout",
+        "status": "resolved",
+        "priority": "P0",
+        "severity": "critical",
+        "assigneeId": "emp-05",
+        "createdAt": "2025-09-29",
+        "updatedAt": "2025-10-16",
+        "resolvedAt": "2025-10-16"
+      }
+    },
+    {
+      "id": "bug-wallet-timeout",
+      "labels": [
+        "Bug"
+      ],
+      "properties": {
+        "id": "bug-wallet-timeout",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "bug-wallet-timeout",
+        "title": "Wallet fallback timeout shown as decline",
+        "status": "open",
+        "priority": "P1",
+        "severity": "major",
+        "assigneeId": "emp-14",
+        "createdAt": "2025-10-29",
+        "updatedAt": "2025-11-17"
+      }
+    },
+    {
+      "id": "product-pr-retry-engine",
+      "labels": [
+        "PullRequest"
+      ],
+      "properties": {
+        "id": "product-pr-retry-engine",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "product-pr-retry-engine",
+        "title": "Introduce retry policy engine",
+        "status": "merged",
+        "priority": "P0",
+        "authorId": "emp-04",
+        "repositoryId": "payment-core",
+        "createdAt": "2025-10-20",
+        "updatedAt": "2025-11-03",
+        "mergedAt": "2025-11-03"
+      }
+    },
+    {
+      "id": "product-pr-wallet-routing",
+      "labels": [
+        "PullRequest"
+      ],
+      "properties": {
+        "id": "product-pr-wallet-routing",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "product-pr-wallet-routing",
+        "title": "Route wallet fallbacks by issuer",
+        "status": "open",
+        "priority": "P1",
+        "authorId": "emp-13",
+        "repositoryId": "payment-core",
+        "createdAt": "2025-11-12",
+        "updatedAt": "2025-12-05"
+      }
+    },
+    {
+      "id": "commit-retry-policy",
+      "labels": [
+        "Commit"
+      ],
+      "properties": {
+        "id": "commit-retry-policy",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "commit-retry-policy",
+        "title": "Add bounded retry policy",
+        "sha": "synthetic-retry-001",
+        "authorId": "emp-04",
+        "committedAt": "2025-10-31",
+        "createdAt": "2025-10-31",
+        "updatedAt": "2025-10-31"
+      }
+    },
+    {
+      "id": "commit-wallet-fallback",
+      "labels": [
+        "Commit"
+      ],
+      "properties": {
+        "id": "commit-wallet-fallback",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "commit-wallet-fallback",
+        "title": "Add issuer fallback table",
+        "sha": "synthetic-wallet-001",
+        "authorId": "emp-13",
+        "committedAt": "2025-12-01",
+        "createdAt": "2025-12-01",
+        "updatedAt": "2025-12-01"
+      }
+    },
+    {
+      "id": "review-retry-engine",
+      "labels": [
+        "Review"
+      ],
+      "properties": {
+        "id": "review-retry-engine",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "review-retry-engine",
+        "title": "Retry engine review",
+        "status": "approved",
+        "reviewerId": "emp-06",
+        "createdAt": "2025-11-01",
+        "updatedAt": "2025-11-02"
+      }
+    },
+    {
+      "id": "release-orbit-2025-12",
+      "labels": [
+        "Release"
+      ],
+      "properties": {
+        "id": "release-orbit-2025-12",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "release-orbit-2025-12",
+        "name": "Orbit Checkout 2025.12",
+        "status": "released",
+        "priority": "P0",
+        "version": "2025.12.0",
+        "releasedAt": "2025-11-25",
+        "createdAt": "2025-11-19",
+        "updatedAt": "2025-11-25"
+      }
+    },
+    {
+      "id": "release-orbit-2026-01",
+      "labels": [
+        "Release"
+      ],
+      "properties": {
+        "id": "release-orbit-2026-01",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "release-orbit-2026-01",
+        "name": "Orbit Checkout 2026.01",
+        "status": "planned",
+        "priority": "P1",
+        "version": "2026.01.0",
+        "targetDate": "2026-01-01",
+        "createdAt": "2025-12-22",
+        "updatedAt": "2026-01-01"
+      }
+    },
+    {
+      "id": "comment-retry-observability",
+      "labels": [
+        "Comment"
+      ],
+      "properties": {
+        "id": "comment-retry-observability",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "comment-retry-observability",
+        "body": "Please add a metric for policy fallbacks before the next release.",
+        "authorId": "emp-09",
+        "createdAt": "2025-11-05",
+        "updatedAt": "2025-11-05"
+      }
+    },
+    {
+      "id": "decision-retry-cap",
+      "labels": [
+        "Decision"
+      ],
+      "properties": {
+        "id": "decision-retry-cap",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "decision-retry-cap",
+        "title": "Cap automatic retries at two attempts",
+        "status": "accepted",
+        "deciderId": "emp-01",
+        "createdAt": "2025-10-08",
+        "updatedAt": "2025-10-09"
+      }
+    },
+    {
+      "id": "activity-retry-shipped",
+      "labels": [
+        "Activity"
+      ],
+      "properties": {
+        "id": "activity-retry-shipped",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "activity-retry-shipped",
+        "activityType": "release_update",
+        "message": "Retry policy engine is included in the December release.",
+        "actorId": "emp-01",
+        "occurredAt": "2025-11-26",
+        "createdAt": "2025-11-26",
+        "updatedAt": "2025-11-26"
+      }
+    },
+    {
+      "id": "activity-wallet-risk",
+      "labels": [
+        "Activity"
+      ],
+      "properties": {
+        "id": "activity-wallet-risk",
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed",
+        "sourceRecordId": "activity-wallet-risk",
+        "activityType": "status_update",
+        "message": "Wallet fallback remains in validation pending issuer timeout tests.",
+        "actorId": "emp-12",
+        "occurredAt": "2025-12-10",
+        "createdAt": "2025-12-10",
+        "updatedAt": "2025-12-10"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "HAS_DEPARTMENT:hirenova:swe",
+      "type": "HAS_DEPARTMENT",
+      "source": "hirenova",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "HAS_DEPARTMENT:hirenova:devops",
+      "type": "HAS_DEPARTMENT",
+      "source": "hirenova",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "HAS_DEPARTMENT:hirenova:paymentintegration",
+      "type": "HAS_DEPARTMENT",
+      "source": "hirenova",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "HAS_DEPARTMENT:hirenova:product",
+      "type": "HAS_DEPARTMENT",
+      "source": "hirenova",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "HAS_DEPARTMENT:hirenova:design",
+      "type": "HAS_DEPARTMENT",
+      "source": "hirenova",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "HAS_DEPARTMENT:hirenova:security",
+      "type": "HAS_DEPARTMENT",
+      "source": "hirenova",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "HAS_DEPARTMENT:hirenova:customer-success",
+      "type": "HAS_DEPARTMENT",
+      "source": "hirenova",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "HAS_TEAM:swe:eng",
+      "type": "HAS_TEAM",
+      "source": "swe",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "MAINTAINS:eng:payments-api",
+      "type": "MAINTAINS",
+      "source": "eng",
+      "target": "payments-api",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_ON:eng:module-payment-methods",
+      "type": "WORKS_ON",
+      "source": "eng",
+      "target": "module-payment-methods",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_TEAM:devops:platform",
+      "type": "HAS_TEAM",
+      "source": "devops",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "MAINTAINS:platform:checkout-web",
+      "type": "MAINTAINS",
+      "source": "platform",
+      "target": "checkout-web",
+      "properties": {}
+    },
+    {
+      "id": "HAS_TEAM:paymentintegration:payments",
+      "type": "HAS_TEAM",
+      "source": "paymentintegration",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "MAINTAINS:payments:platform-runtime",
+      "type": "MAINTAINS",
+      "source": "payments",
+      "target": "platform-runtime",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_ON:payments:product-orbit",
+      "type": "WORKS_ON",
+      "source": "payments",
+      "target": "product-orbit",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_TEAM:product:product-team",
+      "type": "HAS_TEAM",
+      "source": "product",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "HAS_TEAM:design:design-team",
+      "type": "HAS_TEAM",
+      "source": "design",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "HAS_TEAM:security:security-team",
+      "type": "HAS_TEAM",
+      "source": "security",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "HAS_TEAM:customer-success:success",
+      "type": "HAS_TEAM",
+      "source": "customer-success",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-00:swe",
+      "type": "WORKS_IN",
+      "source": "emp-00",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-00:eng",
+      "type": "MEMBER_OF",
+      "source": "emp-00",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-01:devops",
+      "type": "WORKS_IN",
+      "source": "emp-01",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-01:platform",
+      "type": "MEMBER_OF",
+      "source": "emp-01",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-01:emp-00",
+      "type": "REPORTS_TO",
+      "source": "emp-01",
+      "target": "emp-00",
+      "properties": {}
+    },
+    {
+      "id": "OWNS:emp-01:ledger-reconciliation",
+      "type": "OWNS",
+      "source": "emp-01",
+      "target": "ledger-reconciliation",
+      "properties": {}
+    },
+    {
+      "id": "MADE_DECISION:emp-01:decision-retry-cap",
+      "type": "MADE_DECISION",
+      "source": "emp-01",
+      "target": "decision-retry-cap",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "PERFORMED_BY:emp-01:activity-retry-shipped",
+      "type": "PERFORMED_BY",
+      "source": "emp-01",
+      "target": "activity-retry-shipped",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-02:paymentintegration",
+      "type": "WORKS_IN",
+      "source": "emp-02",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-02:payments",
+      "type": "MEMBER_OF",
+      "source": "emp-02",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-02:emp-00",
+      "type": "REPORTS_TO",
+      "source": "emp-02",
+      "target": "emp-00",
+      "properties": {}
+    },
+    {
+      "id": "OWNS:emp-02:instant-refunds",
+      "type": "OWNS",
+      "source": "emp-02",
+      "target": "instant-refunds",
+      "properties": {}
+    },
+    {
+      "id": "AUTHORED:emp-02:doc-idempotency",
+      "type": "AUTHORED",
+      "source": "emp-02",
+      "target": "doc-idempotency",
+      "properties": {}
+    },
+    {
+      "id": "AUTHORED:emp-02:msg-idempotency",
+      "type": "AUTHORED",
+      "source": "emp-02",
+      "target": "msg-idempotency",
+      "properties": {}
+    },
+    {
+      "id": "ASSIGNED_TO:emp-02:task-idempotency-audit",
+      "type": "ASSIGNED_TO",
+      "source": "emp-02",
+      "target": "task-idempotency-audit",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-03:product",
+      "type": "WORKS_IN",
+      "source": "emp-03",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-03:product-team",
+      "type": "MEMBER_OF",
+      "source": "emp-03",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-03:emp-00",
+      "type": "REPORTS_TO",
+      "source": "emp-03",
+      "target": "emp-00",
+      "properties": {}
+    },
+    {
+      "id": "OWNS:emp-03:reliability-foundation",
+      "type": "OWNS",
+      "source": "emp-03",
+      "target": "reliability-foundation",
+      "properties": {}
+    },
+    {
+      "id": "ASSIGNED_TO:emp-03:task-idempotency",
+      "type": "ASSIGNED_TO",
+      "source": "emp-03",
+      "target": "task-idempotency",
+      "properties": {}
+    },
+    {
+      "id": "AUTHORED:emp-03:pr-idempotency",
+      "type": "AUTHORED",
+      "source": "emp-03",
+      "target": "pr-idempotency",
+      "properties": {}
+    },
+    {
+      "id": "OWNED_BY:emp-03:feature-smart-retry",
+      "type": "OWNED_BY",
+      "source": "emp-03",
+      "target": "feature-smart-retry",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-04:design",
+      "type": "WORKS_IN",
+      "source": "emp-04",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-04:design-team",
+      "type": "MEMBER_OF",
+      "source": "emp-04",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-04:emp-00",
+      "type": "REPORTS_TO",
+      "source": "emp-04",
+      "target": "emp-00",
+      "properties": {}
+    },
+    {
+      "id": "ASSIGNED_TO:emp-04:ticket-retry-policy",
+      "type": "ASSIGNED_TO",
+      "source": "emp-04",
+      "target": "ticket-retry-policy",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "CREATED:emp-04:product-pr-retry-engine",
+      "type": "CREATED",
+      "source": "emp-04",
+      "target": "product-pr-retry-engine",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-05:security",
+      "type": "WORKS_IN",
+      "source": "emp-05",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-05:security-team",
+      "type": "MEMBER_OF",
+      "source": "emp-05",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-05:emp-01",
+      "type": "REPORTS_TO",
+      "source": "emp-05",
+      "target": "emp-01",
+      "properties": {}
+    },
+    {
+      "id": "ASSIGNED_TO:emp-05:bug-double-retry",
+      "type": "ASSIGNED_TO",
+      "source": "emp-05",
+      "target": "bug-double-retry",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-06:customer-success",
+      "type": "WORKS_IN",
+      "source": "emp-06",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-06:success",
+      "type": "MEMBER_OF",
+      "source": "emp-06",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-06:emp-01",
+      "type": "REPORTS_TO",
+      "source": "emp-06",
+      "target": "emp-01",
+      "properties": {}
+    },
+    {
+      "id": "REVIEWS:emp-06:product-pr-retry-engine",
+      "type": "REVIEWS",
+      "source": "emp-06",
+      "target": "product-pr-retry-engine",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-07:swe",
+      "type": "WORKS_IN",
+      "source": "emp-07",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-07:eng",
+      "type": "MEMBER_OF",
+      "source": "emp-07",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-07:emp-01",
+      "type": "REPORTS_TO",
+      "source": "emp-07",
+      "target": "emp-01",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-08:devops",
+      "type": "WORKS_IN",
+      "source": "emp-08",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-08:platform",
+      "type": "MEMBER_OF",
+      "source": "emp-08",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-08:emp-01",
+      "type": "REPORTS_TO",
+      "source": "emp-08",
+      "target": "emp-01",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-09:paymentintegration",
+      "type": "WORKS_IN",
+      "source": "emp-09",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-09:payments",
+      "type": "MEMBER_OF",
+      "source": "emp-09",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-09:emp-02",
+      "type": "REPORTS_TO",
+      "source": "emp-09",
+      "target": "emp-02",
+      "properties": {}
+    },
+    {
+      "id": "CREATED:emp-09:comment-retry-observability",
+      "type": "CREATED",
+      "source": "emp-09",
+      "target": "comment-retry-observability",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-10:product",
+      "type": "WORKS_IN",
+      "source": "emp-10",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-10:product-team",
+      "type": "MEMBER_OF",
+      "source": "emp-10",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-10:emp-02",
+      "type": "REPORTS_TO",
+      "source": "emp-10",
+      "target": "emp-02",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-11:design",
+      "type": "WORKS_IN",
+      "source": "emp-11",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-11:design-team",
+      "type": "MEMBER_OF",
+      "source": "emp-11",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-11:emp-02",
+      "type": "REPORTS_TO",
+      "source": "emp-11",
+      "target": "emp-02",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-12:security",
+      "type": "WORKS_IN",
+      "source": "emp-12",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-12:security-team",
+      "type": "MEMBER_OF",
+      "source": "emp-12",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-12:emp-02",
+      "type": "REPORTS_TO",
+      "source": "emp-12",
+      "target": "emp-02",
+      "properties": {}
+    },
+    {
+      "id": "OWNED_BY:emp-12:feature-wallet-routing",
+      "type": "OWNED_BY",
+      "source": "emp-12",
+      "target": "feature-wallet-routing",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "PERFORMED_BY:emp-12:activity-wallet-risk",
+      "type": "PERFORMED_BY",
+      "source": "emp-12",
+      "target": "activity-wallet-risk",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-13:customer-success",
+      "type": "WORKS_IN",
+      "source": "emp-13",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-13:success",
+      "type": "MEMBER_OF",
+      "source": "emp-13",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-13:emp-03",
+      "type": "REPORTS_TO",
+      "source": "emp-13",
+      "target": "emp-03",
+      "properties": {}
+    },
+    {
+      "id": "ASSIGNED_TO:emp-13:ticket-wallet-fallback",
+      "type": "ASSIGNED_TO",
+      "source": "emp-13",
+      "target": "ticket-wallet-fallback",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "CREATED:emp-13:product-pr-wallet-routing",
+      "type": "CREATED",
+      "source": "emp-13",
+      "target": "product-pr-wallet-routing",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-14:swe",
+      "type": "WORKS_IN",
+      "source": "emp-14",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-14:eng",
+      "type": "MEMBER_OF",
+      "source": "emp-14",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-14:emp-03",
+      "type": "REPORTS_TO",
+      "source": "emp-14",
+      "target": "emp-03",
+      "properties": {}
+    },
+    {
+      "id": "ASSIGNED_TO:emp-14:bug-wallet-timeout",
+      "type": "ASSIGNED_TO",
+      "source": "emp-14",
+      "target": "bug-wallet-timeout",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-15:devops",
+      "type": "WORKS_IN",
+      "source": "emp-15",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-15:platform",
+      "type": "MEMBER_OF",
+      "source": "emp-15",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-15:emp-03",
+      "type": "REPORTS_TO",
+      "source": "emp-15",
+      "target": "emp-03",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-16:paymentintegration",
+      "type": "WORKS_IN",
+      "source": "emp-16",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-16:payments",
+      "type": "MEMBER_OF",
+      "source": "emp-16",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-16:emp-03",
+      "type": "REPORTS_TO",
+      "source": "emp-16",
+      "target": "emp-03",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-17:product",
+      "type": "WORKS_IN",
+      "source": "emp-17",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-17:product-team",
+      "type": "MEMBER_OF",
+      "source": "emp-17",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-17:emp-04",
+      "type": "REPORTS_TO",
+      "source": "emp-17",
+      "target": "emp-04",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-18:design",
+      "type": "WORKS_IN",
+      "source": "emp-18",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-18:design-team",
+      "type": "MEMBER_OF",
+      "source": "emp-18",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-18:emp-04",
+      "type": "REPORTS_TO",
+      "source": "emp-18",
+      "target": "emp-04",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-19:security",
+      "type": "WORKS_IN",
+      "source": "emp-19",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-19:security-team",
+      "type": "MEMBER_OF",
+      "source": "emp-19",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-19:emp-04",
+      "type": "REPORTS_TO",
+      "source": "emp-19",
+      "target": "emp-04",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-20:customer-success",
+      "type": "WORKS_IN",
+      "source": "emp-20",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-20:success",
+      "type": "MEMBER_OF",
+      "source": "emp-20",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-20:emp-04",
+      "type": "REPORTS_TO",
+      "source": "emp-20",
+      "target": "emp-04",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-21:swe",
+      "type": "WORKS_IN",
+      "source": "emp-21",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-21:eng",
+      "type": "MEMBER_OF",
+      "source": "emp-21",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-21:emp-05",
+      "type": "REPORTS_TO",
+      "source": "emp-21",
+      "target": "emp-05",
+      "properties": {}
+    },
+    {
+      "id": "ASSIGNED_TO:emp-21:ticket-receipt-locale",
+      "type": "ASSIGNED_TO",
+      "source": "emp-21",
+      "target": "ticket-receipt-locale",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "WORKS_IN:emp-22:devops",
+      "type": "WORKS_IN",
+      "source": "emp-22",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-22:platform",
+      "type": "MEMBER_OF",
+      "source": "emp-22",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-22:emp-05",
+      "type": "REPORTS_TO",
+      "source": "emp-22",
+      "target": "emp-05",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-23:paymentintegration",
+      "type": "WORKS_IN",
+      "source": "emp-23",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-23:payments",
+      "type": "MEMBER_OF",
+      "source": "emp-23",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-23:emp-05",
+      "type": "REPORTS_TO",
+      "source": "emp-23",
+      "target": "emp-05",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-24:product",
+      "type": "WORKS_IN",
+      "source": "emp-24",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-24:product-team",
+      "type": "MEMBER_OF",
+      "source": "emp-24",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-24:emp-05",
+      "type": "REPORTS_TO",
+      "source": "emp-24",
+      "target": "emp-05",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-25:design",
+      "type": "WORKS_IN",
+      "source": "emp-25",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-25:design-team",
+      "type": "MEMBER_OF",
+      "source": "emp-25",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-25:emp-06",
+      "type": "REPORTS_TO",
+      "source": "emp-25",
+      "target": "emp-06",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-26:security",
+      "type": "WORKS_IN",
+      "source": "emp-26",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-26:security-team",
+      "type": "MEMBER_OF",
+      "source": "emp-26",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-26:emp-06",
+      "type": "REPORTS_TO",
+      "source": "emp-26",
+      "target": "emp-06",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-27:customer-success",
+      "type": "WORKS_IN",
+      "source": "emp-27",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-27:success",
+      "type": "MEMBER_OF",
+      "source": "emp-27",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-27:emp-06",
+      "type": "REPORTS_TO",
+      "source": "emp-27",
+      "target": "emp-06",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-28:swe",
+      "type": "WORKS_IN",
+      "source": "emp-28",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-28:eng",
+      "type": "MEMBER_OF",
+      "source": "emp-28",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-28:emp-06",
+      "type": "REPORTS_TO",
+      "source": "emp-28",
+      "target": "emp-06",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-29:devops",
+      "type": "WORKS_IN",
+      "source": "emp-29",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-29:platform",
+      "type": "MEMBER_OF",
+      "source": "emp-29",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-29:emp-07",
+      "type": "REPORTS_TO",
+      "source": "emp-29",
+      "target": "emp-07",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-30:paymentintegration",
+      "type": "WORKS_IN",
+      "source": "emp-30",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-30:payments",
+      "type": "MEMBER_OF",
+      "source": "emp-30",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-30:emp-07",
+      "type": "REPORTS_TO",
+      "source": "emp-30",
+      "target": "emp-07",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-31:product",
+      "type": "WORKS_IN",
+      "source": "emp-31",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-31:product-team",
+      "type": "MEMBER_OF",
+      "source": "emp-31",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-31:emp-07",
+      "type": "REPORTS_TO",
+      "source": "emp-31",
+      "target": "emp-07",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-32:design",
+      "type": "WORKS_IN",
+      "source": "emp-32",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-32:design-team",
+      "type": "MEMBER_OF",
+      "source": "emp-32",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-32:emp-07",
+      "type": "REPORTS_TO",
+      "source": "emp-32",
+      "target": "emp-07",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-33:security",
+      "type": "WORKS_IN",
+      "source": "emp-33",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-33:security-team",
+      "type": "MEMBER_OF",
+      "source": "emp-33",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-33:emp-08",
+      "type": "REPORTS_TO",
+      "source": "emp-33",
+      "target": "emp-08",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-34:customer-success",
+      "type": "WORKS_IN",
+      "source": "emp-34",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-34:success",
+      "type": "MEMBER_OF",
+      "source": "emp-34",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-34:emp-08",
+      "type": "REPORTS_TO",
+      "source": "emp-34",
+      "target": "emp-08",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-35:swe",
+      "type": "WORKS_IN",
+      "source": "emp-35",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-35:eng",
+      "type": "MEMBER_OF",
+      "source": "emp-35",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-35:emp-08",
+      "type": "REPORTS_TO",
+      "source": "emp-35",
+      "target": "emp-08",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-36:devops",
+      "type": "WORKS_IN",
+      "source": "emp-36",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-36:platform",
+      "type": "MEMBER_OF",
+      "source": "emp-36",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-36:emp-08",
+      "type": "REPORTS_TO",
+      "source": "emp-36",
+      "target": "emp-08",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-37:paymentintegration",
+      "type": "WORKS_IN",
+      "source": "emp-37",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-37:payments",
+      "type": "MEMBER_OF",
+      "source": "emp-37",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-37:emp-09",
+      "type": "REPORTS_TO",
+      "source": "emp-37",
+      "target": "emp-09",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-38:product",
+      "type": "WORKS_IN",
+      "source": "emp-38",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-38:product-team",
+      "type": "MEMBER_OF",
+      "source": "emp-38",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-38:emp-09",
+      "type": "REPORTS_TO",
+      "source": "emp-38",
+      "target": "emp-09",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-39:design",
+      "type": "WORKS_IN",
+      "source": "emp-39",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-39:design-team",
+      "type": "MEMBER_OF",
+      "source": "emp-39",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-39:emp-09",
+      "type": "REPORTS_TO",
+      "source": "emp-39",
+      "target": "emp-09",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-40:security",
+      "type": "WORKS_IN",
+      "source": "emp-40",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-40:security-team",
+      "type": "MEMBER_OF",
+      "source": "emp-40",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-40:emp-09",
+      "type": "REPORTS_TO",
+      "source": "emp-40",
+      "target": "emp-09",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-41:customer-success",
+      "type": "WORKS_IN",
+      "source": "emp-41",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-41:success",
+      "type": "MEMBER_OF",
+      "source": "emp-41",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-41:emp-10",
+      "type": "REPORTS_TO",
+      "source": "emp-41",
+      "target": "emp-10",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-42:swe",
+      "type": "WORKS_IN",
+      "source": "emp-42",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-42:eng",
+      "type": "MEMBER_OF",
+      "source": "emp-42",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-42:emp-10",
+      "type": "REPORTS_TO",
+      "source": "emp-42",
+      "target": "emp-10",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-43:devops",
+      "type": "WORKS_IN",
+      "source": "emp-43",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-43:platform",
+      "type": "MEMBER_OF",
+      "source": "emp-43",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-43:emp-10",
+      "type": "REPORTS_TO",
+      "source": "emp-43",
+      "target": "emp-10",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-44:paymentintegration",
+      "type": "WORKS_IN",
+      "source": "emp-44",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-44:payments",
+      "type": "MEMBER_OF",
+      "source": "emp-44",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-44:emp-10",
+      "type": "REPORTS_TO",
+      "source": "emp-44",
+      "target": "emp-10",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-45:product",
+      "type": "WORKS_IN",
+      "source": "emp-45",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-45:product-team",
+      "type": "MEMBER_OF",
+      "source": "emp-45",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-45:emp-11",
+      "type": "REPORTS_TO",
+      "source": "emp-45",
+      "target": "emp-11",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-46:design",
+      "type": "WORKS_IN",
+      "source": "emp-46",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-46:design-team",
+      "type": "MEMBER_OF",
+      "source": "emp-46",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-46:emp-11",
+      "type": "REPORTS_TO",
+      "source": "emp-46",
+      "target": "emp-11",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-47:security",
+      "type": "WORKS_IN",
+      "source": "emp-47",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-47:security-team",
+      "type": "MEMBER_OF",
+      "source": "emp-47",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-47:emp-11",
+      "type": "REPORTS_TO",
+      "source": "emp-47",
+      "target": "emp-11",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-48:customer-success",
+      "type": "WORKS_IN",
+      "source": "emp-48",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-48:success",
+      "type": "MEMBER_OF",
+      "source": "emp-48",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-48:emp-11",
+      "type": "REPORTS_TO",
+      "source": "emp-48",
+      "target": "emp-11",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-49:swe",
+      "type": "WORKS_IN",
+      "source": "emp-49",
+      "target": "swe",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-49:eng",
+      "type": "MEMBER_OF",
+      "source": "emp-49",
+      "target": "eng",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-49:emp-12",
+      "type": "REPORTS_TO",
+      "source": "emp-49",
+      "target": "emp-12",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-50:devops",
+      "type": "WORKS_IN",
+      "source": "emp-50",
+      "target": "devops",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-50:platform",
+      "type": "MEMBER_OF",
+      "source": "emp-50",
+      "target": "platform",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-50:emp-12",
+      "type": "REPORTS_TO",
+      "source": "emp-50",
+      "target": "emp-12",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-51:paymentintegration",
+      "type": "WORKS_IN",
+      "source": "emp-51",
+      "target": "paymentintegration",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-51:payments",
+      "type": "MEMBER_OF",
+      "source": "emp-51",
+      "target": "payments",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-51:emp-12",
+      "type": "REPORTS_TO",
+      "source": "emp-51",
+      "target": "emp-12",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-52:product",
+      "type": "WORKS_IN",
+      "source": "emp-52",
+      "target": "product",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-52:product-team",
+      "type": "MEMBER_OF",
+      "source": "emp-52",
+      "target": "product-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-52:emp-12",
+      "type": "REPORTS_TO",
+      "source": "emp-52",
+      "target": "emp-12",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-53:design",
+      "type": "WORKS_IN",
+      "source": "emp-53",
+      "target": "design",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-53:design-team",
+      "type": "MEMBER_OF",
+      "source": "emp-53",
+      "target": "design-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-53:emp-13",
+      "type": "REPORTS_TO",
+      "source": "emp-53",
+      "target": "emp-13",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-54:security",
+      "type": "WORKS_IN",
+      "source": "emp-54",
+      "target": "security",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-54:security-team",
+      "type": "MEMBER_OF",
+      "source": "emp-54",
+      "target": "security-team",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-54:emp-13",
+      "type": "REPORTS_TO",
+      "source": "emp-54",
+      "target": "emp-13",
+      "properties": {}
+    },
+    {
+      "id": "WORKS_IN:emp-55:customer-success",
+      "type": "WORKS_IN",
+      "source": "emp-55",
+      "target": "customer-success",
+      "properties": {}
+    },
+    {
+      "id": "MEMBER_OF:emp-55:success",
+      "type": "MEMBER_OF",
+      "source": "emp-55",
+      "target": "success",
+      "properties": {}
+    },
+    {
+      "id": "REPORTS_TO:emp-55:emp-13",
+      "type": "REPORTS_TO",
+      "source": "emp-55",
+      "target": "emp-13",
+      "properties": {}
+    },
+    {
+      "id": "DEPENDS_ON:payment-core:payments-api",
+      "type": "DEPENDS_ON",
+      "source": "payment-core",
+      "target": "payments-api",
+      "properties": {}
+    },
+    {
+      "id": "DEPENDS_ON:platform-infra:platform-runtime",
+      "type": "DEPENDS_ON",
+      "source": "platform-infra",
+      "target": "platform-runtime",
+      "properties": {}
+    },
+    {
+      "id": "DEPENDS_ON:customer-portal:checkout-web",
+      "type": "DEPENDS_ON",
+      "source": "customer-portal",
+      "target": "checkout-web",
+      "properties": {}
+    },
+    {
+      "id": "DESCRIBES:doc-idempotency:decision-idempotency",
+      "type": "DESCRIBES",
+      "source": "doc-idempotency",
+      "target": "decision-idempotency",
+      "properties": {}
+    },
+    {
+      "id": "DISCUSSED_IN:decision-idempotency:payments-eng",
+      "type": "DISCUSSED_IN",
+      "source": "decision-idempotency",
+      "target": "payments-eng",
+      "properties": {}
+    },
+    {
+      "id": "CREATES:decision-idempotency:task-idempotency",
+      "type": "CREATES",
+      "source": "decision-idempotency",
+      "target": "task-idempotency",
+      "properties": {}
+    },
+    {
+      "id": "AFFECTS:incident-duplicate-charge:payments-api",
+      "type": "AFFECTS",
+      "source": "incident-duplicate-charge",
+      "target": "payments-api",
+      "properties": {}
+    },
+    {
+      "id": "POSTED_IN:msg-idempotency:payments-eng",
+      "type": "POSTED_IN",
+      "source": "msg-idempotency",
+      "target": "payments-eng",
+      "properties": {}
+    },
+    {
+      "id": "IMPLEMENTS:task-idempotency:pr-idempotency",
+      "type": "IMPLEMENTS",
+      "source": "task-idempotency",
+      "target": "pr-idempotency",
+      "properties": {}
+    },
+    {
+      "id": "UPDATES:pr-idempotency:payments-api",
+      "type": "UPDATES",
+      "source": "pr-idempotency",
+      "target": "payments-api",
+      "properties": {}
+    },
+    {
+      "id": "HAS_MODULE:product-orbit:module-payment-methods",
+      "type": "HAS_MODULE",
+      "source": "product-orbit",
+      "target": "module-payment-methods",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_MODULE:product-orbit:module-risk-controls",
+      "type": "HAS_MODULE",
+      "source": "product-orbit",
+      "target": "module-risk-controls",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_MODULE:product-orbit:module-checkout-ui",
+      "type": "HAS_MODULE",
+      "source": "product-orbit",
+      "target": "module-checkout-ui",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_RELEASE:product-orbit:release-orbit-2025-12",
+      "type": "HAS_RELEASE",
+      "source": "product-orbit",
+      "target": "release-orbit-2025-12",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_RELEASE:product-orbit:release-orbit-2026-01",
+      "type": "HAS_RELEASE",
+      "source": "product-orbit",
+      "target": "release-orbit-2026-01",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_FEATURE:module-payment-methods:feature-smart-retry",
+      "type": "HAS_FEATURE",
+      "source": "module-payment-methods",
+      "target": "feature-smart-retry",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_FEATURE:module-payment-methods:feature-wallet-routing",
+      "type": "HAS_FEATURE",
+      "source": "module-payment-methods",
+      "target": "feature-wallet-routing",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_FEATURE:module-checkout-ui:request-saved-cards",
+      "type": "HAS_FEATURE",
+      "source": "module-checkout-ui",
+      "target": "request-saved-cards",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_FEATURE:module-checkout-ui:request-receipt-locale",
+      "type": "HAS_FEATURE",
+      "source": "module-checkout-ui",
+      "target": "request-receipt-locale",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_TICKET:feature-smart-retry:ticket-retry-policy",
+      "type": "HAS_TICKET",
+      "source": "feature-smart-retry",
+      "target": "ticket-retry-policy",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_TICKET:feature-smart-retry:task-idempotency-audit",
+      "type": "HAS_TICKET",
+      "source": "feature-smart-retry",
+      "target": "task-idempotency-audit",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_TICKET:feature-wallet-routing:ticket-wallet-fallback",
+      "type": "HAS_TICKET",
+      "source": "feature-wallet-routing",
+      "target": "ticket-wallet-fallback",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "HAS_TICKET:request-receipt-locale:ticket-receipt-locale",
+      "type": "HAS_TICKET",
+      "source": "request-receipt-locale",
+      "target": "ticket-receipt-locale",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "DEPENDS_ON:ticket-retry-policy:ticket-wallet-fallback",
+      "type": "DEPENDS_ON",
+      "source": "ticket-retry-policy",
+      "target": "ticket-wallet-fallback",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "RELATED_TO:ticket-retry-policy:bug-double-retry",
+      "type": "RELATED_TO",
+      "source": "ticket-retry-policy",
+      "target": "bug-double-retry",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "IMPLEMENTS:ticket-retry-policy:product-pr-retry-engine",
+      "type": "IMPLEMENTS",
+      "source": "ticket-retry-policy",
+      "target": "product-pr-retry-engine",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "RELATED_TO:ticket-wallet-fallback:bug-wallet-timeout",
+      "type": "RELATED_TO",
+      "source": "ticket-wallet-fallback",
+      "target": "bug-wallet-timeout",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "IMPLEMENTS:ticket-wallet-fallback:product-pr-wallet-routing",
+      "type": "IMPLEMENTS",
+      "source": "ticket-wallet-fallback",
+      "target": "product-pr-wallet-routing",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "FIXES:bug-double-retry:product-pr-retry-engine",
+      "type": "FIXES",
+      "source": "bug-double-retry",
+      "target": "product-pr-retry-engine",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "INCLUDES:product-pr-retry-engine:commit-retry-policy",
+      "type": "INCLUDES",
+      "source": "product-pr-retry-engine",
+      "target": "commit-retry-policy",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "INCLUDES:product-pr-wallet-routing:commit-wallet-fallback",
+      "type": "INCLUDES",
+      "source": "product-pr-wallet-routing",
+      "target": "commit-wallet-fallback",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "REVIEWS:review-retry-engine:product-pr-retry-engine",
+      "type": "REVIEWS",
+      "source": "review-retry-engine",
+      "target": "product-pr-retry-engine",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "INCLUDES:release-orbit-2025-12:product-pr-retry-engine",
+      "type": "INCLUDES",
+      "source": "release-orbit-2025-12",
+      "target": "product-pr-retry-engine",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "INCLUDES:release-orbit-2026-01:product-pr-wallet-routing",
+      "type": "INCLUDES",
+      "source": "release-orbit-2026-01",
+      "target": "product-pr-wallet-routing",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "COMMENTED_ON:comment-retry-observability:product-pr-retry-engine",
+      "type": "COMMENTED_ON",
+      "source": "comment-retry-observability",
+      "target": "product-pr-retry-engine",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "RELATED_TO:decision-retry-cap:feature-smart-retry",
+      "type": "RELATED_TO",
+      "source": "decision-retry-cap",
+      "target": "feature-smart-retry",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "ACTIVITY_ON:activity-retry-shipped:release-orbit-2025-12",
+      "type": "ACTIVITY_ON",
+      "source": "activity-retry-shipped",
+      "target": "release-orbit-2025-12",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    },
+    {
+      "id": "ACTIVITY_ON:activity-wallet-risk:feature-wallet-routing",
+      "type": "ACTIVITY_ON",
+      "source": "activity-wallet-risk",
+      "target": "feature-wallet-routing",
+      "properties": {
+        "graphDomain": "product-progress",
+        "sourceSystem": "seed"
+      }
+    }
+  ]
+}

@@ -16,6 +16,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "rag:rebuild": "tsx scripts/rebuild-rag.ts",
+    "rag:verify": "tsx scripts/verify-rag.ts",
     "start": "node dist/index.js",
     "seed:generate": "tsx scripts/seed-generate.ts",
     "seed:validate": "tsx scripts/seed-validate.ts",

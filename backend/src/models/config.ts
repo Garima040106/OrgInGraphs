@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../config/load-env.js';
 import { z } from 'zod';
 
 const optionalString = z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional());
@@ -32,6 +32,7 @@ export interface ModelInstanceConfig {
   modelId: string;
   temperature: number;
   timeoutMs: number;
+  responseFormat?: 'json' | 'text';
 }
 
 export function parseModelEnvironment(input: unknown): ModelEnvironment {

@@ -15,7 +15,7 @@ export interface ConfluenceIngestionAgent {
   ingest(request: ConfluenceIngestionRequest): Promise<ConfluenceIngestionResult>;
 }
 
-export const confluenceIngestionEnabled = env.CONFLUENCE_INGESTION_ENABLED !== 'false' && Boolean(env.CONFLUENCE_BASE_URL && env.CONFLUENCE_EMAIL && env.CONFLUENCE_API_TOKEN);
+export const confluenceIngestionEnabled = env.CONFLUENCE_INGESTION_ENABLED !== 'false' && Boolean(env.CONFLUENCE_BASE_URL && env.CONFLUENCE_EMAIL && (env.CONFLUENCE_API_TOKEN || env.CONFLUENCE_API_KEY));
 
 export const disabledConfluenceIngestionAgent: ConfluenceIngestionAgent = {
   async ingest(request) {

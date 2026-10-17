@@ -15,6 +15,7 @@ const idSchema = z.string().regex(/^[a-z0-9-]+$/);
 const conversationIdSchema = z.string().uuid();
 const workspaceIdentitySchema = z.string().trim().email().max(254);
 const filterSchema = z.object({ departmentId:idSchema.optional(), teamId:idSchema.optional(), employmentStatus:z.enum(['active','inactive']).optional() });
+const sourceRecordsQuerySchema = z.object({ q:z.string().trim().max(200).optional(), limit:z.coerce.number().int().min(1).max(200).default(100), offset:z.coerce.number().int().min(0).max(100_000).default(0) }).strict();
 const supported = new Set(['Company','Employee','Department','Team','Project','Repository','Service','Document','Decision','Incident','Task','PullRequest','Channel','Message','Product','ProductModule','Feature','FeatureRequest','Ticket','Bug','Release','Commit','Comment','Activity','Review']);
 const parse = <T>(schema:z.ZodType<T>, input:unknown): T => schema.parse(input);
 const sendError = (res:Response, error:unknown) => {
@@ -22,6 +23,15 @@ const sendError = (res:Response, error:unknown) => {
   console.error(error); return res.status(503).json({ error:'Database request failed' });
 };
 const one = async (graph:Graph, label:string, id:string) => rows(await query(graph,`MATCH (n:${label} {id:$id}) RETURN n`,{id}))[0]?.n;
+type ApiGraphNode = { id:string; labels:string[]; properties:Record<string,unknown> };
+const apiGraphNode = (value:unknown, labels:string[]=[]):ApiGraphNode|undefined => {
+  if (!value || typeof value !== 'object') return undefined;
+  const node=value as { id?:string|number; labels?:string[]; properties?:Record<string,unknown> };
+  const properties=node.properties??value as Record<string,unknown>;
+  const id=typeof properties.id==='string'?properties.id:undefined;
+  return id?{id,labels:node.labels??labels,properties}:undefined;
+};
+const sourceRecordFilter = (q:string) => '(n.title IS NOT NULL AND toLower(n.title) CONTAINS toLower($q)) OR (n.content IS NOT NULL AND toLower(n.content) CONTAINS toLower($q)) OR (n.description IS NOT NULL AND toLower(n.description) CONTAINS toLower($q)) OR (n.sourceRecordId IS NOT NULL AND toLower(n.sourceRecordId) CONTAINS toLower($q))';
 const workflowBodySchema = z.object({ text:z.string().trim().min(1).max(20_000), type:z.enum(['auto','ticket','feature-update']).optional(), source:z.string().trim().min(1).max(100).optional(), sourceRecordId:z.string().trim().min(1).max(200).optional(), receivedAt:z.string().datetime().optional(), provenance:z.enum(['synthetic','user-provided','external-verified']).optional() }).strict();
 
 const workflowStatus = (result: Awaited<ReturnType<typeof runOrgInGraphsWorkflow>>) => {
@@ -33,6 +43,7 @@ const workflowStatus = (result: Awaited<ReturnType<typeof runOrgInGraphsWorkflow
 export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowDependencies; agent1?: OrganizationIntelligenceAgent } = {}) {
   const app=express();
   const agent1 = options.agent1 ?? getOrganizationIntelligenceAgent({ graph });
+  let initialRagIndex: Promise<void> | undefined;
   const allowedOrigins=new Set((process.env.FRONTEND_ORIGINS??'http://localhost:3000,http://127.0.0.1:3000').split(',').map(origin=>origin.trim()).filter(Boolean));
   app.use((req,res,next)=>{
     const origin=req.headers.origin;
@@ -47,6 +58,46 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     return memoryOwnerId(identity.data);
   };
   app.get('/health',async (_req,res)=>{ try { await query(graph,'RETURN 1 AS connected'); res.json({status:'ok',database:'connected'}); } catch(error){ console.error(error); res.status(503).json({status:'degraded',database:'unavailable'}); } });
+  const dashboardResponse = async () => {
+    const [company, organization, productProgress] = await Promise.all([
+      one(graph,'Company','hirenova').catch(() => undefined),
+      fetchEntireGraph(graph),
+      fetchProductProgressGraph(graph)
+    ]);
+    const nodes=[...new Map([...organization.nodes,...productProgress.nodes].map((node)=>[node.id,node])).values()];
+    const sources=['confluence','jira','slack','github'] as const;
+    const sourceCounts=Object.fromEntries(sources.map((source)=>[source,nodes.filter((node)=>String(node.properties.sourceSystem??'').toLowerCase()===source).length]));
+    return { company:company??null, organization, productProgress, sourceCounts, totals:{ entities:nodes.length, people:nodes.filter((node)=>node.labels.includes('Employee')).length, teams:nodes.filter((node)=>node.labels.includes('Team')).length, services:nodes.filter((node)=>node.labels.includes('Service')).length, decisions:nodes.filter((node)=>node.labels.includes('Decision')).length } };
+  };
+  app.get('/api/dashboard',async(_req,res)=>{try{return res.json(await dashboardResponse());}catch(error){return sendError(res,error);}});
+  app.get('/api/dashboard/summary',async(_req,res)=>{try{const result=await dashboardResponse();return res.json({company:result.company,sourceCounts:result.sourceCounts,totals:result.totals});}catch(error){return sendError(res,error);}});
+  const sourceRecords = (source:string, labels:string, sortProperty='updatedAt') => async (req:Request,res:Response) => {
+    const parsed=sourceRecordsQuerySchema.safeParse(req.query);
+    if(!parsed.success)return res.status(400).json({error:'Invalid source records query',details:parsed.error.flatten()});
+    const {q='',limit,offset}=parsed.data;
+    const where=`(${labels}) AND toLower(n.sourceSystem)=toLower($source) AND coalesce(n.synthetic,false)=false AND n.provenance IN ['external-verified','user-provided'] AND ($q='' OR (${sourceRecordFilter(q)}))`;
+    try {
+      const count=rows(await query(graph,`MATCH (n) WHERE ${where} RETURN count(n) AS total`,{source,q}))[0]?.total;
+      const result=await query(graph,`MATCH (n) WHERE ${where} RETURN n,labels(n) AS labels ORDER BY n.${sortProperty} DESC SKIP $offset LIMIT $limit`,{source,q,offset,limit});
+      const items=rows(result).flatMap((row)=>{const node=apiGraphNode(row.n,Array.isArray(row.labels)?row.labels:[]);return node?[node]:[];});
+      return res.json({source,items,total:Number(count??0),limit,offset});
+    }catch(error){return sendError(res,error);}
+  };
+  app.get('/api/documents',sourceRecords('confluence','n:Document'));
+  app.get('/api/tickets',sourceRecords('jira','n:Ticket OR n:Bug'));
+  app.get('/api/conversations',async(req,res)=>{
+    const parsed=sourceRecordsQuerySchema.safeParse(req.query);
+    if(!parsed.success)return res.status(400).json({error:'Invalid conversation query',details:parsed.error.flatten()});
+    const {q='',limit,offset}=parsed.data;
+    const where=`toLower(m.sourceSystem)='slack' AND coalesce(m.synthetic,false)=false AND m.provenance IN ['external-verified','user-provided'] AND ($q='' OR (toLower(coalesce(m.content,'')) CONTAINS toLower($q)) OR (toLower(coalesce(m.title,'')) CONTAINS toLower($q)) OR (toLower(coalesce(m.channelName,'')) CONTAINS toLower($q)))`;
+    try {
+      const total=rows(await query(graph,`MATCH (m:Message) WHERE ${where} RETURN count(m) AS total`,{q}))[0]?.total;
+      const result=await query(graph,`MATCH (m:Message) WHERE ${where} OPTIONAL MATCH (m)-[:IN_CHANNEL]->(c:Channel) RETURN m,labels(m) AS messageLabels,c,labels(c) AS channelLabels ORDER BY m.occurredAt DESC SKIP $offset LIMIT $limit`,{q,offset,limit});
+      const items=rows(result).flatMap((row)=>{const message=apiGraphNode(row.m,Array.isArray(row.messageLabels)?row.messageLabels:['Message']);return message?[{...message,channel:apiGraphNode(row.c,Array.isArray(row.channelLabels)?row.channelLabels:['Channel'])??null}]:[];});
+      return res.json({source:'slack',items,total:Number(total??0),limit,offset});
+    }catch(error){return sendError(res,error);}
+  });
+  app.get('/api/proactive-insights',sourceRecords('github','n:PullRequest OR n:Bug OR n:Commit'));
   app.get('/api/graph', async (_req, res) => {
     try {
       return res.json(await fetchEntireGraph(graph));
@@ -196,10 +247,29 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
       return res.status(400).json({ error: 'Invalid organization query request', details: parsed.error.flatten() });
     }
     try {
+      // A fresh install has no vectors until the admin ingestion endpoint is called.
+      // Populate the index on the first user query so the built-in company data is searchable.
+      if (agent1.getStatus().totalChunks === 0) {
+        initialRagIndex ??= agent1.ingest().then((result) => {
+          if (result.status === 'failed' || result.stats.totalChunks === 0) {
+            console.error('Initial Organization RAG indexing did not produce searchable chunks:', {
+              status: result.status,
+              stats: result.stats,
+              errors: result.errors
+            });
+          } else {
+            console.log(`Initial Organization RAG index ready: ${result.stats.totalChunks} chunks from ${result.stats.totalSources} sources.`);
+          }
+        }).catch((error) => {
+          console.error('Initial Organization RAG indexing failed:', error);
+        }).finally(() => { initialRagIndex = undefined; });
+        await initialRagIndex;
+      }
       const response = await agent1.query(parsed.data);
+      if (response.status !== 'completed') console.error('Organization RAG query returned a degraded result:', { query: parsed.data.query, status: response.status, errors: response.errors, uncertainty: response.uncertainty });
       return res.status(response.status === 'failed' ? 503 : 200).json(response);
     } catch (error) {
-      console.error('Agent 1 query failed:', error);
+      console.error('Agent 1 query failed:', { query: parsed.data.query, error });
       return res.status(503).json({
         answer: 'The organization intelligence query could not be completed safely.',
         sources: [],

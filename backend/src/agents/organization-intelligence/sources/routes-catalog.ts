@@ -337,6 +337,55 @@ export const BACKEND_ROUTES: RouteDefinition[] = [
     },
     responseDescription: 'Array of message records with text, user, timestamp, and channel.',
     associatedEntities: ['Message', 'Channel']
+  },
+  {
+    method: 'GET',
+    path: '/api/dashboard',
+    category: 'General',
+    summary: 'Read the overview dashboard graph snapshots and source counts',
+    description: 'Reads company, organization graph, product graph, totals, and source counts from FalkorDB. This route never calls upstream connectors.',
+    responseDescription: 'Dashboard payload containing company, organization and productProgress graph responses, sourceCounts, and aggregate totals.',
+    associatedEntities: ['Company', 'Employee', 'Team', 'Service', 'Decision', 'Document', 'Ticket', 'Message', 'PullRequest']
+  },
+  {
+    method: 'GET',
+    path: '/api/documents',
+    category: 'Confluence',
+    summary: 'Read Confluence documents already stored in FalkorDB',
+    description: 'Returns paginated Document nodes whose sourceSystem is confluence. Supports q, limit, and offset; performs no Confluence API requests.',
+    parameters: { query: { q: 'Optional title/content/source ID text filter', limit: 'Optional page size, 1 to 200', offset: 'Optional result offset' } },
+    responseDescription: 'Paged source record response with items, total, limit, and offset.',
+    associatedEntities: ['Document']
+  },
+  {
+    method: 'GET',
+    path: '/api/tickets',
+    category: 'Jira',
+    summary: 'Read Jira tickets already stored in FalkorDB',
+    description: 'Returns paginated Ticket and Bug nodes whose sourceSystem is jira. Supports q, limit, and offset; performs no Jira API requests.',
+    parameters: { query: { q: 'Optional title/content/source ID text filter', limit: 'Optional page size, 1 to 200', offset: 'Optional result offset' } },
+    responseDescription: 'Paged source record response with items, total, limit, and offset.',
+    associatedEntities: ['Ticket', 'Bug']
+  },
+  {
+    method: 'GET',
+    path: '/api/conversations',
+    category: 'Slack',
+    summary: 'Read Slack messages and linked channels already stored in FalkorDB',
+    description: 'Returns paginated Message nodes whose sourceSystem is slack with their linked Channel when available. Supports q, limit, and offset; performs no Slack API requests.',
+    parameters: { query: { q: 'Optional message or channel text filter', limit: 'Optional page size, 1 to 200', offset: 'Optional result offset' } },
+    responseDescription: 'Paged messages with optional channel details and total count.',
+    associatedEntities: ['Message', 'Channel']
+  },
+  {
+    method: 'GET',
+    path: '/api/proactive-insights',
+    category: 'GitHub',
+    summary: 'Read indexed GitHub activity for the proactive insights view',
+    description: 'Returns paginated GitHub PullRequest, Bug, and Commit source records from FalkorDB. It does not calculate or claim risk insights.',
+    parameters: { query: { q: 'Optional title/content/source ID text filter', limit: 'Optional page size, 1 to 200', offset: 'Optional result offset' } },
+    responseDescription: 'Paged GitHub source records with total, limit, and offset.',
+    associatedEntities: ['PullRequest', 'Bug', 'Commit']
   }
 ];
 

@@ -132,7 +132,12 @@ export function CompanyAssistant({
     try {
       if (mode === "intelligence") {
         // Query Organization Intelligence RAG (Agent 1)
-        const ragRes = await api.organizationQuery({ query: question, topK: 8 });
+        const history = messages.flatMap((message, index) => {
+          if (message.role !== "user") return [];
+          const reply = messages.slice(index + 1).find((item) => item.role === "assistant" && item.ragResponse);
+          return reply?.ragResponse ? [{ query: message.content, answer: reply.ragResponse.answer }] : [];
+        }).slice(-4);
+        const ragRes = await api.organizationQuery({ query: question, history, topK: 8 });
         setMessages((previous) => [
           ...previous,
           {
@@ -343,9 +348,7 @@ export function CompanyAssistant({
             className={`assistant-message ${message.role}`}
             key={`${index}:${message.role}`}
           >
-            {(!message.ragResponse ||
-              (message.ragResponse.sources.length === 0 &&
-                message.ragResponse.retrieved_chunks.length === 0)) && (
+            {!message.ragResponse && (
               <div className={`assistant-bubble ${message.role}`}>
                 {message.role === "assistant" ? (
                   <Bot size={13} className="assistant-avatar" />
@@ -355,9 +358,7 @@ export function CompanyAssistant({
                 <div className="assistant-bubble-text">{message.content}</div>
               </div>
             )}
-            {message.ragResponse &&
-              (message.ragResponse.sources.length > 0 ||
-                message.ragResponse.retrieved_chunks.length > 0) && (
+            {message.ragResponse && (
                 <AgentResponseRenderer payload={message.ragResponse} />
               )}
             {!message.ragResponse && message.response && (
