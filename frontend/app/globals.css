@@ -4670,3 +4670,99 @@ body {
   padding: 1px 4px;
   border-radius: 3px;
 }
+.assistant-panel {
+  overflow: hidden;
+  border-radius: 20px;
+}
+.assistant-header {
+  min-height: 66px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border, rgba(120, 120, 140, .16));
+}
+.assistant-title { gap: 10px; }
+.assistant-title-icon.nexus-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 11px;
+  background: var(--muted, rgba(120, 120, 140, .09));
+}
+.nexus-brand-mark img { object-fit: contain; }
+.assistant-title b { font-size: 14px; font-weight: 650; letter-spacing: -.02em; }
+.assistant-title small { margin-top: 3px; opacity: .68; font-size: 11px; }
+.assistant-mode-bar { padding: 10px 16px 4px; gap: 6px; }
+.assistant-mode-pill { border-radius: 999px; padding: 8px 12px; font-size: 12px; }
+.assistant-scope { padding: 7px 18px 11px; opacity: .65; font-size: 11px; }
+.assistant-messages { padding: 18px; gap: 16px; }
+.assistant-bubble.assistant { border: 0; box-shadow: none; }
+.assistant-bubble-text { line-height: 1.65; }
+.suggestion-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.suggestion-chip { min-height: 48px; text-align: left; line-height: 1.4; border-radius: 12px; padding: 11px 13px; }
+.assistant-form { margin: 12px 16px 16px; border-radius: 15px; padding: 7px; }
+.assistant-form input { min-height: 38px; }
+.assistant-form button[type="submit"] { width: 36px; height: 36px; border-radius: 11px; }
+
+.nexus-sources {
+  position: relative;
+  margin: 10px 0 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border, rgba(120, 120, 140, .16));
+}
+.nexus-sources-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 2px 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.nexus-sources-label { font-size: 11px; font-weight: 600; opacity: .72; white-space: nowrap; }
+.nexus-sources-label span { margin-left: 3px; opacity: .75; }
+.nexus-source-stack { display: inline-flex; align-items: center; padding-left: 2px; }
+.nexus-source-logo {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  margin-left: -7px;
+  overflow: hidden;
+  border: 2px solid var(--card, white);
+  border-radius: 50%;
+  background: var(--card, white);
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+.nexus-source-logo:first-child { margin-left: 0; }
+.nexus-source-logo img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+.nexus-source-fallback { color: var(--muted-foreground, #777); }
+.nexus-sources-chevron { opacity: .55; transition: transform .18s ease; }
+.nexus-sources-chevron.is-open { transform: rotate(180deg); }
+.nexus-source-list {
+  display: grid;
+  gap: 2px;
+  margin-top: 9px;
+  padding: 5px;
+  border: 1px solid var(--border, rgba(120,120,140,.18));
+  border-radius: 13px;
+  background: var(--card, white);
+}
+.nexus-source-item { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px; border-radius: 9px; }
+.nexus-source-item:hover { background: var(--muted, rgba(120,120,140,.07)); }
+.nexus-source-item-icon { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; border-radius: 8px; background: var(--muted, rgba(120,120,140,.08)); overflow: hidden; }
+.nexus-source-item-icon img { width: 20px; height: 20px; object-fit: contain; }
+.nexus-source-item-copy { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.nexus-source-item-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 550; }
+.nexus-source-item-platform { font-size: 10px; opacity: .62; }
+.nexus-source-item a { display: grid; place-items: center; padding: 6px; border-radius: 7px; color: inherit; opacity: .65; }
+.nexus-source-item a:hover { opacity: 1; background: var(--muted, rgba(120,120,140,.08)); }
+@media (max-width: 560px) {
+  .assistant-header { padding: 12px; }
+  .assistant-messages { padding: 13px; }
+  .suggestion-list { grid-template-columns: 1fr; }
+  .assistant-form { margin: 10px 12px 12px; }
+  .assistant-title small { max-width: 180px; }
+}
