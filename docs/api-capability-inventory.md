@@ -33,3 +33,92 @@ Assistant memory is stored in FalkorDB as conversation-scoped episodic turns and
 ## Capabilities not exposed
 
 There is no separate source-citation retrieval endpoint, authenticated Jira/GitHub/Slack connector, dedicated decision-history service, causal investigation service, impact simulation, proactive insight API, or detailed agent tool-trace API. Indexed source records are retrievable through graph search and neighborhoods. The assistant distinguishes recorded relationships from inferred impact and does not claim to simulate impact. Rich renderers for conflicting-document comparisons, missing-approval audits, task proposals, proactive insights, and multi-stage tool traces are not yet exposed by the current backend response contract.
+
+
+## confluence,JIRA,github API use
+
+BASE API route are
+ CONFLUNCE_API_KEY
+ GITHUB_API_KEY
+ SLACK_API_KEY
+ JIRA_API_KEY
+
+ in /backend/.env
+
+### 1. General, dashboard and graph
+
+| Method | Route | Purpose / useful query parameters |
+|---|---|---|
+| GET | `/` | Service overview and integration names |
+| GET | `/api/health` | Health, combined seed node/edge counts and mock integration status |
+| GET | `/api/docs` | Machine-readable route catalogue |
+| GET | `/api/dashboard/summary` | Aggregate employee, project, repository, issue, PR, release, channel and message counts |
+| GET | `/api/company` | Company records |
+| GET | `/api/departments` | Departments; supports `q` |
+| GET | `/api/teams` | Teams; supports `q` |
+| GET | `/api/employees` | Employee directory; supports `q`, `departmentId`, `teamId`, `employmentStatus`, `location`, `seniority` |
+| GET | `/api/graph` | Nodes and edges; supports `label`, `q`, `startAt`, `maxResults` |
+| GET | `/api/graph/nodes` | Node list; supports `label`, `q` |
+| GET | `/api/graph/edges` | Edge list; supports `type`, `nodeId` |
+| GET | `/api/search?q=checkout` | Cross-system search across docs, Jira issues, repos, PRs, GitHub issues, Slack messages and employees |
+
+`/api/search` requires `q` or `query`; it returns `400 query_required` if neither is supplied.
+
+### 2. Confluence-style knowledge API
+
+| Method | Route | Purpose / useful query parameters |
+|---|---|---|
+| GET | `/api/confluence/spaces` | Space list with page counts |
+| GET | `/api/confluence/pages` | Page list; supports `q`, `query`, `search` |
+| GET | `/api/confluence/pages/:id` | Read a page by seed ID, e.g. `org-doc-002` |
+| GET | `/api/confluence/pages/:id/history` | Synthetic version history for a page |
+| GET | `/api/confluence/search?query=idempotency` | Search titles, body text and IDs |
+| GET | `/api/confluence/labels` | Label names and page counts |
+
+Pages are shaped with `id`, `title`, `body.storage.value`, `space`, `version`, `author`, `labels`, timestamps and a synthetic URL. They work well as RAG ingestion inputs.
+
+### 3. Jira-style work management API
+
+| Method | Route | Purpose / useful query parameters |
+|---|---|---|
+| GET | `/api/jira/projects` | Project directory |
+| GET | `/api/jira/boards` | Scrum-board-like project list |
+| GET | `/api/jira/issue-types` | Distinct issue types in the seed |
+| GET | `/api/jira/sprints` | Distinct seeded sprint names |
+| GET | `/api/jira/issues` | Issues; supports `q`, `status`, `assignee` |
+| GET | `/api/jira/issues/:id` | Issue by seed ID or Jira key, e.g. `/api/jira/issues/PAY-1001` |
+| GET | `/api/jira/search?jql=retry` | Simple text search across summary, description, key, status, assignee and project |
+
+Jira search accepts a **text fragment** in `jql`; this is not a complete JQL parser. Issue payloads include `key`, `summary`, `description`, `status`, `priority`, `issuetype`, `assignee`, `reporter`, `project`, `sprint`, `storyPoints`, `labels`, `components`, `created`, `updated`, `resolutiondate` and `fixVersion` where available.
+
+### 4. GitHub-style source control API
+
+| Method | Route | Purpose / useful query parameters |
+|---|---|---|
+| GET | `/api/github/repos` | Repository list; supports `q` |
+| GET | `/api/github/repos/:owner/:repo` | Repository metadata; seeded owner is `acme-platform` |
+| GET | `/api/github/repos/:owner/:repo/branches` | `main` plus feature/fix branches derived from seeded PRs |
+| GET | `/api/github/repos/:owner/:repo/pulls` | Pull requests for one repository; supports `q` |
+| GET | `/api/github/pulls` | Cross-repository pull requests; supports `q` |
+| GET | `/api/github/pulls/:number` | Pull-request detail including branch names, merge state, linked Jira key and review decision |
+| GET | `/api/github/pulls/:number/reviews` | Synthetic review records for a PR |
+| GET | `/api/github/commits` | Cross-repository commits; supports `q` |
+| GET | `/api/github/repos/:owner/:repo/commits` | Commits for one repository |
+| GET | `/api/github/issues` | GitHub issues; supports `q`, `state`, `repo` |
+| GET | `/api/github/releases` | Releases/tags; supports `q` |
+| GET | `/api/github/search?q=wallet` | Search across repositories, PRs and commits |
+
+The seed uses fictional organization/repository names such as `acme-platform/payments-api`. Branches, commit SHAs, review records and URLs are deterministic fixture data, not real GitHub objects. PR numbers and Jira keys are linked where applicable to support graph exploration and agent demos.
+
+### 5. Slack-style workspace API
+
+| Method | Route | Purpose / useful query parameters |
+|---|---|---|
+| GET | `/api/slack/users.list` | Named user directory with email, title, team and department in the profile |
+| GET | `/api/slack/conversations.list` | Channel directory, purpose, topic, owner and member count |
+| GET | `/api/slack/conversations.info?channel=team-platform` | One channel's metadata and owner |
+| GET | `/api/slack/conversations.members?channel=team-platform` | Members and profile details for a channel |
+| GET | `/api/slack/conversations.history?channel=team-payments` | Channel history; accepts channel name or seed channel ID |
+| GET | `/api/slack/search.messages?query=idempotency` | Search message text, channel and user |
+
+Channel names include `general`, `team-engineering`, `team-platform`, `team-payments`, `team-web`, `team-data`, `team-security`, `team-mobile`, `proj-saved-payments`, `inc-checkout-latency`, `customer-escalations`, `release-coordination` and `docs-and-knowledge`. Each seeded channel has an owner and membership list. Slack-shaped user IDs and message timestamps are synthetic.
