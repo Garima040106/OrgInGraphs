@@ -48,14 +48,16 @@ function LandingCursor() {
 
     const onPointerOver = (event: PointerEvent) => {
       const target = event.target as Element | null;
-      const interactive = target?.closest("a, button, [role='button'], .landing-hero-visual");
+      const interactive = target?.closest("a, button, [role='button'], .landing-hero-visual, .architecture-visual");
       const graph = target?.closest(".landing-hero-visual");
+      const architecture = target?.closest(".architecture-visual");
       root.classList.toggle("oig-cursor-hover", !!interactive);
       root.classList.toggle("oig-cursor-graph", !!graph);
+      root.classList.toggle("oig-cursor-architecture", !!architecture);
       if (graph) labelRef.current!.textContent = "EXPLORE";
     };
 
-    const onPointerLeave = () => root.classList.remove("oig-cursor-hover", "oig-cursor-graph");
+    const onPointerLeave = () => root.classList.remove("oig-cursor-hover", "oig-cursor-graph", "oig-cursor-architecture");
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("pointerover", onPointerOver, { passive: true });
     document.documentElement.addEventListener("mouseleave", onPointerLeave);
@@ -65,7 +67,7 @@ function LandingCursor() {
       window.removeEventListener("pointerover", onPointerOver);
       document.documentElement.removeEventListener("mouseleave", onPointerLeave);
       if (frame) window.cancelAnimationFrame(frame);
-      root.classList.remove("oig-cursor-enabled", "oig-cursor-hover", "oig-cursor-graph");
+      root.classList.remove("oig-cursor-enabled", "oig-cursor-hover", "oig-cursor-graph", "oig-cursor-architecture");
     };
   }, []);
 
@@ -557,6 +559,59 @@ export default function Home() {
           >
             See how it works
           </a>
+        </div>
+      </section>
+
+      {/* ── Architecture ──────────────────────────────────────────────── */}
+      <section className="architecture-section" aria-labelledby="architecture-heading">
+        <div className="architecture-copy">
+          <div className="architecture-eyebrow">THE ORGINOGRAPHS ARCHITECTURE</div>
+          <h2 id="architecture-heading">From organizational signals to connected context.</h2>
+          <p>Source information is processed into searchable context and structured graph relationships. The diagram shows the current product architecture at a conceptual level.</p>
+        </div>
+
+        <div className="architecture-visual" aria-label="Illustrative OrgInGraphs architecture flow">
+          <div className="architecture-flow-label architecture-flow-label-sources">SOURCE INFORMATION</div>
+          <ol className="architecture-source-list" aria-label="Source systems"><li>Jira</li><li>Confluence</li><li>GitHub</li><li>Slack</li></ol>
+          <p className="architecture-sr-only">Jira, Confluence, GitHub, and Slack feed Workspace identity ingestion, then the embedding service, then persistent vector storage, and finally the FalkorDB organizational knowledge graph. Amazon Titan Text Embeddings V2 is an alternative 1,024-dimensional configuration.</p>
+
+          <svg className="architecture-flow-svg" viewBox="0 0 100 438" preserveAspectRatio="none" fill="none" aria-hidden="true">
+            <path className="architecture-path architecture-path-source" d="M12 82 C14 82 14 118 16 194" fill="none" stroke="#9db9a3" strokeWidth="1.75" vectorEffect="non-scaling-stroke" />
+            <path className="architecture-path architecture-path-source" d="M12 123 C14 123 14 143 16 194" fill="none" stroke="#9db9a3" strokeWidth="1.75" vectorEffect="non-scaling-stroke" />
+            <path className="architecture-path architecture-path-source" d="M12 164 C14 164 14 166 16 194" fill="none" stroke="#9db9a3" strokeWidth="1.75" vectorEffect="non-scaling-stroke" />
+            <path className="architecture-path architecture-path-source" d="M12 205 C14 205 14 194 16 194" fill="none" stroke="#9db9a3" strokeWidth="1.75" vectorEffect="non-scaling-stroke" />
+          </svg>
+
+          <ol className="architecture-stages" aria-label="Architecture stages">
+          <li className="architecture-node architecture-node-ingest">
+            <span className="architecture-node-kicker">01 · INGEST</span>
+            <strong>Workspace identity</strong>
+            <small>Source ingestion and processing</small>
+          </li>
+          <li className="architecture-node architecture-node-embed">
+            <span className="architecture-node-kicker">02 · EMBED</span>
+            <strong>Embedding service</strong>
+            <span className="architecture-dimension"><b>3,072</b><small>dimensions · Default path</small></span>
+          </li>
+          <li className="architecture-node architecture-node-vector">
+            <span className="architecture-node-kicker">03 · RETRIEVE</span>
+            <strong>Vector store</strong>
+            <small>Persistent document vectors</small>
+          </li>
+          <li className="architecture-node architecture-node-graph">
+            <span className="architecture-node-kicker">04 · CONNECT</span>
+            <strong>FalkorDB</strong>
+            <small>Organizational knowledge graph</small>
+            <svg className="architecture-graph-network" viewBox="0 0 220 112" aria-hidden="true"><g><path d="M20 54 L61 25 L103 54 L145 22 L193 52 M61 25 L76 91 L103 54 L163 89 L193 52 M20 54 L76 91 M145 22 L163 89" /></g><circle cx="20" cy="54" r="7" /><rect x="54" y="18" width="14" height="14" rx="4" /><path d="M103 45 L112 54 L103 63 L94 54 Z" /><polygon points="145,13 154,18 154,28 145,33 136,28 136,18" /><circle cx="193" cy="52" r="9" /><circle cx="76" cy="91" r="6" /><rect x="156" y="82" width="14" height="14" rx="4" /></svg>
+            <div className="architecture-graph-legend" aria-label="Graph entity types"><span>People</span><span>Teams</span><span>Projects</span><span>Services</span><span>Decisions</span></div>
+          </li>
+          </ol>
+          <div className="architecture-note architecture-note-titan">
+            <span>ALTERNATIVE CONFIGURATION</span>
+            <strong>Amazon Titan Text Embeddings V2</strong>
+            <b>1,024 dimensions</b>
+          </div>
+          <p className="architecture-caption">Illustrative architecture visualization — not a live operational dashboard.</p>
         </div>
       </section>
 
