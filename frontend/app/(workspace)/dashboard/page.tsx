@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Activity, ArrowRight, ArrowUpRight, Building2, CircleAlert, Clock3, FileText, GitPullRequest, MessagesSquare, Network, Plug, RefreshCw, Server, Sparkles, UsersRound } from "lucide-react";
+import { Activity, ArrowRight, ArrowUpRight, Building2, CircleAlert, Clock3, ExternalLink, FileText, GitPullRequest, MessagesSquare, Network, Plug, RefreshCw, Server, Sparkles, UsersRound } from "lucide-react";
 import { OrganizationGraph } from "@/components/graph/OrganizationGraph";
 import { api, friendlyApiError } from "@/lib/api";
 import { isProductGraphEntity } from "@/lib/graph/mode";
@@ -32,10 +32,48 @@ function recordPath(node: GraphApiNode) {
 function RecordLink({ node, children }: { node: GraphApiNode; children?: ReactNode }) {
   const type=typeOf(node);const entity={...node.properties,id:node.id,entityType:type} as Entity;
   const graphMode=isProductGraphEntity(type,node.properties.graphDomain)?"product":"team";
-  return <Link className="bento-record" href={recordPath(node)} onClick={()=>{
-    window.dispatchEvent(new CustomEvent("oig-graph-selection",{detail:{entity,entityType:type}}));
-    window.dispatchEvent(new CustomEvent("oig-graph-focus",{detail:{id:node.id,type,mode:graphMode}}));
-  }}><span className="bento-record-type">{type}</span><b>{children??recordTitle(node)}</b><ArrowUpRight size={12}/></Link>;
+  const externalUrl = typeof node.properties.externalUrl === "string" && node.properties.externalUrl.startsWith("http") ? node.properties.externalUrl : null;
+  const pageId = typeof node.properties.sourceRecordId === "string" ? node.properties.sourceRecordId : null;
+  const isConfluence = String(node.properties.sourceSystem ?? "").toLowerCase().includes("confluence");
+
+  return (
+    <div className="bento-record-row" style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
+      <Link className="bento-record" style={{ flex: 1, minWidth: 0 }} href={recordPath(node)} onClick={()=>{
+        window.dispatchEvent(new CustomEvent("oig-graph-selection",{detail:{entity,entityType:type}}));
+        window.dispatchEvent(new CustomEvent("oig-graph-focus",{detail:{id:node.id,type,mode:graphMode}}));
+      }}>
+        <span className="bento-record-type" title={isConfluence && pageId ? `Confluence page ${pageId}` : type}>
+          {isConfluence && pageId ? `Confluence · #${pageId}` : type}
+        </span>
+        <b>{children??recordTitle(node)}</b>
+        <ArrowUpRight size={12}/>
+      </Link>
+      {externalUrl && (
+        <a
+          href={externalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bento-external-link"
+          title={`Open in ${isConfluence ? "Confluence" : "external source"}`}
+          aria-label={`Open ${recordTitle(node)} in external source`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "8px 9px",
+            border: "1px solid var(--line)",
+            borderRadius: "6px",
+            background: "var(--paper)",
+            color: "var(--muted)",
+            transition: "all .14s ease",
+            flexShrink: 0,
+          }}
+        >
+          <ExternalLink size={12} />
+        </a>
+      )}
+    </div>
+  );
 }
 function relativeDate(value?: string) {
   if(!value)return "Date not recorded";const date=new Date(value);return Number.isNaN(date.valueOf())?"Date not recorded":date.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
@@ -118,7 +156,7 @@ export default function DashboardPage() {
 
       <section className="bento-card bento-insights-card" id="insights">
         <div className="bento-card-heading"><div><span className="bento-kicker"><Sparkles size={12}/> Evidence signals</span><h2>{filter?.label??"Proactive insights"}</h2><p>{filter?`${filter.nodes.length} matching graph records`:"Deterministic checks from indexed company data"}</p></div>{filter&&<button className="bento-text-button" type="button" onClick={()=>setFilter(null)}>Clear</button>}</div>
-        {filter?<div className="bento-list">{filter.nodes.length?filter.nodes.slice(0,8).map(node=><RecordLink key={node.id} node={node}/>):<div className="bento-empty"><p>No matching records were returned by the graph.</p></div>}</div>:!loaded?<div className="bento-loading"><span className="spinner"/>Loading graph signals…</div>:<>
+        {filter?<div className="bento-list">{filter.nodes.length?filter.nodes.map(node=><RecordLink key={node.id} node={node}/>):<div className="bento-empty"><p>No matching records were returned by the graph.</p></div>}</div>:!loaded?<div className="bento-loading"><span className="spinner"/>Loading graph signals…</div>:<>
           {unownedServices.length>0&&<div className="bento-signal"><span className="bento-signal-icon"><Server size={14}/></span><div><b>{unownedServices.length} service{unownedServices.length===1?"":"s"} without recorded ownership</b><small>No owner or maintainer relationship is present in the loaded graph.</small>{unownedServices.slice(0,3).map(node=><RecordLink key={node.id} node={node}/>)}</div></div>}
           {!unownedServices.length&&<div className="bento-empty"><Sparkles size={17}/><b>No graph signals to review</b><p>This is based on indexed records; no investigations or inferred risks are fabricated.</p></div>}
           <div className="bento-card-footnote">Graph checks only · not a simulation</div>

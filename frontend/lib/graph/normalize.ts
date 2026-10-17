@@ -89,13 +89,19 @@ export function graphEntity(node: GraphResponse["nodes"][number]): Entity {
     : { ...node.properties, id: node.id, entityType };
 }
 
-export function normalizeGraph(graph: GraphResponse): {
+export function normalizeGraph(
+  graph: GraphResponse,
+  graphMode: "team" | "product" = "team",
+): {
   nodes: Node<GraphNodeData>[];
   edges: Edge[];
 } {
   const rootId = graphRootId(graph);
-  const visibleIds = initialVisibleIds(graph, rootId);
-  return normalizeVisibleGraph(graph, visibleIds, [], rootId);
+  const visibleIds =
+    graphMode === "product"
+      ? new Set(graph.nodes.map((node) => node.id))
+      : initialVisibleIds(graph, rootId);
+  return normalizeVisibleGraph(graph, visibleIds, [], rootId, graphMode);
 }
 
 export function graphRootId(graph: GraphResponse): string | undefined {
@@ -230,40 +236,66 @@ export function getChildNodeIds(graph: GraphResponse, parentId: string): string[
       }
     }
   } else if (type === "Product") {
-    // Product -> ProductModule
+    // Product -> ProductModule, Release, Team
     for (const edge of graph.edges) {
       if (edge.source === parentId) {
         const targetNode = graph.nodes.find((n) => n.id === edge.target);
-        if (targetNode?.labels.includes("ProductModule")) addChild(targetNode.id);
+        if (targetNode?.labels.some((l) => ["ProductModule", "Release", "Team"].includes(l))) {
+          addChild(targetNode.id);
+        }
       }
     }
   } else if (type === "ProductModule") {
-    // ProductModule -> Feature / FeatureRequest
+    // ProductModule -> Feature / FeatureRequest, Team
     for (const edge of graph.edges) {
       if (edge.source === parentId) {
         const targetNode = graph.nodes.find((n) => n.id === edge.target);
-        if (targetNode?.labels.some((l) => ["Feature", "FeatureRequest"].includes(l))) {
+        if (targetNode?.labels.some((l) => ["Feature", "FeatureRequest", "Team"].includes(l))) {
           addChild(targetNode.id);
         }
       }
     }
   } else if (type === "Feature" || type === "FeatureRequest") {
-    // Feature -> Ticket / Task / Bug
+    // Feature -> Ticket / Task / Bug / Decision / Employee
     for (const edge of graph.edges) {
-      if (edge.source === parentId) {
-        const targetNode = graph.nodes.find((n) => n.id === edge.target);
-        if (targetNode?.labels.some((l) => ["Ticket", "Task", "Bug"].includes(l))) {
-          addChild(targetNode.id);
+      if (edge.source === parentId || edge.target === parentId) {
+        const otherId = edge.source === parentId ? edge.target : edge.source;
+        const otherNode = graph.nodes.find((n) => n.id === otherId);
+        if (otherNode?.labels.some((l) => ["Ticket", "Task", "Bug", "Decision", "Employee", "Activity"].includes(l))) {
+          addChild(otherNode.id);
         }
       }
     }
   } else if (type === "Ticket" || type === "Task" || type === "Bug") {
-    // Ticket -> PullRequest / Release / Commit
+    // Ticket -> PullRequest / Release / Commit / Employee / Bug
     for (const edge of graph.edges) {
-      if (edge.source === parentId) {
-        const targetNode = graph.nodes.find((n) => n.id === edge.target);
-        if (targetNode?.labels.some((l) => ["PullRequest", "Release", "Commit"].includes(l))) {
-          addChild(targetNode.id);
+      if (edge.source === parentId || edge.target === parentId) {
+        const otherId = edge.source === parentId ? edge.target : edge.source;
+        const otherNode = graph.nodes.find((n) => n.id === otherId);
+        if (otherNode?.labels.some((l) => ["PullRequest", "Release", "Commit", "Bug", "Employee"].includes(l))) {
+          addChild(otherNode.id);
+        }
+      }
+    }
+  } else if (type === "PullRequest") {
+    // PullRequest -> Commit / Review / Comment / Employee
+    for (const edge of graph.edges) {
+      if (edge.source === parentId || edge.target === parentId) {
+        const otherId = edge.source === parentId ? edge.target : edge.source;
+        const otherNode = graph.nodes.find((n) => n.id === otherId);
+        if (otherNode?.labels.some((l) => ["Commit", "Review", "Comment", "Employee"].includes(l))) {
+          addChild(otherNode.id);
+        }
+      }
+    }
+  } else if (type === "Release") {
+    // Release -> PullRequest / Activity
+    for (const edge of graph.edges) {
+      if (edge.source === parentId || edge.target === parentId) {
+        const otherId = edge.source === parentId ? edge.target : edge.source;
+        const otherNode = graph.nodes.find((n) => n.id === otherId);
+        if (otherNode?.labels.some((l) => ["PullRequest", "Activity"].includes(l))) {
+          addChild(otherNode.id);
         }
       }
     }
@@ -308,6 +340,7 @@ export function normalizeVisibleGraph(
   visibleIds: Set<string>,
   _previousNodes: Node<GraphNodeData>[] = [],
   _expansionOrigin?: string,
+  graphMode: "team" | "product" = "team",
 ): { nodes: Node<GraphNodeData>[]; edges: Edge[] } {
   const byId = new Map(graph.nodes.map((node) => [node.id, node]));
   const rootId = graphRootId(graph);
@@ -426,39 +459,73 @@ export function normalizeVisibleGraph(
     return toGraphNode(entity, position, hasChildren);
   });
 
-  // Construct React Flow edges: strictly parent -> child (left to right)
+  // Construct React Flow edges
   const edgeIds = new Set<string>();
   const edges: Edge[] = [];
 
-  for (const [childId, parentId] of parentOf.entries()) {
-    if (!visibleIds.has(childId) || !visibleIds.has(parentId)) continue;
-
-    // Find raw edge if available to preserve ID and properties
-    const rawEdge = graph.edges.find(
-      (e) =>
-        (e.source === parentId && e.target === childId) ||
-        (e.source === childId && e.target === parentId),
+  const isProductMode =
+    graphMode === "product" ||
+    graph.nodes.some(
+      (n) =>
+        n.properties?.graphDomain === "product-progress" ||
+        n.labels.includes("Product") ||
+        n.labels.includes("ProductModule"),
     );
 
-    let edgeId = rawEdge?.id ?? `${parentId}:${childId}`;
-    if (edgeIds.has(edgeId)) {
-      edgeId = `${parentId}:${childId}:${edgeIds.size}`;
-    }
-    edgeIds.add(edgeId);
+  if (isProductMode) {
+    for (const rawEdge of graph.edges) {
+      if (!visibleIds.has(rawEdge.source) || !visibleIds.has(rawEdge.target)) continue;
+      if (edgeIds.has(rawEdge.id)) continue;
+      edgeIds.add(rawEdge.id);
 
-    edges.push({
-      id: edgeId,
-      source: parentId,
-      target: childId,
-      sourceHandle: "source-right",
-      targetHandle: "target-left",
-      type: "default", // elegant smooth Bezier curve
-      animated: false,
-      data: {
-        relationshipType: rawEdge?.type ?? "HIERARCHY",
-        properties: rawEdge?.properties ?? {},
-      },
-    });
+      const sourcePos = positions.get(rawEdge.source) ?? ROOT_POSITION;
+      const targetPos = positions.get(rawEdge.target) ?? ROOT_POSITION;
+      const flowsRight = targetPos.x >= sourcePos.x;
+
+      edges.push({
+        id: rawEdge.id,
+        source: rawEdge.source,
+        target: rawEdge.target,
+        sourceHandle: flowsRight ? "source-right" : "source-left",
+        targetHandle: flowsRight ? "target-left" : "target-right",
+        type: "default",
+        animated: false,
+        data: {
+          relationshipType: rawEdge.type,
+          properties: rawEdge.properties ?? {},
+        },
+      });
+    }
+  } else {
+    for (const [childId, parentId] of parentOf.entries()) {
+      if (!visibleIds.has(childId) || !visibleIds.has(parentId)) continue;
+
+      const rawEdge = graph.edges.find(
+        (e) =>
+          (e.source === parentId && e.target === childId) ||
+          (e.source === childId && e.target === parentId),
+      );
+
+      let edgeId = rawEdge?.id ?? `${parentId}:${childId}`;
+      if (edgeIds.has(edgeId)) {
+        edgeId = `${parentId}:${childId}:${edgeIds.size}`;
+      }
+      edgeIds.add(edgeId);
+
+      edges.push({
+        id: edgeId,
+        source: parentId,
+        target: childId,
+        sourceHandle: "source-right",
+        targetHandle: "target-left",
+        type: "default",
+        animated: false,
+        data: {
+          relationshipType: rawEdge?.type ?? "HIERARCHY",
+          properties: rawEdge?.properties ?? {},
+        },
+      });
+    }
   }
 
   return { nodes, edges };
