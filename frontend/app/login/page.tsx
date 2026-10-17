@@ -6,24 +6,19 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, LockKeyhole } from "lucide-react";
 import { Brand } from "@/components/Brand";
 
-const demoEmail = "demo@hirenova.example";
+const demoAccounts = [
+  { id: "Judges", name: "Judges demo", email: "demo@hirenova.com" },
+  { id: "team", name: "nickhilverma", email: "nickhil@hirenova.com" },
+] as const;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [workspace, setWorkspace] = useState("");
-  const [error, setError] = useState("");
+  const [selectedAccount, setSelectedAccount] = useState<(typeof demoAccounts)[number]>(demoAccounts[0]);
 
   function enterDemo(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const value = workspace.trim() || demoEmail;
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      setError("Enter a valid work email address.");
-      return;
-    }
-
-    window.localStorage.setItem("oig-demo-workspace", value);
+    window.localStorage.setItem("oig-demo-workspace", selectedAccount.email);
     router.push("/dashboard");
   }
 
@@ -60,50 +55,44 @@ export default function LoginPage() {
             </h1>
 
             <p className="mt-3 text-sm leading-6 text-[#66665f]">
-              Enter your work email to access your organization’s connected
-              knowledge and workspace.
+              Choose one of the two demo accounts to access the connected
+              knowledge workspace.
             </p>
           </div>
 
-          {/* Email form */}
+          {/* Demo account switcher */}
           <form onSubmit={enterDemo} noValidate>
-            <label
-              htmlFor="workspace-email"
-              className="mb-2 block text-sm font-semibold"
-            >
-              Work email
-            </label>
-
-            <input
-              id="workspace-email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              autoFocus
-              placeholder="name@company.com"
-              value={workspace}
-              onChange={(event) => {
-                setWorkspace(event.target.value);
-                setError("");
-              }}
-              aria-invalid={Boolean(error)}
-              aria-describedby={error ? "login-error" : undefined}
-              className={`h-12 w-full rounded-lg border bg-white px-3.5 text-sm text-[#19191b] outline-none transition placeholder:text-[#99998f] focus:border-[#347653] focus:ring-4 focus:ring-[#347653]/10 ${
-                error ? "border-red-500" : "border-[#d9d9cf]"
-              }`}
-            />
-
-            {error && (
-              <p id="login-error" role="alert" className="mt-2 text-sm text-red-600">
-                {error}
-              </p>
-            )}
+            <p className="mb-2 block text-sm font-semibold">Choose account</p>
+            <div className="grid gap-3" role="group" aria-label="Choose demo account">
+              {demoAccounts.map((account) => {
+                const selected = selectedAccount.id === account.id;
+                return (
+                  <button
+                    key={account.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setSelectedAccount(account)}
+                    className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left transition focus:outline-none focus:ring-4 focus:ring-[#347653]/10 ${
+                      selected
+                        ? "border-[#347653] bg-[#f3f8f1] ring-2 ring-[#347653]/10"
+                        : "border-[#d9d9cf] bg-white hover:border-[#a9b9a4]"
+                    }`}
+                  >
+                    <span>
+                      <span className="block text-sm font-semibold text-[#19191b]">{account.name}</span>
+                      <span className="mt-1 block text-xs text-[#66665f]">{account.email}</span>
+                    </span>
+                    <span className={`h-4 w-4 rounded-full border-2 ${selected ? "border-[#347653] bg-[#347653] shadow-[inset_0_0_0_3px_white]" : "border-[#bcbcb2]"}`} aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
 
             <button
               type="submit"
               className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#19191b] px-5 text-sm font-semibold !text-white transition hover:-translate-y-0.5 hover:bg-[#174d35] focus:outline-none focus:ring-4 focus:ring-[#347653]/20"
             >
-              Continue
+              Continue as {selectedAccount.name}
               <ArrowRight size={16} />
             </button>
           </form>
@@ -126,8 +115,8 @@ export default function LoginPage() {
               <div>
                 <p className="text-sm font-semibold">Explore the demo workspace</p>
                 <p className="mt-1 text-xs leading-5 text-[#6d6d64]">
-                  Authentication is not configured yet. Your email is stored
-                  in this browser for the demo; no account is created.
+                  Authentication is not configured yet. The selected demo
+                  identity is stored in this browser; no account is created.
                 </p>
               </div>
             </div>
