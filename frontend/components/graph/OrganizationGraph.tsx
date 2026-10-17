@@ -22,6 +22,7 @@ import {
   ChevronRight,
   CircleHelp,
   Expand,
+  ExternalLink,
   GitBranch,
   Network,
   RotateCcw,
@@ -128,7 +129,7 @@ export function GraphRenderer({
   focusType?: string;
   focusRequest: number;
 }) {
-  const { nodes, edges, expandedIds, expandingId, toggle: toggleExpansion, replace: replaceGraph, reset: resetExpandableGraph } = useExpandableGraph(fullGraph, initialNodes, initialEdges);
+  const { nodes, edges, expandedIds, expandingId, toggle: toggleExpansion, replace: replaceGraph, reset: resetExpandableGraph } = useExpandableGraph(fullGraph, initialNodes, initialEdges, graphMode);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -138,7 +139,11 @@ export function GraphRenderer({
   useEffect(() => {
     setSelectedId(null);
     setPanelError("");
-  }, [initialEdges, initialNodes]);
+    const timer = window.setTimeout(() => {
+      void fitView({ duration: 300, padding: 0.16 });
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [initialEdges, initialNodes, fitView]);
 
   const selectedNode = nodes.find((node) => node.id === selectedId) ?? null;
   const connected = useMemo(() => {
@@ -255,9 +260,9 @@ export function GraphRenderer({
         detail
   ) : selectedNode?.data.entity;
   const fieldRows = properties ? Object.entries(properties).filter(([key, value]) => {
-    return !["id", "profilePictureUrl", "skills", "sourceRecordId", "sourceSystem", "externalUrl", "createdAt", "updatedAt"].includes(key)
+    return !["id", "profilePictureUrl", "skills", "externalUrl", "createdAt", "updatedAt"].includes(key)
       && (typeof value === "string" || typeof value === "number" || typeof value === "boolean");
-  }).slice(0, 7) : [];
+  }).slice(0, 8) : [];
   const path = selectedNode ? detailPath(selectedNode.data.entityType, selectedNode.id) : null;
 
   return (
@@ -291,9 +296,8 @@ export function GraphRenderer({
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: .16, maxZoom: 1.05 }}
-            minZoom={.15}
+            minZoom={.25}
             maxZoom={1.6}
-            proOptions={{ hideAttribution: true }}
             nodesDraggable
             nodesConnectable={false}
             elementsSelectable
@@ -341,6 +345,17 @@ export function GraphRenderer({
                       : "Expand"}
               </button>
               {path && <Link href={path} className="small-button">Open profile <ArrowUpRight size={11} /></Link>}
+              {typeof selectedNode.data.entity.externalUrl === "string" && selectedNode.data.entity.externalUrl.startsWith("http") && (
+                <a
+                  href={selectedNode.data.entity.externalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="small-button"
+                  title="Open in Confluence"
+                >
+                  Open in {entitySource(selectedNode.data.entity)} <ExternalLink size={11} />
+                </a>
+              )}
             </div>
             {panelError && <div className="panel-error">{panelError}</div>}
             {detailLoading && <div className="inspector-section"><span className="inline-loading"><span className="spinner" />Loading record details…</span></div>}
@@ -365,8 +380,8 @@ export function OrganizationGraph(props: {
 }) {
   const sourceGraph = useMemo(() => props.graphMode === "product" ? props.graph : organizationGraph(props.graph), [props.graph, props.graphMode]);
   const initial = useMemo(
-    () => buildInitialGraph(sourceGraph),
-    [sourceGraph],
+    () => buildInitialGraph(sourceGraph, props.graphMode),
+    [sourceGraph, props.graphMode],
   );
   return (
     <div className="graph-workspace">
