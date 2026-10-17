@@ -6,13 +6,14 @@ import Image from "next/image";
 import { Activity, ArrowRight, ArrowUpRight, Building2, CircleAlert, Clock3, FileText, GitPullRequest, MessagesSquare, Network, Plug, RefreshCw, Server, Sparkles, UsersRound } from "lucide-react";
 import { OrganizationGraph } from "@/components/graph/OrganizationGraph";
 import { api, friendlyApiError } from "@/lib/api";
+import { isProductGraphEntity } from "@/lib/graph/mode";
 import type { Entity, GraphApiNode, GraphResponse, IngestionResponse, IngestionSource } from "@/lib/types";
 
 type GraphMode = "team" | "product";
 type GraphState = { data: GraphResponse; loading: boolean; error: string };
 type EntityFilter = { label: string; nodes: GraphApiNode[] } | null;
 const emptyGraph: GraphResponse = { nodes: [], edges: [] };
-const productTypes = new Set(["Product","ProductModule","Feature","FeatureRequest","Ticket","Bug","Release","Commit","Comment","Activity","Review"]);
+const productTypes = new Set(["Product","ProductModule","Feature","FeatureRequest","Ticket","Bug","Release","PullRequest","Commit","Comment","Activity","Review","Task"]);
 const sourceOptions: Array<{ id: IngestionSource; label: string; detail: string; image: string }> = [
   { id: "confluence", label: "Confluence", detail: "Server credentials", image: "/img/confluence.png" },
   { id: "jira", label: "Jira", detail: "Backend demo source", image: "/img/jira.webp" },
@@ -25,16 +26,15 @@ function recordTitle(node: GraphApiNode) { const value = node.properties.name ??
 function recordTime(node: GraphApiNode) { return [node.properties.occurredAt,node.properties.validFrom,node.properties.mergedAt,node.properties.updatedAt,node.properties.createdAt].find((value) => typeof value === "string") as string | undefined; }
 function recordPath(node: GraphApiNode) {
   const type=typeOf(node);const id=encodeURIComponent(node.id);
-  if(type==="Employee")return `/people/${id}`;
-  if(type==="Department")return `/departments/${id}`;
-  if(type==="Project")return `/projects/${id}`;
-  return `/org-graph?${productTypes.has(type)?"mode=product&":""}focus=${id}&type=${encodeURIComponent(type)}`;
+  const graphMode=isProductGraphEntity(type,node.properties.graphDomain)?"product":"team";
+  return `/org-graph?mode=${graphMode}&focus=${id}&type=${encodeURIComponent(type)}`;
 }
 function RecordLink({ node, children }: { node: GraphApiNode; children?: ReactNode }) {
   const type=typeOf(node);const entity={...node.properties,id:node.id,entityType:type} as Entity;
+  const graphMode=isProductGraphEntity(type,node.properties.graphDomain)?"product":"team";
   return <Link className="bento-record" href={recordPath(node)} onClick={()=>{
     window.dispatchEvent(new CustomEvent("oig-graph-selection",{detail:{entity,entityType:type}}));
-    window.dispatchEvent(new CustomEvent("oig-graph-focus",{detail:{id:node.id,type,mode:productTypes.has(type)?"product":"team"}}));
+    window.dispatchEvent(new CustomEvent("oig-graph-focus",{detail:{id:node.id,type,mode:graphMode}}));
   }}><span className="bento-record-type">{type}</span><b>{children??recordTitle(node)}</b><ArrowUpRight size={12}/></Link>;
 }
 function relativeDate(value?: string) {

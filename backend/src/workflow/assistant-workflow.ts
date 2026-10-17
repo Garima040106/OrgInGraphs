@@ -187,12 +187,23 @@ function validateModelAnswer(raw: unknown, knownIds: Set<string>) {
 function withModelAnswer(fallback: AssistantStructuredResponse, modelOutput: ReturnType<typeof validateModelAnswer>, knownEntities: AssistantEntity[]): AssistantStructuredResponse {
   if (!modelOutput) return fallback;
   const entities = new Map(knownEntities.map((item) => [item.id, item]));
-  const ids = [...new Set(modelOutput.citationIds)];
+  const ids = [...new Set([...modelOutput.citationIds, ...fallback.answer.citations.map((c) => c.entityId)])];
   const citations = ids.flatMap((id) => { const entity = entities.get(id); return entity ? [citation(entity)] : []; });
   const type = fallback.answer.type;
+  const modelEntities = modelOutput.relatedEntityIds.flatMap((id) => { const entity = entities.get(id); return entity ? [limitedEntity(entity)] : []; });
+  const related_entities = [...modelEntities, ...fallback.answer.related_entities.filter((f) => !modelEntities.some((m) => m.id === f.id))].slice(0, 30);
+  const title = type === 'company_overview' && modelOutput.title.toLowerCase() === 'company overview' ? 'Company overview' : modelOutput.title;
+  let summary = modelOutput.summary;
+  if (type === 'impact_analysis' && !/not a simulation/i.test(summary)) {
+    summary = `${summary} This is graph traversal, not a simulation.`.slice(0, 1200);
+  }
+  let uncertainty = modelOutput.uncertainty;
+  if (type === 'impact_analysis' && !/no multi-hop risk analysis or simulation/i.test(uncertainty)) {
+    uncertainty = `Only direct recorded relationships are shown. No multi-hop risk analysis or simulation was run. ${uncertainty}`.trim().slice(0, 700);
+  }
   return responseSchema.parse({
-    answer: { ...fallback.answer, title: modelOutput.title, summary: modelOutput.summary, findings: modelOutput.findings, citations, related_entities: modelOutput.relatedEntityIds.flatMap((id) => { const entity = entities.get(id); return entity ? [limitedEntity(entity)] : []; }), suggested_actions: modelOutput.suggestedActions, uncertainty: modelOutput.uncertainty, type },
-    ui: { ...fallback.ui, interactions: modelOutput.suggestedActions.map(({ type: interactionType, entityId }) => ({ type: interactionType, entityId })) },
+    answer: { ...fallback.answer, title, summary, findings: modelOutput.findings, citations, related_entities, suggested_actions: modelOutput.suggestedActions.length ? modelOutput.suggestedActions : fallback.answer.suggested_actions, uncertainty, type },
+    ui: { ...fallback.ui, interactions: (modelOutput.suggestedActions.length ? modelOutput.suggestedActions : fallback.answer.suggested_actions).map(({ type: interactionType, entityId }) => ({ type: interactionType, entityId })) },
     execution: { ...fallback.execution, stages: fallback.execution.stages.map((stage) => stage.name === 'synthesize' ? { ...stage, status: 'completed' as const } : stage) }
   });
 }

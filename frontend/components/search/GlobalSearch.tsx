@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BriefcaseBusiness, Building2, Search, UserRound, X } from "lucide-react";
 import { api, entityName, friendlyApiError } from "@/lib/api";
+import { isProductGraphEntity } from "@/lib/graph/mode";
 import type { GraphEntityType, SearchResult } from "@/lib/types";
 
 const iconFor = (type: GraphEntityType) => {
@@ -13,7 +14,7 @@ const iconFor = (type: GraphEntityType) => {
 };
 
 const destination = (result: SearchResult) =>
-  `/org-graph?${["Product","ProductModule","Feature","FeatureRequest","Ticket","Bug","Release","Commit","Comment","Activity","Review"].includes(result.entityType) ? "mode=product&" : ""}focus=${encodeURIComponent(result.n.id)}&type=${encodeURIComponent(result.entityType)}`;
+  `/org-graph?${isProductGraphEntity(result.entityType, result.n.graphDomain) ? "mode=product&" : ""}focus=${encodeURIComponent(result.n.id)}&type=${encodeURIComponent(result.entityType)}`;
 
 export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
@@ -69,7 +70,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
     onClose();
     router.push(destination(result));
     window.dispatchEvent(new CustomEvent("oig-graph-focus", {
-      detail: { id: result.n.id, type: result.entityType, mode: ["Product","ProductModule","Feature","FeatureRequest","Ticket","Bug","Release","Commit","Comment","Activity","Review"].includes(result.entityType) ? "product" : "team" },
+      detail: { id: result.n.id, type: result.entityType, mode: isProductGraphEntity(result.entityType, result.n.graphDomain) ? "product" : "team" },
     }));
   }
 

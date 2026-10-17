@@ -28,9 +28,9 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 12_000): Promise<T> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12_000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const signal = options.signal
     ? AbortSignal.any([controller.signal, options.signal])
     : controller.signal;
@@ -99,6 +99,9 @@ export const api = {
   assistantQuery: (input: AssistantQuery) => request<AssistantResponse>("/api/assistant/query", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
   }),
+  organizationQuery: (input: { query: string; topK?: number; threshold?: number; orgId?: string }) => request<import("@/lib/types").OrganizationRagResponse>("/api/organization/query", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
+  }, 45_000),
   assistantConversations: () => request<{ conversations: import("@/lib/types").AssistantConversation[] }>("/api/assistant/conversations"),
   assistantConversation: (id: string) => request<{ conversationId: string; turns: import("@/lib/types").AssistantTurn[] }>(`/api/assistant/conversations/${encodeURIComponent(id)}`),
 };

@@ -8,6 +8,8 @@ import { runOrgInGraphsWorkflow } from '../workflow/workflow.js';
 import { ingestionRequestSchema, runIngestionWorkflow, type IngestionWorkflowDependencies } from '../workflow/ingestion-workflow.js';
 import { assistantRequestSchema, runAssistantWorkflow } from '../workflow/assistant-workflow.js';
 import { conversationTurns, createConversation, listConversations, loadAssistantMemory, memoryOwnerId, ownsConversation, saveAssistantTurn } from '../agents/company-assistant/memory.js';
+import { getOrganizationIntelligenceAgent, type OrganizationIntelligenceAgent } from '../agents/organization-intelligence/agent.js';
+import { ragQueryInputSchema } from '../agents/organization-intelligence/types.js';
 
 const idSchema = z.string().regex(/^[a-z0-9-]+$/);
 const conversationIdSchema = z.string().uuid();
@@ -28,8 +30,9 @@ const workflowStatus = (result: Awaited<ReturnType<typeof runOrgInGraphsWorkflow
   return 200;
 };
 
-export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowDependencies } = {}) {
+export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowDependencies; agent1?: OrganizationIntelligenceAgent } = {}) {
   const app=express();
+  const agent1 = options.agent1 ?? getOrganizationIntelligenceAgent({ graph });
   const allowedOrigins=new Set((process.env.FRONTEND_ORIGINS??'http://localhost:3000,http://127.0.0.1:3000').split(',').map(origin=>origin.trim()).filter(Boolean));
   app.use((req,res,next)=>{
     const origin=req.headers.origin;
@@ -143,5 +146,97 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
       return res.status(500).json({ error: 'Ingestion processing failed' });
     }
   });
+
+  // Agent 1: Organization Intelligence & Knowledge Ingestion endpoints
+  const adminOwner = (req: Request, res: Response): boolean => {
+    const authHeader = req.header('x-orgmind-user-id');
+    if (!authHeader) {
+      res.status(401).json({ error: 'Administrative action requires authorized workspace identity (x-orgmind-user-id).' });
+      return false;
+    }
+    const parsed = workspaceIdentitySchema.safeParse(authHeader);
+    if (!parsed.success) {
+      res.status(401).json({ error: 'Invalid workspace identity for administrative action.' });
+      return false;
+    }
+    return true;
+  };
+
+  const handleIngest = async (req: Request, res: Response) => {
+    if (!adminOwner(req, res)) return;
+    try {
+      const body = req.body ?? {};
+      const force = Boolean(body.force);
+      const sources = Array.isArray(body.sources) ? body.sources : undefined;
+      const result = await agent1.ingest({ forceReindex: force, selectedSources: sources });
+      return res.status(result.status === 'failed' ? 503 : 200).json(result);
+    } catch (error) {
+      console.error('Agent 1 ingestion failed:', error);
+      return res.status(503).json({ status: 'failed', errors: ['Ingestion workflow execution failed safely.'] });
+    }
+  };
+  app.post('/api/organization/ingest', handleIngest);
+  app.post('/api/organization-intelligence/ingest', handleIngest);
+
+  const handleStatus = async (_req: Request, res: Response) => {
+    try {
+      const stats = agent1.getStatus();
+      return res.json({ status: 'ready', stats, agent: 'organization-intelligence' });
+    } catch (error) {
+      console.error('Agent 1 status failed:', error);
+      return res.status(500).json({ error: 'Failed to retrieve indexing status.' });
+    }
+  };
+  app.get('/api/organization/status', handleStatus);
+  app.get('/api/organization-intelligence/status', handleStatus);
+
+  const handleQuery = async (req: Request, res: Response) => {
+    const parsed = ragQueryInputSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid organization query request', details: parsed.error.flatten() });
+    }
+    try {
+      const response = await agent1.query(parsed.data);
+      return res.status(response.status === 'failed' ? 503 : 200).json(response);
+    } catch (error) {
+      console.error('Agent 1 query failed:', error);
+      return res.status(503).json({
+        answer: 'The organization intelligence query could not be completed safely.',
+        sources: [],
+        retrieved_chunks: [],
+        agent: 'organization-intelligence',
+        status: 'failed'
+      });
+    }
+  };
+  app.post('/api/organization/query', handleQuery);
+  app.post('/api/organization-intelligence/query', handleQuery);
+
+  const handleSources = async (_req: Request, res: Response) => {
+    try {
+      const sources = agent1.getSources();
+      return res.json({ sources, count: sources.length });
+    } catch (error) {
+      console.error('Agent 1 getSources failed:', error);
+      return res.status(500).json({ error: 'Failed to retrieve indexed sources.' });
+    }
+  };
+  app.get('/api/organization/sources', handleSources);
+  app.get('/api/organization-intelligence/sources', handleSources);
+
+  const handleReindex = async (req: Request, res: Response) => {
+    if (!adminOwner(req, res)) return;
+    try {
+      const sourcePath = typeof req.body?.sourcePath === 'string' ? req.body.sourcePath : undefined;
+      const result = await agent1.reindex(sourcePath);
+      return res.status(result.status === 'failed' ? 503 : 200).json(result);
+    } catch (error) {
+      console.error('Agent 1 reindexing failed:', error);
+      return res.status(503).json({ status: 'failed', errors: ['Reindexing failed safely.'] });
+    }
+  };
+  app.post('/api/organization/reindex', handleReindex);
+  app.post('/api/organization-intelligence/reindex', handleReindex);
+
   return app;
 }

@@ -16,7 +16,11 @@ const environmentSchema = z.object({
   CONFLUENCE_BASE_URL: z.preprocess((value) => value === '' ? undefined : value, z.string().url().optional()),
   CONFLUENCE_EMAIL: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
   CONFLUENCE_API_TOKEN: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
-  MOCK_API_BASE_URL: z.preprocess((value) => value === '' ? undefined : value, z.string().url().optional())
+  MOCK_API_BASE_URL: z.preprocess((value) => value === '' ? undefined : value, z.string().url().optional()),
+  GEMINI_API_KEY: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
+  GEMINI_EMBEDDING_MODEL: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).default('gemini-embedding-001')),
+  VECTOR_STORE_PATH: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
+  ORGANIZATION_ID: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).default('hirenova'))
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

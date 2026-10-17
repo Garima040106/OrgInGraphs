@@ -124,13 +124,13 @@ export function AppShell({
           <div className="topbar-actions">
             <div className={`connection-pill ${connection ? "" : "offline"}`} title={connection ? "Backend connected" : "Backend unavailable"}><span className="status-dot" /><span>{connection ? "Connected" : health ? "Offline" : "Checking"}</span></div>
             <button className="search-trigger" type="button" onClick={() => setSearchOpen(true)}><Search size={13} /><span>Search your organization</span><kbd><Command size={9} /> K</kbd></button>
-            <button className="topbar-user" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open Ask OrgMind"><Sparkles size={13} /></button>
+            <button className="topbar-user" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open OrgMind Assistant"><Sparkles size={13} /></button>
           </div>
         </header>
         <main className="workspace-content">{children}</main>
       </div>
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <button className="assistant-launch" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open Ask OrgMind"><Sparkles size={14} /> Ask OrgMind</button>
+      <button className="assistant-launch" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open OrgMind Assistant"><Sparkles size={14} /> OrgMind Assistant</button>
       <CompanyAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} selected={selected} />
       <SelectionSync onSelection={(value) => setSelected(value)} />
     </div>
