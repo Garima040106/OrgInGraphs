@@ -1,3 +1,5 @@
+import { SourceLibrary } from "@/components/sources/SourceLibrary";
+
 export default function ProactiveInsightsPage() {
-  return <h1>Proactive Insights</h1>;
+  return <SourceLibrary kind="insights" />;
 }

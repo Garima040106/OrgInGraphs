@@ -7,6 +7,12 @@ The backend exposes no OpenAPI document. This inventory is based on the current 
 | `GET /health` | Status and database connectivity | Workspace connection indicator |
 | `GET /api/company` | Company graph node | Workspace company name |
 | `GET /api/graph` | Full graph nodes and edges | Dashboard metrics and organization graph |
+| `GET /api/dashboard` | Company data plus organization and product graph snapshots and source counts, assembled from FalkorDB | Overview Bento dashboard initial load and refresh |
+| `GET /api/dashboard/summary` | Lightweight totals and source counts from FalkorDB | Dashboard summary integrations |
+| `GET /api/documents?q=&limit=&offset=` | Paginated Confluence `Document` graph records | Documents page |
+| `GET /api/tickets?q=&limit=&offset=` | Paginated Jira `Ticket` and `Bug` graph records | Tickets page |
+| `GET /api/conversations?q=&limit=&offset=` | Paginated Slack `Message` records and linked channels | Conversations page |
+| `GET /api/proactive-insights?q=&limit=&offset=` | Paginated GitHub pull request, issue, and commit records | Proactive Insights source view (not a generated risk assessment) |
 | `GET /api/graph/neighborhood/:entityType/:entityId` | Direct neighbors and relationship direction, capped at 100 | Graph expansion; entity, ownership, decision, and impact views |
 | `GET /api/search?q=` | Up to 50 graph records matching name, title, or email | Global search and assistant citations |
 | `GET /api/employees[?departmentId&teamId&employmentStatus]` | Employee list/filter | People directory |
@@ -21,6 +27,32 @@ The backend exposes no OpenAPI document. This inventory is based on the current 
 | `GET /api/assistant/conversations` | Lists up to 50 conversations for the supplied workspace identity | Assistant conversation switcher
 | `GET /api/assistant/conversations/:conversationId` | Returns persisted turns after checking conversation ownership | Restore a prior assistant conversation
 | `POST /api/ingestion/process` | LangGraph validates source and limit, fetches normalized records, processes documents, and returns per-record outcomes | Integration settings "Fetch & process records" action |
+
+## Documents and tickets pages
+
+The Documents page reads `GET /api/documents`; the Tickets page reads `GET /api/tickets`. Both routes paginate and filter persisted source records, and neither calls upstream services. Conversations reads `GET /api/conversations`, and Proactive Insights reads `GET /api/proactive-insights`. All four pages can sync through `POST /api/ingestion/process`, which fetches records server-side, persists them to FalkorDB, and returns processing outcomes. The overview page uses `GET /api/dashboard` for the company, organization and product graphs, counts, and dashboard cards. Backend read failures are displayed in the relevant page.
+
+Confluence fetching uses the configured server-side Confluence REST API connection (`CONFLUENCE_BASE_URL`, `CONFLUENCE_EMAIL`, and `CONFLUENCE_API_TOKEN` or `CONFLUENCE_API_KEY`) when `MOCK_API_BASE_URL` is not set. Jira fetching uses the configured connector at `MOCK_API_BASE_URL/api/jira/issues` with `JIRA_API_KEY` when supplied; a direct Jira Cloud REST client is not implemented. The route catalog's `/api/confluence/*` and `/api/jira/*` entries describe connector/source capabilities and are not Express routes exposed by this backend. Use the ingestion endpoint above for both pages.
+
+The same ingestion flow now persists Slack messages as graph `Message` nodes with channel relationships and GitHub pull requests, issues, and commits as graph source records. The frontend maps Conversations to Slack `Message` records and Proactive Insights to GitHub records. The latter is a source-backed activity view; the backend does not currently calculate or persist risk insights from GitHub data. Source refreshes use the route catalog contract (`/api/slack/conversations.list` and `/api/slack/conversations.history`; `/api/github/pulls`, `/api/github/issues`, and `/api/github/commits`) through `MOCK_API_BASE_URL`, which defaults to `http://localhost:8787` for these connector APIs.
+
+Per-source credentials are backend-only: `CONFLUENCE_API_KEY` (or the existing `CONFLUENCE_API_TOKEN` for direct Atlassian access), `JIRA_API_KEY`, `SLACK_API_KEY`, and `GITHUB_API_KEY`. For the route-catalog connector, the client sends the configured source key in `x-api-key` and Bearer authorization headers. Without a matching API key, local/demo connector responses retain their original provenance. Actual external records fetched with a source key are marked `external-verified` before graph persistence. Graph reads are served from FalkorDB, so page navigation does not refetch the upstream APIs.
+
+### Source API response probe (2026-10-17)
+
+The configured tunnel routes responded successfully, but the returned records are seeded fixtures, not verified live provider records. Do not ingest or present them as real company data. A backend workflow guard rejects synthetic connector results, and the four source-library read routes include only non-synthetic `external-verified` or `user-provided` records.
+
+| GET route | Response wrapper | Probe result | Fixture indicator |
+|---|---|---:|---|
+| `/api/confluence/pages` | `results`, `startAt`, `maxResults`, `total`, `isLast` | 42 pages | `source: "seed"` |
+| `/api/jira/issues` | `issues`, `startAt`, `maxResults`, `total`, `isLast` | 129 issues | Records include `rawSeedId` |
+| `/api/github/pulls` | `pulls`, `startAt`, `maxResults`, `total`, `isLast` | 87 pull requests | Route-catalog docs identify GitHub records as deterministic fixtures |
+| `/api/github/issues` | `issues`, `startAt`, `maxResults`, `total`, `isLast` | 24 issues | Route-catalog docs identify GitHub records as deterministic fixtures |
+| `/api/github/commits` | `commits`, `startAt`, `maxResults`, `total`, `isLast` | 170 commits | Route-catalog docs identify GitHub records as deterministic fixtures |
+| `/api/slack/conversations.list` | `ok`, `channels`, `response_metadata` | 15 channels | Channel history records contain `seedId` |
+| `/api/slack/conversations.history` | `ok`, `messages`, `response_metadata` | 16 messages in the probed channel | Message records contain `seedId` |
+
+These response shapes are useful connector contracts. The stats and source cards in the frontend read the indexed backend routes, not these fixtures directly. Genuine Jira, GitHub, or Slack records require live provider credentials/connector responses with verifiable provenance; URL-valued `*_API_KEY` settings are connector URLs, not provider credentials.
 
 ## LangGraph ingestion behavior
 

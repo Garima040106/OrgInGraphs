@@ -502,129 +502,26 @@ export function AgentResponseRenderer({
   // Case 1: Organization Intelligence Agent 1 RAG Response
   if (isRagResponse(payload)) {
     const rag = payload;
-    const sources = rag.sources || [];
-    const chunks = rag.retrieved_chunks || [];
-
-    // Combine sources and chunks into cards
-    const evidenceCards = chunks.length > 0
-      ? chunks.map((chunk) => {
-          const platform = chunk.platform || resolvePlatform({
-            platform: chunk.platform,
-            sourcePath: chunk.sourcePath,
-            title: (chunk.metadata?.title as string) || chunk.sourcePath,
-          });
-          const title =
-            (chunk.metadata?.title as string) ||
-            chunk.sourcePath.split("/").pop() ||
-            "Indexed Source Record";
-          return {
-            chunkId: chunk.chunkId,
-            title,
-            platform,
-            sourcePath: chunk.sourcePath,
-            excerpt: chunk.text,
-            score: chunk.score,
-            sourceUrl: chunk.metadata?.url as string | undefined,
-          };
-        })
-      : sources.map((src, index) => {
-          const platform = src.platform || resolvePlatform({
-            platform: src.platform,
-            sourcePath: src.sourcePath,
-            title: src.title,
-          });
-          return {
-            chunkId: `src-${index}`,
-            title: src.title,
-            platform,
-            sourcePath: src.sourcePath,
-            excerpt: src.excerpt,
-            score: undefined,
-            sourceUrl: undefined,
-          };
-        });
-
-    const filteredCards =
-      selectedPlatformFilter === "all"
-        ? evidenceCards
-        : evidenceCards.filter((c) => c.platform === selectedPlatformFilter);
-
-    // Platform counts
-    const platformCounts: Record<string, number> = {};
-    for (const card of evidenceCards) {
-      platformCounts[card.platform] = (platformCounts[card.platform] || 0) + 1;
-    }
+    const sourceTitles = [...new Set(
+      (rag.sources?.length
+        ? rag.sources.map((source) => source.title)
+        : rag.retrieved_chunks.map((chunk) => String(chunk.metadata?.title ?? chunk.sourcePath)))
+        .filter(Boolean)
+    )];
 
     return (
       <article className="agent-response-card">
-        {/* Agent 1 Header */}
         <div className="agent-entity-summary">
-          <div className="agent-badge-row">
-            <small className="agent-badge-rag">
-              <Sparkles size={11} /> Organization Intelligence RAG
-            </small>
-            <span className="agent-status-tag">{rag.status}</span>
-          </div>
-          <h3>Synthesized Answer</h3>
+          <h3>Answer</h3>
           <FormattedTextAnswer text={rag.answer} />
         </div>
-
-        {/* Backing Platform Evidence Cards */}
-        {evidenceCards.length > 0 && (
+        {sourceTitles.length > 0 && (
           <section className="agent-response-section">
-            <div className="agent-section-header">
-              <h4>
-                <Layers size={13} /> Backing Platform Evidence ({evidenceCards.length})
-              </h4>
-              <div className="platform-filter-tabs">
-                <button
-                  type="button"
-                  className={`platform-tab ${
-                    selectedPlatformFilter === "all" ? "active" : ""
-                  }`}
-                  onClick={() => setSelectedPlatformFilter("all")}
-                >
-                  All ({evidenceCards.length})
-                </button>
-                {(["jira", "confluence", "slack", "github", "route"] as const).map(
-                  (plat) => {
-                    const count = platformCounts[plat] || 0;
-                    if (count === 0) return null;
-                    return (
-                      <button
-                        key={plat}
-                        type="button"
-                        className={`platform-tab ${plat} ${
-                          selectedPlatformFilter === plat ? "active" : ""
-                        }`}
-                        onClick={() => setSelectedPlatformFilter(plat)}
-                      >
-                        <PlatformBadge platform={plat} /> ({count})
-                      </button>
-                    );
-                  }
-                )}
-              </div>
-            </div>
-
-            <div className="platform-cards-grid">
-              {filteredCards.map((card) => (
-                <PlatformEvidenceCard
-                  key={card.chunkId}
-                  title={card.title}
-                  platform={card.platform}
-                  sourcePath={card.sourcePath}
-                  excerpt={card.excerpt}
-                  score={card.score}
-                  sourceUrl={card.sourceUrl}
-                />
-              ))}
-            </div>
+            <h4>Sources</h4>
+            <ul className="rag-source-list">
+              {sourceTitles.map((title) => <li key={title}>{title}</li>)}
+            </ul>
           </section>
-        )}
-
-        {rag.uncertainty && (
-          <p className="agent-uncertainty">{rag.uncertainty}</p>
         )}
       </article>
     );

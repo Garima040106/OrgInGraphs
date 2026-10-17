@@ -7,7 +7,7 @@ import { Activity, ArrowRight, ArrowUpRight, Building2, CircleAlert, Clock3, Fil
 import { OrganizationGraph } from "@/components/graph/OrganizationGraph";
 import { api, friendlyApiError } from "@/lib/api";
 import { isProductGraphEntity } from "@/lib/graph/mode";
-import type { Entity, GraphApiNode, GraphResponse, IngestionResponse, IngestionSource } from "@/lib/types";
+import type { DashboardResponse, Entity, GraphApiNode, GraphResponse, IngestionResponse, IngestionSource } from "@/lib/types";
 
 type GraphMode = "team" | "product";
 type GraphState = { data: GraphResponse; loading: boolean; error: string };
@@ -44,6 +44,7 @@ function relativeDate(value?: string) {
 export default function DashboardPage() {
   const [organization,setOrganization]=useState<GraphState>({data:emptyGraph,loading:true,error:""});
   const [product,setProduct]=useState<GraphState>({data:emptyGraph,loading:true,error:""});
+  const [dashboardStats,setDashboardStats]=useState<Pick<DashboardResponse,"sourceCounts"|"totals">|null>(null);
   const [graphMode,setGraphMode]=useState<GraphMode>("team");
   const [focus,setFocus]=useState<{id?:string;type?:string;request:number}>({request:0});
   const [filter,setFilter]=useState<EntityFilter>(null);
@@ -51,11 +52,12 @@ export default function DashboardPage() {
   const [syncResult,setSyncResult]=useState<Partial<Record<IngestionSource,{result?:IngestionResponse;error?:string}>>>({});
   const current=graphMode==="team"?organization:product;
 
-  const loadOrganization=useCallback(async()=>{setOrganization(previous=>({...previous,loading:true,error:""}));try{setOrganization({data:await api.graph(),loading:false,error:""});}catch(error){setOrganization(previous=>({...previous,loading:false,error:friendlyApiError(error)}));}},[]);
-  const loadProduct=useCallback(async()=>{setProduct(previous=>({...previous,loading:true,error:""}));try{setProduct({data:await api.productProgressGraph(),loading:false,error:""});}catch(error){setProduct(previous=>({...previous,loading:false,error:friendlyApiError(error)}));}},[]);
-  async function syncSource(source:IngestionSource){setSyncing(source);setSyncResult(previous=>({...previous,[source]:{}}));try{const result=await api.processIngestion(source);setSyncResult(previous=>({...previous,[source]:{result}}));if(result.outcomes.some(item=>item.status==="processed")){void loadOrganization();void loadProduct();}}catch(error){setSyncResult(previous=>({...previous,[source]:{error:friendlyApiError(error)}}));}finally{setSyncing(null);}}
+  const loadDashboard=useCallback(async()=>{setOrganization(previous=>({...previous,loading:true,error:""}));setProduct(previous=>({...previous,loading:true,error:""}));try{const result=await api.dashboard();setDashboardStats({sourceCounts:result.sourceCounts,totals:result.totals});setOrganization({data:result.organization,loading:false,error:""});setProduct({data:result.productProgress,loading:false,error:""});}catch(error){const message=friendlyApiError(error);setOrganization(previous=>({...previous,loading:false,error:message}));setProduct(previous=>({...previous,loading:false,error:message}));}},[]);
+  const loadOrganization=loadDashboard;
+  const loadProduct=loadDashboard;
+  async function syncSource(source:IngestionSource){setSyncing(source);setSyncResult(previous=>({...previous,[source]:{}}));try{const result=await api.processIngestion(source);setSyncResult(previous=>({...previous,[source]:{result}}));if(result.outcomes.some(item=>item.status==="processed")){void loadDashboard();}}catch(error){setSyncResult(previous=>({...previous,[source]:{error:friendlyApiError(error)}}));}finally{setSyncing(null);}}
 
-  useEffect(()=>{void loadOrganization();void loadProduct();},[loadOrganization,loadProduct]);
+  useEffect(()=>{void loadDashboard();},[loadDashboard]);
   useEffect(()=>{
     const params=new URLSearchParams(window.location.search);if(params.get("mode")==="product")setGraphMode("product");
     setFocus((previous)=>({id:params.get("focus")??undefined,type:params.get("type")??undefined,request:previous.request+1}));
@@ -73,31 +75,31 @@ export default function DashboardPage() {
   const teams=combinedNodes.filter(node=>typeOf(node)==="Team");
   const services=combinedNodes.filter(node=>typeOf(node)==="Service");
   const issues=combinedNodes.filter(node=>["Ticket","Bug"].includes(typeOf(node))&&(!node.properties.sourceSystem||String(node.properties.sourceSystem).toLowerCase()==="jira"));
-  const pullRequests=combinedNodes.filter(node=>typeOf(node)==="PullRequest");
+  const githubRecords=combinedNodes.filter(node=>String(node.properties.sourceSystem??"").toLowerCase()==="github");
   const confluenceRecords=combinedNodes.filter(node=>String(node.properties.sourceSystem??"").toLowerCase().includes("confluence")&&["Document","Decision"].includes(typeOf(node)));
   const slackRecords=combinedNodes.filter(node=>String(node.properties.sourceSystem??"").toLowerCase().includes("slack")&&["Message","Channel"].includes(typeOf(node)));
   const metrics=[
-    {label:"Total entities",value:combinedNodes.length,icon:Network,nodes:combinedNodes},
-    {label:"Teams",value:teams.length,icon:UsersRound,nodes:teams},
-    {label:"Services",value:services.length,icon:Server,nodes:services},
-    {label:"Jira issues",value:issues.length,icon:CircleAlert,nodes:issues},
-    {label:"GitHub pull requests",value:pullRequests.length,icon:GitPullRequest,nodes:pullRequests},
-    {label:"Confluence docs",value:confluenceRecords.length,icon:FileText,nodes:confluenceRecords},
-    {label:"Slack messages",value:slackRecords.length,icon:MessagesSquare,nodes:slackRecords},
+    {label:"Total entities",value:dashboardStats?.totals.entities??0,icon:Network,nodes:combinedNodes},
+    {label:"Teams",value:dashboardStats?.totals.teams??0,icon:UsersRound,nodes:teams},
+    {label:"Services",value:dashboardStats?.totals.services??0,icon:Server,nodes:services},
+    {label:"Jira issues",value:dashboardStats?.sourceCounts.jira??0,icon:CircleAlert,nodes:issues},
+    {label:"GitHub records",value:dashboardStats?.sourceCounts.github??0,icon:GitPullRequest,nodes:githubRecords},
+    {label:"Confluence docs",value:dashboardStats?.sourceCounts.confluence??0,icon:FileText,nodes:confluenceRecords},
+    {label:"Slack messages",value:dashboardStats?.sourceCounts.slack??0,icon:MessagesSquare,nodes:slackRecords},
   ];
   const unownedServices=services.filter(service=>{
     const hasOwner=combinedEdges.some(edge=>["MAINTAINS","OWNS","OWNED_BY","OWNED"].includes(edge.type)&&[edge.source,edge.target].includes(service.id));
     return !hasOwner&&!service.properties.teamId&&!service.properties.ownerId;
   });
-  const metricsLoading=!loaded;
+  const metricsLoading=!loaded||dashboardStats===null;
   const latestActivity=activities.slice(0,5);
   const graphError=current.error;
-  const apiFailures=[organization.error&&{label:"Company graph",error:organization.error,retry:loadOrganization},product.error&&{label:"Product graph",error:product.error,retry:loadProduct}].filter((item):item is {label:string;error:string;retry:()=>Promise<void>}=>item!=="");
+  const apiFailures=organization.error?[{label:"Dashboard data",error:organization.error,retry:loadDashboard}]:[];
 
   return <>
     <div className="page-heading dashboard-bento-heading">
       <div className="dashboard-heading-copy"><div className="eyebrow"><span className="eyebrow-mark"/> Organizational intelligence</div><h1>Your organization, at a glance.</h1><p>Company signals, decisions, and dependencies in one connected view.</p></div>
-      <div className="heading-actions"><button className="small-button primary-action" type="button" onClick={()=>{void loadOrganization();void loadProduct();}} disabled={organization.loading||product.loading}><RefreshCw size={12}/> Refresh data</button><Link className="small-button" href="/settings"><Plug size={12}/> Sources</Link></div>
+      <div className="heading-actions"><button className="small-button primary-action" type="button" onClick={()=>void loadDashboard()} disabled={organization.loading||product.loading}><RefreshCw size={12}/> Refresh data</button><Link className="small-button" href="/settings"><Plug size={12}/> Sources</Link></div>
     </div>
     {apiFailures.map(item=><div className="bento-api-alert" role="alert" key={item.label}><CircleAlert size={14}/><span><b>{item.label} unavailable.</b> {item.error}</span><button className="small-button" type="button" onClick={item.retry}>Retry</button></div>)}
 

@@ -1,6 +1,7 @@
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
 import { z } from 'zod';
 import { runMockFetcher } from '../agents/mock-fetcher/agent.js';
+import { sourceConnectorBase } from '../agents/mock-fetcher/client.js';
 import { mockSources, normalizedDocumentSchema, type MockFetcherRequest, type NormalizedDocument } from '../agents/mock-fetcher/types.js';
 import { processDocuments } from '../agents/document-processor/agent.js';
 import type { DocumentOutcome, DocumentProcessorOptions } from '../agents/document-processor/types.js';
@@ -37,7 +38,16 @@ export function createIngestionWorkflow(dependencies: IngestionWorkflowDependenc
     .addNode('validate', async (state) => {
       const result = ingestionRequestSchema.safeParse(state.request);
       if (!result.success) return { status: 'failed' as const, errors: ['Ingestion request is invalid.'] };
-      if (!dependencies.fetcher && !env.MOCK_API_BASE_URL) return { status: 'failed' as const, errors: ['Mock API is not configured.'] };
+      const directConfluenceConfigured = state.request.source === 'confluence'
+        && env.CONFLUENCE_INGESTION_ENABLED !== 'false'
+        && !sourceConnectorBase('confluence')
+        && Boolean(env.CONFLUENCE_BASE_URL && env.CONFLUENCE_EMAIL && (env.CONFLUENCE_API_TOKEN || env.CONFLUENCE_API_KEY));
+      if (!dependencies.fetcher && !sourceConnectorBase(state.request.source) && !directConfluenceConfigured) {
+        const message = state.request.source === 'confluence'
+          ? 'Confluence API credentials are not configured.'
+          : `MOCK_API_BASE_URL is not configured for ${state.request.source}. Configure the server-side source connector before syncing.`;
+        return { status: 'failed' as const, errors: [message] };
+      }
       return { request: result.data, status: 'received' as const, errors: [] };
     })
     .addNode('fetch', async (state) => {
@@ -47,6 +57,9 @@ export function createIngestionWorkflow(dependencies: IngestionWorkflowDependenc
         if (result.source !== state.request.source) return { status: 'failed' as const, errors: ['Source connector returned records for a different source.'] };
         const validated = z.array(normalizedDocumentSchema).safeParse(result.documents);
         if (!validated.success || validated.data.some((document) => document.sourceSystem !== result.source)) return { status: 'failed' as const, errors: ['Fetched records failed the normalized ingestion schema.'] };
+        if (!dependencies.fetcher && validated.data.some((document) => document.synthetic || document.provenance === 'synthetic')) {
+          return { status: 'failed' as const, errors: [`${result.source} returned demo or synthetic records. They were not written to FalkorDB.`] };
+        }
         return validated.data.length ? { documents: validated.data, status: 'fetched' as const, errors: [] } : { documents: [], status: 'empty' as const, errors: [] };
       } catch (error) { return { status: 'failed' as const, errors: [safeError(error, 'Mock API fetch failed.')] }; }
     })

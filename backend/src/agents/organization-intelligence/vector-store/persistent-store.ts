@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { DocumentChunk, IngestionStats, PersistentVectorStoreData, SearchResult, SourceType, VectorStoreDocumentEntry } from '../types.js';
 
 export interface VectorStoreOptions {
@@ -21,6 +22,23 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+function differsByAtMostOneCharacter(left: string, right: string): boolean {
+  if (left === right) return true;
+  if (Math.abs(left.length - right.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let differences = 0;
+  while (i < left.length && j < right.length) {
+    if (left[i] === right[j]) { i++; j++; continue; }
+    if (++differences > 1) return false;
+    if (left.length > right.length) i++;
+    else if (right.length > left.length) j++;
+    else { i++; j++; }
+  }
+  if (i < left.length || j < right.length) differences++;
+  return differences <= 1;
+}
+
 export class PersistentVectorStore {
   private filePath: string;
   private orgId: string;
@@ -30,8 +48,11 @@ export class PersistentVectorStore {
 
   constructor(options: VectorStoreOptions = {}) {
     this.orgId = options.orgId ?? 'hirenova';
-    const defaultPath = path.resolve(process.cwd(), 'data', 'vector-store.json');
-    this.filePath = options.storagePath ?? process.env.VECTOR_STORE_PATH ?? defaultPath;
+    const backendDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../');
+    const configuredPath = options.storagePath ?? process.env.VECTOR_STORE_PATH;
+    this.filePath = configuredPath
+      ? path.resolve(backendDirectory, configuredPath)
+      : path.join(backendDirectory, 'data', 'vector-store.json');
     this.lastUpdated = new Date().toISOString();
     this.load();
   }
@@ -101,7 +122,7 @@ export class PersistentVectorStore {
     return Boolean(existing && existing.docHash === docHash);
   }
 
-  upsertDocumentChunks(docEntry: VectorStoreDocumentEntry, newChunks: DocumentChunk[]): void {
+  upsertDocumentChunks(docEntry: VectorStoreDocumentEntry, newChunks: DocumentChunk[], persist = true): void {
     const existing = this.documents.get(docEntry.path);
     if (existing) {
       // Remove stale chunks previously associated with this document
@@ -122,7 +143,7 @@ export class PersistentVectorStore {
       updatedAt: new Date().toISOString()
     });
 
-    this.save();
+    if (persist) this.save();
   }
 
   removeDocument(path: string): boolean {
@@ -141,16 +162,20 @@ export class PersistentVectorStore {
     const removed: string[] = [];
     for (const existingPath of this.documents.keys()) {
       if (!currentPaths.has(existingPath)) {
-        this.removeDocument(existingPath);
+        const doc = this.documents.get(existingPath);
+        if (doc) for (const chunkId of doc.chunkIds) this.chunks.delete(chunkId);
+        this.documents.delete(existingPath);
         removed.push(existingPath);
       }
     }
+    if (removed.length) this.save();
     return removed;
   }
 
   search(queryEmbedding: number[], options: {
     topK?: number;
     threshold?: number;
+    queryText?: string;
     orgId?: string;
     sourceTypes?: SourceType[];
     sourcePath?: string;
@@ -159,6 +184,9 @@ export class PersistentVectorStore {
     const threshold = options.threshold ?? 0.3;
     const targetOrg = options.orgId ?? this.orgId;
     const allowedTypes = options.sourceTypes ? new Set(options.sourceTypes) : undefined;
+    const queryTokens = (options.queryText ?? '').toLowerCase().split(/[^a-z0-9]+/)
+      .filter((token) => token.length > 1 && !new Set(['what', 'who', 'how', 'many', 'is', 'are', 'the', 'a', 'an', 'of', 'for', 'in', 'on', 'there', 'does', 'do', 'tell', 'me', 'about']).has(token))
+      .map((token) => token === 'dept' || token === 'depts' ? 'department' : token.replace(/s$/, ''));
 
     const scored: SearchResult[] = [];
 
@@ -182,8 +210,32 @@ export class PersistentVectorStore {
         continue;
       }
 
-      const score = cosineSimilarity(queryEmbedding, chunk.embedding);
-      if (score >= threshold) {
+      const vectorScore = cosineSimilarity(queryEmbedding, chunk.embedding);
+      const text = chunk.text.toLowerCase();
+      const textTokens = new Set(text.split(/[^a-z0-9]+/).filter(Boolean));
+      const matched = new Set(queryTokens.filter((token) => text.includes(token)
+        || (token.length >= 5 && [...textTokens].some((candidate) => differsByAtMostOneCharacter(token, candidate)))));
+      const lexicalScore = queryTokens.length ? matched.size / new Set(queryTokens).size : 0;
+      const countIntent = /\b(how many|number of|count|total)\b/i.test(options.queryText ?? '');
+      const query = options.queryText ?? '';
+      const queryWords = new Set(query.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+      const asksPullRequests = /\b(prs?|pull requests?)\b/i.test(query);
+      const asksAboutDepartments = [...queryWords].some((word) => word.startsWith('dept') || word.startsWith('department'));
+      const asksAboutEmployees = [...queryWords].some((word) => word.startsWith('employee') || word === 'people' || word === 'person' || word === 'headcount');
+      const asksDepartmentCount = asksAboutDepartments && countIntent;
+      const asksDepartmentHeadcount = asksAboutDepartments && (asksAboutEmployees || queryWords.has('most') || queryWords.has('highest') || queryWords.has('largest'));
+      const wantsTeamOwners = /\b(team|teams|owner|owners|lead|leads|area of work)\b/i.test(query);
+      const wantsLatestProduct = /\b(latest|newest|most recent)\b/i.test(query) && /\b(product|products|working on)\b/i.test(query);
+      const asksFrontendResponsibility = /\b(front.?end|web team)\b/i.test(query) && /\b(who|responsible|owner|lead|team)\b/i.test(query);
+      const countFactBoost = asksPullRequests && chunk.metadata.summaryKind === 'pull-request-count' ? 0.92
+        : asksDepartmentHeadcount && chunk.metadata.summaryKind === 'department-headcount' ? 0.92
+          : asksDepartmentCount && chunk.metadata.summaryKind === 'department-count' ? 0.92
+            : countIntent && chunk.metadata.graphSummary === true ? 0.35 : 0;
+      const intentBoost = asksFrontendResponsibility && chunk.metadata.summaryKind === 'responsibilities' ? 0.92
+        : wantsTeamOwners && chunk.metadata.summaryKind === 'teams' ? 0.88
+        : wantsLatestProduct && chunk.metadata.summaryKind === 'products' ? 0.88 : 0;
+      const score = Math.max(vectorScore, lexicalScore * 0.8 + countFactBoost, intentBoost);
+      if (score >= threshold && (vectorScore >= threshold || lexicalScore > 0 || countFactBoost > 0 || intentBoost > 0)) {
         scored.push({ chunk, score });
       }
     }

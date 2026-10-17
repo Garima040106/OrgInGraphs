@@ -1,3 +1,5 @@
+import { SourceLibrary } from "@/components/sources/SourceLibrary";
+
 export default function TicketsPage() {
-  return <h1>Tickets</h1>;
+  return <SourceLibrary kind="tickets" />;
 }

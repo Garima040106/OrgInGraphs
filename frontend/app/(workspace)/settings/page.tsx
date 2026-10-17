@@ -8,9 +8,9 @@ import type { IngestionResponse, IngestionSource } from "@/lib/types";
 
 const integrations: Array<{ id: IngestionSource; name: string; detail: string; logo: string; logoAlt: string }> = [
   { id: "confluence", name: "Confluence", detail: "Knowledge pages · server credentials", logo: "/img/confluence.png", logoAlt: "Confluence logo" },
-  { id: "slack", name: "Slack", detail: "Team conversations · backend demo source", logo: "/img/slack.png", logoAlt: "Slack logo" },
-  { id: "jira", name: "Jira", detail: "Issues and delivery · backend demo source", logo: "/img/jira.webp", logoAlt: "Jira logo" },
-  { id: "github", name: "GitHub", detail: "Repositories and pull requests · backend demo source", logo: "/img/github.png", logoAlt: "GitHub logo" },
+  { id: "slack", name: "Slack", detail: "Team conversations · live connector required", logo: "/img/slack.png", logoAlt: "Slack logo" },
+  { id: "jira", name: "Jira", detail: "Issues and delivery · live connector required", logo: "/img/jira.webp", logoAlt: "Jira logo" },
+  { id: "github", name: "GitHub", detail: "Repositories and pull requests · live connector required", logo: "/img/github.png", logoAlt: "GitHub logo" },
 ];
 
 function integrationRecordPath(outcome: IngestionResponse["outcomes"][number]) {
@@ -37,7 +37,7 @@ function IntegrationCard({ integration }: { integration: (typeof integrations)[n
     </div>
     <div className="integration-setting-copy">
       <b>{integration.name}</b><span>{integration.detail}</span>
-      <span className="integration-status-badge" aria-live="polite"><span className={`integration-status-dot ${error ? "" : result?.status === "processed" ? "is-connected" : loading ? "is-busy" : ""}`} />{error ? "Unavailable" : loading ? "Fetching and processing" : result ? `${result.status} · ${result.fetchedDocumentCount} fetched` : integration.id === "confluence" ? "Server-side source · not yet synced" : "Backend demo source · not yet synced"}</span>
+      <span className="integration-status-badge" aria-live="polite"><span className={`integration-status-dot ${error ? "" : result?.status === "processed" ? "is-connected" : loading ? "is-busy" : ""}`} />{error ? "Unavailable" : loading ? "Fetching and processing" : result ? `${result.status} · ${result.fetchedDocumentCount} fetched` : integration.id === "confluence" ? "Server-side source · not yet synced" : "Live connector required"}</span>
       <button className="integration-action-btn is-connect" type="button" onClick={() => void sync()} disabled={loading} aria-label={`Fetch and process ${integration.name} records`}>
         {loading ? <LoaderCircle size={13} className="spin" /> : <CloudDownload size={13} />}{loading ? "Processing…" : "Fetch & process records"}
       </button>
@@ -69,6 +69,6 @@ export default function WorkspaceSettingsPage() {
       <span className="settings-demo-note">Confluence credentials remain server-side</span>
     </div>
     <div className="integration-settings-grid">{integrations.map((integration) => <IntegrationCard key={integration.id} integration={integration} />)}</div>
-    <div className="settings-source-note"><span>Confluence uses the configured Confluence base URL and credentials. Jira, GitHub, and Slack currently use the backend mock source URL. Each response reports actual fetch and processing outcomes; failed or unresolved records are not treated as successful.</span><Link href="/dashboard">Return to organization graph <ArrowUpRight size={13} /></Link></div>
+    <div className="settings-source-note"><span>Confluence uses the configured server-side API credentials. The documented Jira, GitHub, and Slack catalog routes currently return seeded fixtures; the backend refuses to write those records into FalkorDB. Configure live provider credentials and connector responses to populate their verified source pages.</span><Link href="/dashboard">Return to organization graph <ArrowUpRight size={13} /></Link></div>
   </section>;
 }

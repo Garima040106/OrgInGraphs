@@ -4,6 +4,14 @@ dist/
 .env.*
 !.env.example
 
+# Persistent indexed content, local retrieval cache, and generated source seeds.
+/data/
+/cache/
+/seed/
+/seed-data*.json
+/retrieval*.json
+/source-retrieval*.json
+
 # Generated seed output from `npm run seed:generate`.
 /seed-data.json
 
