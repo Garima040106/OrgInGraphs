@@ -260,13 +260,13 @@ function MobileMenu() {
             </a>
           ))}
           <div className="mt-2 flex flex-col gap-2 border-t border-[#E7E4D9] pt-3">
-            <Link
+            {/* <Link
               href="/login"
               onClick={() => setOpen(false)}
               className="flex items-center rounded-lg px-4 py-3 text-sm font-medium text-[#3F403D] transition hover:text-[#174D35]"
             >
               Sign in
-            </Link>
+            </Link> */}
             <Link
               href="/login"
               onClick={() => setOpen(false)}
@@ -317,7 +317,7 @@ export default function Home() {
 
         {/* Desktop actions */}
         <div className="ml-8 hidden shrink-0 items-center gap-4 lg:flex">
-          <Link href="/login" className="lp-nav-link">Sign in</Link>
+          {/* <Link href="/login" className="lp-nav-link">Sign in</Link> */}
           <Link
             href="/login"
             id="nav-get-started"
