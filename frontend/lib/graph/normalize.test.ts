@@ -103,6 +103,46 @@ test("graph modes select independent roots", () => {
   assert.deepEqual([...initialVisibleIds(product)], ["product"]);
 });
 
+test("product expansion reveals one hop at a time and preserves independent branches", () => {
+  const product: GraphResponse = {
+    nodes: [
+      { id: "product", labels: ["Product"], properties: { id: "product", name: "Orbit Checkout" } },
+      { id: "module-a", labels: ["ProductModule"], properties: { id: "module-a", name: "Payments" } },
+      { id: "module-b", labels: ["ProductModule"], properties: { id: "module-b", name: "Orders" } },
+      { id: "feature-a", labels: ["Feature"], properties: { id: "feature-a", name: "Retry" } },
+      { id: "shared", labels: ["Team"], properties: { id: "shared", name: "Platform" } },
+      { id: "feature-b", labels: ["Feature"], properties: { id: "feature-b", name: "Tax" } },
+    ],
+    edges: [
+      { id: "product-a", type: "HAS_MODULE", source: "product", target: "module-a", properties: {} },
+      { id: "product-b", type: "HAS_MODULE", source: "product", target: "module-b", properties: {} },
+      { id: "a-feature", type: "HAS_FEATURE", source: "module-a", target: "feature-a", properties: {} },
+      { id: "a-shared", type: "OWNED_BY", source: "module-a", target: "shared", properties: {} },
+      { id: "b-shared", type: "OWNED_BY", source: "module-b", target: "shared", properties: {} },
+      { id: "b-feature", type: "HAS_FEATURE", source: "module-b", target: "feature-b", properties: {} },
+    ],
+  };
+
+  const initial = initialVisibleIds(product, "product");
+  assert.deepEqual([...initial], ["product"]);
+
+  const rootExpanded = visibleIdsForExpanded(product, "product", new Set(["product"]));
+  assert.deepEqual(new Set(rootExpanded), new Set(["product", "module-a", "module-b"]));
+
+  const nested = visibleIdsForExpanded(product, "product", new Set(["product", "module-a"]));
+  assert.deepEqual(new Set(nested), new Set(["product", "module-a", "module-b", "feature-a", "shared"]));
+
+  const bothBranches = visibleIdsForExpanded(product, "product", new Set(["product", "module-a", "module-b"]));
+  assert.deepEqual(new Set(bothBranches), new Set(["product", "module-a", "module-b", "feature-a", "shared", "feature-b"]));
+
+  const oneBranchCollapsed = visibleIdsForExpanded(product, "product", new Set(["product", "module-b"]));
+  assert.deepEqual(new Set(oneBranchCollapsed), new Set(["product", "module-a", "module-b", "shared", "feature-b"]));
+
+  const normalized = normalizeVisibleGraph(product, nested);
+  assert.equal(new Set(normalized.nodes.map((node) => node.id)).size, normalized.nodes.length);
+  assert.equal(new Set(normalized.edges.map((edge) => `${edge.source}:${edge.target}`)).size, normalized.edges.length);
+});
+
 test("visible normalization removes duplicate edges", () => {
   const duplicateGraph = { ...graph, edges: [...graph.edges, { ...graph.edges[0] }] };
   const normalized = normalizeVisibleGraph(duplicateGraph, new Set(["root", "dept"]));
