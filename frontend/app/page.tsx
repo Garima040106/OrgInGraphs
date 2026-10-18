@@ -6,8 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
-  Network,
-  UsersRound,
   Menu,
   X,
 } from "lucide-react";
@@ -80,146 +78,19 @@ function LandingCursor() {
   );
 }
 
-/* ─── Graph preview illustration ──────────────────────────────────────────── */
+/* ─── Landing page dashboard preview ──────────────────────────────────────── */
 
 function GraphPreview() {
   return (
-    <div
-      className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(28,40,70,0.09)]"
-      aria-label="Illustration of a connected company graph"
-    >
-      {/* Toolbar */}
-      <div className="flex h-[52px] items-center justify-between border-b border-slate-100 px-4 sm:px-5">
-        <div className="flex items-center gap-2">
-          <span className="flex gap-1.5">
-            <i className="h-[7px] w-[7px] rounded-full bg-[#f2b8a5]" />
-            <i className="h-[7px] w-[7px] rounded-full bg-[#f0d38c]" />
-            <i className="h-[7px] w-[7px] rounded-full bg-[#a6d9bd]" />
-          </span>
-          <span className="ml-3 flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            Organization graph
-          </span>
-        </div>
-        <span className="rounded-md border border-slate-200 px-2 py-1 text-[9px] uppercase tracking-wider text-slate-400">
-          Illustration
-        </span>
-      </div>
-
-      {/* Graph canvas */}
-      <div className="relative h-[360px] overflow-hidden bg-[#fcfdff] sm:h-[420px]">
-        <div
-          className="absolute inset-0 opacity-70"
-          style={{
-            backgroundImage: "radial-gradient(#d9e2f3 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-          }}
-        />
-
-        <svg
-          className="absolute inset-0 h-full w-full"
-          viewBox="0 0 760 420"
-          fill="none"
-          preserveAspectRatio="xMidYMid meet"
-          aria-hidden="true"
-        >
-          <g stroke="#c9d7f0" strokeWidth="1.5" strokeDasharray="4 5">
-            <path d="M372 191 C300 145 230 118 162 94" />
-            <path d="M394 194 C466 144 527 122 601 105" />
-            <path d="M368 215 C286 250 243 296 174 330" />
-            <path d="M404 217 C481 247 532 287 610 328" />
-            <path d="M165 94 C146 158 151 247 174 330" />
-            <path d="M601 105 C619 170 623 245 610 328" />
-            <path d="M163 94 C278 65 481 63 601 105" />
-            <path d="M174 330 C310 362 479 363 610 328" />
-            <path d="M248 148 C284 173 317 187 365 197" />
-            <path d="M515 150 C474 172 446 185 405 197" />
-            <path d="M255 274 C302 245 328 229 368 213" />
-            <path d="M514 274 C474 247 443 227 405 213" />
-          </g>
-        </svg>
-
-        {/* Central company */}
-        <div className="absolute left-1/2 top-[47%] z-10 flex w-[190px] -translate-x-1/2 -translate-y-1/2 items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-[0_10px_25px_rgba(30,45,80,0.08)] sm:w-[208px]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
-            <Image src="/img/HirenovaLogo.png" alt="" width={36} height={36} className="h-full w-full object-contain" />
-          </span>
-          <span className="min-w-0">
-            <b className="block text-[11px] font-bold text-slate-700">Hirenova</b>
-            <small className="mt-1 block text-[10px] text-slate-400">Company</small>
-          </span>
-          <span className="ml-auto self-start text-xs text-slate-400">···</span>
-        </div>
-
-        {/* Person: Ava */}
-        <div className="absolute left-[9%] top-[16%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eee8fc] text-[10px] font-bold text-[#8570c4]">AP</span>
-          <span className="min-w-0">
-            <b className="block text-[10px] text-slate-700">Ava Patel</b>
-            <small className="mt-1 block text-[9px] text-slate-400">Engineering</small>
-          </span>
-        </div>
-
-        {/* Person: Noah */}
-        <div className="absolute right-[8%] top-[20%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e1f3eb] text-[10px] font-bold text-[#4e9a7a]">NC</span>
-          <span className="min-w-0">
-            <b className="block text-[10px] text-slate-700">Noah Chen</b>
-            <small className="mt-1 block text-[9px] text-slate-400">Product</small>
-          </span>
-        </div>
-
-        {/* Payments project */}
-        <div className="absolute left-1/2 top-[5%] z-10 flex w-[165px] -translate-x-1/2 items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fbf0dc] text-[#c68c40]">
-            <Network size={15} />
-          </span>
-          <span>
-            <b className="block text-[10px] text-slate-700">Payments API</b>
-            <small className="mt-1 block text-[9px] text-slate-400">Project · active</small>
-          </span>
-        </div>
-
-        {/* Person: Mia */}
-        <div className="absolute bottom-[13%] left-[11%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#fae9df] text-[10px] font-bold text-[#c77c60]">MR</span>
-          <span>
-            <b className="block text-[10px] text-slate-700">Mia Rivera</b>
-            <small className="mt-1 block text-[9px] text-slate-400">Design</small>
-          </span>
-        </div>
-
-        {/* Person: Jonah */}
-        <div className="absolute bottom-[14%] right-[7%] z-10 flex w-[165px] items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e5edfc] text-[10px] font-bold text-[#6585c7]">JL</span>
-          <span>
-            <b className="block text-[10px] text-slate-700">Jonah Lee</b>
-            <small className="mt-1 block text-[9px] text-slate-400">Infrastructure</small>
-          </span>
-        </div>
-
-        {/* Department */}
-        <div className="absolute bottom-[4%] left-1/2 z-10 flex w-[165px] -translate-x-1/2 items-center gap-2.5 rounded-xl border border-slate-100 bg-white p-2.5 shadow-[0_8px_20px_rgba(30,45,80,0.06)]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eeebfc] text-[#8170d0]">
-            <UsersRound size={15} />
-          </span>
-          <span>
-            <b className="block text-[10px] text-slate-700">Software Eng.</b>
-            <small className="mt-1 block text-[9px] text-slate-400">Department</small>
-          </span>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="flex min-h-[40px] flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-4 py-3 text-[9px] text-slate-400 sm:px-5">
-        <span>People, projects, decisions — connected.</span>
-        <span className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#7185ee]" />People</span>
-          <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#9b85df]" />Teams</span>
-          <span className="flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-[#e2ad67]" />Projects</span>
-        </span>
-      </div>
-    </div>
+    <Image
+      className="landing-dashboard-image"
+      src="/img/Dashboard.png"
+      alt="OrgInGraphs company intelligence dashboard with connected sources, recent activity, insights, and projects"
+      width={2878}
+      height={1477}
+      sizes="(max-width: 760px) 100vw, 55vw"
+      priority
+    />
   );
 }
 
