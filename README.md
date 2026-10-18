@@ -7,12 +7,18 @@
 <img width="369" height="96" alt="image" src="https://github.com/user-attachments/assets/e97307b4-93fd-4575-986b-ad7fc4db192e" />
 
 <p align="center">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white" />
-  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white" />
-  <img alt="Amazon Bedrock" src="https://img.shields.io/badge/LLM%20Inference-Amazon%20Bedrock-FF9900?logo=amazonaws&logoColor=white" />
-  <img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white" />
-  <img alt="FalkorDB" src="https://img.shields.io/badge/Graph%20DB-FalkorDB-6B46C1" />
-  <img alt="LangGraph" src="https://img.shields.io/badge/Workflows-LangGraph-1C3C3C" />
+ <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white" />
+<img alt="Next.js" src="https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white" />
+<img alt="Amazon Bedrock" src="https://img.shields.io/badge/LLM%20Inference-Amazon%20Bedrock-FF9900?logo=amazonaws&logoColor=white" />
+<img alt="Express" src="https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white" />
+<img alt="FalkorDB" src="https://img.shields.io/badge/Graph%20DB-FalkorDB-6B46C1" />
+<img alt="LangGraph" src="https://img.shields.io/badge/Workflows-LangGraph-1C3C3C" />
+<img alt="Jira" src="https://img.shields.io/badge/Project%20Management-Jira-0052CC?logo=jira&logoColor=white" />
+<img alt="Confluence" src="https://img.shields.io/badge/Documentation-Confluence-172B4D?logo=confluence&logoColor=white" />
+<img alt="GitHub" src="https://img.shields.io/badge/Version%20Control-GitHub-181717?logo=github&logoColor=white" />
+<img alt="Slack" src="https://img.shields.io/badge/Collaboration-Slack-4A154B?logo=slack&logoColor=white" />
+<img alt="Hugging Face" src="https://img.shields.io/badge/Models-Hugging%20Face-FFD21E?logo=huggingface&logoColor=black" />
+<img alt="Xenova Transformers" src="https://img.shields.io/badge/Interface%20LLM-Xenova%20Transformers.js-E90052" />
 </p>
 
 <p align="center"><b>6 specialized agent components</b> &nbsp; | &nbsp; <b>384-dimensional vectors</b> &nbsp; | &nbsp; <b>FalkorDB cosine/HNSW</b> &nbsp; | &nbsp; <b>Bedrock-grounded answers</b></p>
