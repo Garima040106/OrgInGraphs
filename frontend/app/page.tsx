@@ -302,10 +302,10 @@ export default function Home() {
           <Image
             src="/img/logo.png"
             alt="OrgInGraphs"
-            width={150}
+            width={48}
             height={48}
             priority
-            className="h-10 w-[105px] object-contain object-left sm:h-12 sm:w-[150px]"
+            className="h-10 w-12 object-contain object-left sm:h-12 sm:w-[54px]"
           />
           <span className="landing-brand-wordmark" aria-hidden="true">
             Org<span>In</span>Graphs
