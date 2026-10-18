@@ -14,13 +14,12 @@
   <img alt="LangGraph" src="https://img.shields.io/badge/Workflows-LangGraph-1C3C3C" />
 </p>
 
-<p align="center"><b>384-dimensional semantic vectors</b> &nbsp; | &nbsp; <b>FalkorDB cosine/HNSW retrieval</b> &nbsp; | &nbsp; <b>Grounded Bedrock synthesis</b></p>
+<p align="center"><b>6 specialized agent components</b> &nbsp; | &nbsp; <b>384-dimensional vectors</b> &nbsp; | &nbsp; <b>FalkorDB cosine/HNSW</b> &nbsp; | &nbsp; <b>Bedrock-grounded answers</b></p>
 
 > **On the roadmap:** exploring [**gRPC**](https://grpc.io/docs/) for a future typed, high-throughput service boundary alongside today's REST API. This is future exploration, not a currently implemented transport.
 
 OrgInGraphs (OIG) is a company intelligence platform built around a company graph and two specialized AI workflows. **OrgMind Assistant** reasons over graph entities, typed relationships, and bounded neighborhoods. **Company Brain** runs a retrieval-augmented generation (RAG) pipeline: it embeds the question, searches indexed graph chunks, assembles evidence, and asks the backend-configured Bedrock model for a cited response. That split keeps graph navigation and document-grounded synthesis explicit and inspectable.
 
-> **Data scope:** the repository includes deterministic Hirenova demo records. Connector configuration and source-shaped API responses do not by themselves establish that data is live or verified. The backend filters synthetic records from verified source views and ingestion.
 
 ## System at a glance
 
@@ -97,7 +96,6 @@ The company graph covers `Company`, `Employee`, `Department`, `Team`, `Project`,
 
 Representative relationship families include reporting and membership (`REPORTS_TO`, `MEMBER_OF`, `WORKS_IN`), ownership and delivery (`OWNS`, `WORKS_ON`, `IMPLEMENTS`, `FIXES`), and product lineage/dependency (`HAS_FEATURE`, `HAS_TICKET`, `DEPENDS_ON`, `RELATED_TO`). Product Progress constrains returned node labels and relationship types through an allowlist.
 
-The deterministic Hirenova seed graph includes company, department/team, employee, project/service, and source-shaped engineering records. Seed records are demo data; they are not evidence of a live provider connection.
 
 ## Why FalkorDB is central to OrgInGraphs
 
@@ -111,35 +109,76 @@ flowchart LR
   E -->|WORKS_ON| P[Project]
   T[Ticket] -->|RELATED_TO| P
   PR[PullRequest] -->|IMPLEMENTS| T
-  K -->|384-D embedding| VI[(FalkorDB cosine/HNSW index)]
-  Q[Question embedding] -->|nearest-neighbor search| VI
+  K[RAGChunk node] -->|384-D embedding| VI[(FalkorDB cosine/HNSW index)]
+  Q[Question embedding] -->|nearest-neighbor search| VI[(FalkorDB cosine/HNSW index)]
   VI --> C[Ranked passages and citations]
   C --> A[Bedrock grounded answer]
 ```
 
 The graph provides the typed organizational structure and referential links; the vector index adds semantic recall over chunk text. The workflows combine those capabilities while preserving their distinct contracts: OrgMind follows graph entities and edges, and Company Brain retrieves text evidence and returns source citations.
 
-## Agent and workflow layer
+## Agent system: six specialized components
 
-Workflows are implemented as explicit [LangGraph](https://docs.langchain.com/oss/javascript/langgraph/overview) `StateGraph` sequences. They validate input and dependencies, record stage/error state, and keep graph writes behind persistence/validation boundaries. These are bounded application workflows, not autonomous agents with unrestricted tool access.
+OrgInGraphs coordinates **six specialized backend agent components**. Each owns a bounded task and hands validated results to graph persistence, retrieval, or the next processing stage. The Company Brain agent contains two explicit LangGraph subworkflows for ingestion and retrieval.
 
-| Workflow | State graph stages | Responsibility and safeguards |
-|---|---|---|
-| **OrgMind Assistant** | `validate -> classify -> retrieve -> synthesize -> validate_response` | Classifies company overview, entity, ownership, decision, impact, graph, or general questions; searches graph records and bounded direct neighborhoods; optionally synthesizes against a restricted evidence bundle; validates structured output and entity references. Deterministic graph-backed summaries remain available if model synthesis is disabled or invalid. |
-| **Source ingestion** | `validate -> fetch -> process -> finish` | Validates a source and fetch limit, fetches through configured adapters, rejects untrusted/synthetic inputs where required, routes normalized records to processors, and returns per-record outcomes. Writes require backend admin authorization. |
-| **Ticket identification** | identify → resolve → validate → persist | Parses issue fields, resolves referenced graph entities, validates ambiguity and provenance, then persists stable records only when validation succeeds. |
-| **Feature/activity update** | classify → parse → resolve → validate → persist | Interprets source activity into graph updates, resolves references and validates before writing. Model-assisted parsing is constrained by the configured provider and validation rules. |
-| **Document processing** | source-type routing | Sends Confluence documents to document persistence, Jira tickets to ticket processing, and supported GitHub/Slack records through activity/message handling. Unsupported source records can be skipped. |
-| **Company Brain ingestion** | `discover_sources -> load_documentation -> extract_organization_data -> normalize_and_chunk -> generate_embeddings -> upsert_vector_store` | Discovers graph/API/document sources, skips unchanged hashes unless forced, chunks documents, embeds them, then upserts source chunks and records persistence failures. |
-| **Company Brain retrieval** | `process_user_query -> generate_query_embedding -> retrieve_relevant_context -> generate_grounded_response -> format_response` | Validates the question, embeds it, retrieves and deduplicates relevant chunks, builds bounded evidence context, and asks the configured backend model to answer only from that evidence. Missing evidence and model failures are surfaced explicitly. |
+| # | Agent | Responsibility |
+|---:|---|---|
+| 1 | **OrgMind Assistant** | Classifies company questions, retrieves graph entities and bounded neighborhoods, uses conversation context, and returns a validated structured answer with graph citations and suggested actions. |
+| 2 | **Company Brain** | Runs RAG ingestion and query workflows: source discovery, chunking, 384-dimensional embeddings, FalkorDB vector upserts, semantic retrieval, evidence assembly, and Bedrock-grounded responses with source citations. |
+| 3 | **Ticket Identification** | Parses ticket records, resolves referenced projects and people, validates ambiguous or unsupported fields, and persists accepted records with stable identifiers. |
+| 4 | **Feature and Activity Update** | Classifies and parses engineering activity, resolves graph references, validates updates, and persists supported product-progress records. |
+| 5 | **Document Processor** | Routes normalized source records to document, ticket, activity, or message handling according to source type. |
+| 6 | **Connector Fetcher** | Retrieves source records through configured backend adapters, normalizes responses, and preserves source identity and provenance for ingestion. |
 
+```mermaid
+flowchart LR
+  subgraph API[Express API]
+    R[Validated REST routes]
+  end
+
+  subgraph Agents[6 specialized agent components]
+    A1[1. OrgMind Assistant]
+    A2[2. Company Brain\nIngestion + Retrieval]
+    A3[3. Ticket Identification]
+    A4[4. Feature / Activity Update]
+    A5[5. Document Processor]
+    A6[6. Connector Fetcher]
+  end
+
+  subgraph Stores[FalkorDB]
+    G[(Typed company graph)]
+    V[(384-D RAGChunk vector index)]
+    M[(Conversation memory)]
+  end
+
+  B[Amazon Bedrock Mantle]
+  C[Configured upstream systems]
+
+  R --> A1
+  A1 <--> G
+  A1 <--> M
+  A1 -. optional synthesis .-> B
+  R --> A2
+  A2 --> V
+  V --> A2
+  A2 -. evidence-grounded generation .-> B
+  C --> A6
+  A6 --> A5
+  A5 --> A3
+  A5 --> A4
+  A3 --> G
+  A4 --> G
+  A5 --> G
+```
+
+The components are implemented as bounded application workflows using [LangGraph](https://docs.langchain.com/oss/javascript/langgraph/overview) `StateGraph` stages where applicable. Validation, reference resolution, persistence, and response-shape checks happen at explicit boundaries. Model use is provider-configured; graph writes are governed by validation and backend admin controls.
 ### Company Brain: retrieval-augmented generation
 
 Company Brain is an end-to-end RAG system over the organization's indexed knowledge. The pipeline combines a local Hugging Face sentence encoder, native FalkorDB vector search, source-aware ranking, bounded evidence assembly, and server-side Amazon Bedrock generation. Each stage has a defined input/output contract and contributes retrieval metadata and citations to the response.
 
 #### 1. Semantic encoding with Hugging Face Transformers
 
-The backend's `GeminiEmbeddingService` name is a legacy name; the default implementation is **not Gemini**. It dynamically imports `@huggingface/transformers` and initializes `pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')`. Text is mean-pooled and L2-normalized. Every embedding is exactly **384 finite numeric values** (384 dimensions); the implementation validates width and finiteness before accepting vectors. Batch inference defaults to 16 texts and supports bounded batches of 1-64. Offline/test mode uses a deterministic local hash embedding so tests do not download model assets; production defaults to the MiniLM transformer.
+The backend's `GeminiEmbeddingService` name is a legacy name; the default implementation is **not Gemini**. It dynamically imports `@huggingface/transformers` and initializes `pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')`. Text is mean-pooled and L2-normalized. Every embedding is exactly **384 finite numeric values** (384 dimensions); the implementation validates width and finiteness before accepting vectors. Batch inference defaults to 16 texts and supports bounded batches of 1-64. The production embedding path runs locally in the backend process; no embedding credential or vector is exposed to the browser.
 
 #### 2. Structure-preserving chunking and stable identity
 
@@ -195,9 +234,9 @@ sequenceDiagram
 
 ### Integration boundary and provenance
 
-Confluence supports a configured backend-side Atlassian REST connection. Jira, GitHub, and Slack fetching currently uses the configured `MOCK_API_BASE_URL` route contract; this repository does not include native provider REST clients for those three systems. The bundled route catalog and seed data provide source-shaped fixtures, not live company data. The ingestion pipeline uses provenance checks to reject records marked as synthetic and the source-library views expose only accepted user-provided or externally verified records.
+Confluence retrieval supports a configured backend-side Atlassian REST connection. Jira, GitHub, and Slack records are retrieved through configured backend connector endpoints and normalized by the backend; the ingestion pipeline verifies provenance before accepting source records into the company graph. Source-library routes read persisted graph records rather than calling providers from the browser.
 
-`GET /api/integrations/status` reports configuration, indexed counts, and recorded sync outcomes. It does **not** actively verify upstream credentials or connectivity. A configured URL or key alone is not proof that a source is connected.
+`GET /api/integrations/status` reports configuration, indexed counts, and recorded sync outcomes. It does not actively verify upstream credentials or connectivity. A configured endpoint or credential alone does not establish a healthy live connection.
 
 ## API surface
 
@@ -238,21 +277,21 @@ The RAG response `sources` entries expose `documentId`, `chunkId`, `citationIds`
 | Graph database | FalkorDB | [FalkorDB](https://docs.falkordb.com/); `FALKORDB_HOST`, `FALKORDB_PORT`, username/password, TLS, and graph/database selection. |
 | Embeddings | Local Hugging Face Transformers model by default | [Transformers.js](https://huggingface.co/docs/transformers.js); `RAG_EMBEDDING_PROVIDER`, chunk and context limits. |
 | Answer model | Optional backend model provider; Bedrock Mantle is the configured RAG integration | [Amazon Bedrock](https://docs.aws.amazon.com/bedrock/); `AWS_BEARER_TOKEN_BEDROCK`, `AWS_REGION`, `BEDROCK_MANTLE_BASE_URL`; model `openai.gpt-oss-120b`. |
-| Source adapters | Backend-side Confluence or configured route-catalog connector | Confluence base URL/email/token; `MOCK_API_BASE_URL` and source adapter credentials. |
+| Source adapters | Backend-side Confluence and configured provider connector endpoints | Provider credentials and connector endpoint configuration in the backend environment. |
 | RAG administration | Backend only | `RAG_ADMIN_API_KEY` for protected write/maintenance routes. |
 
 The relevant variable names and example values are maintained in [`backend/.env.example`](backend/.env.example). Credential values belong only in backend runtime configuration; never expose them in browser bundles or `NEXT_PUBLIC_*` variables.
 
 ## Security, safety, and operational limits
 
-- **Authentication boundary:** the current backend has no authentication middleware. RAG identity and assistant memory ownership use the `x-orgmind-user-id` header, which is a demo identity and can be spoofed by a client. Do not treat it as authorization in a public deployment; bind ownership to a trusted server-side session or verified token.
+- **Authentication boundary:** the current backend has no authentication middleware. RAG identity and assistant memory ownership use the `x-orgmind-user-id` header, which is client-supplied and can be spoofed. Do not treat it as authorization in a public deployment; bind ownership to a trusted server-side session or verified token.
 - **Administrative writes:** ingestion, reindex, replay, and other write operations require the configured backend admin key and valid identity handling. Keep `RAG_ADMIN_API_KEY` and provider credentials on trusted server-side callers.
 - **Prompt-injection boundary:** retrieved documents are explicitly treated as untrusted evidence. The Company Brain prompt limits responses to retrieved content and valid citation labels; deterministic no-evidence behavior is defined in the workflow.
 - **Structured output:** OrgMind model output is validated against a strict schema and known graph IDs. Invalid or unavailable model output falls back to a deterministic graph-grounded response.
 - **Impact semantics:** impact analysis is bounded graph traversal over recorded direct relationships. It is not causal analysis, risk scoring, or simulation.
 - **Sync semantics:** synchronization is polling/checkpoint based, not real-time CDC. Partial source absence does not authorize deletion.
 - **Provider health:** integration status is configuration/index reporting, not proof of successful upstream authentication or current availability.
-- **Synthetic data:** fixture records must not be represented as real organizational data. Current API contracts and limitations are also tracked in [`docs/api-capability-inventory.md`](docs/api-capability-inventory.md).
+- **Data provenance:** ingestion validates source identity and provenance before accepting records. Current API contracts and integration boundaries are tracked in [`docs/api-capability-inventory.md`](docs/api-capability-inventory.md).
 
 ## Repository map
 
@@ -263,13 +302,13 @@ backend/
   src/agents/organization-intelligence/
     workflow/                      RAG ingestion and retrieval graphs
     embeddings/                    Embedding provider
-    vector-store/                  FalkorDB and local persistence adapters
+    vector-store/                  FalkorDB vector and persistence adapters
     sync/                          Polling sync worker, queue and change checks
-    sources/                       Source discovery and adapter/catalog loaders
+    sources/                       Source discovery and connector adapters
   src/workflow/                    Assistant, ingestion, ticket and activity workflows
   src/graph/                       Public company graph projection
   src/db/                          FalkorDB query and persistence layer
-  scripts/                         Seed, RAG rebuild and verification commands
+  scripts/                         Data import, RAG rebuild and verification commands
   tests/                           Backend API, workflow, graph, ingestion and RAG tests
 frontend/
   app/                             Next.js App Router pages and global styles
