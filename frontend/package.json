@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "..\\backend\\node_modules\\.bin\\tsx --test lib/graph/normalize.test.ts"
+    "test": "..\\backend\\node_modules\\.bin\\tsx --test lib/graph/normalize.test.ts lib/api.rag.test.ts components/assistant/AgentResponseRenderer.test.tsx"
   },
   "dependencies": {
     "@xyflow/react": "^12.8.4",

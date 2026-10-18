@@ -20,7 +20,9 @@ function route(document: NormalizedDocument): DocumentRoute {
     const isGithubPullRequest = document.sourceSystem === 'github'
       && typeof document.metadata.repository === 'string'
       && typeof document.metadata.state === 'string';
-    return activity !== 'development-update' || isGithubPullRequest || /\b(pr|pull request|commit|release|review|fixed|fix|merged|shipped|completed|blocked)\b/i.test(value) ? 'feature-update' : 'unsupported';
+    const recognizedGithubRecord = document.sourceSystem === 'github'
+      && ['pull_request', 'issue', 'commit'].includes(String(document.metadata.recordType ?? ''));
+    return activity !== 'development-update' || isGithubPullRequest || recognizedGithubRecord || /\b(pr|pull request|commit|release|review|fixed|fix|merged|shipped|completed|blocked)\b/i.test(value) ? 'feature-update' : 'unsupported';
   }
   return 'unsupported';
 }
@@ -57,7 +59,7 @@ export async function processDocument(document: NormalizedDocument, options: Doc
   }
   const selectedRoute = route(document);
   let sourceEntityId: string | undefined;
-  if ((document.sourceSystem === 'slack' || document.sourceSystem === 'github') && options.graph) {
+  if ((document.sourceSystem === 'slack' || document.sourceSystem === 'github') && options.graph && selectedRoute !== 'unsupported') {
     try { sourceEntityId = await persistConversationOrGithubRecord(document, options.graph); }
     catch { return { ...baseOutcome(document, selectedRoute), status: 'failed', error: 'Source record could not be persisted to the company graph.' }; }
   }

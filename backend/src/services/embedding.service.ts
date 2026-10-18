@@ -1,0 +1,1 @@
+export { GeminiEmbeddingService as EmbeddingService, GeminiEmbeddingService, DEFAULT_EMBEDDING_MODEL, EMBEDDING_DIMENSIONS, deterministicOfflineEmbedding } from '../agents/organization-intelligence/embeddings/gemini-embeddings.js';

@@ -144,6 +144,7 @@ export type OrganizationRagResponse = {
     title: string;
     sourceType: string;
     sourcePath: string;
+    url?: string;
     platform?: PlatformType;
     excerpt?: string;
   }>;
@@ -159,6 +160,23 @@ export type OrganizationRagResponse = {
   status: "completed" | "partial" | "failed";
   uncertainty?: string;
   errors?: string[];
+  retrieval?: { candidateCount: number; usedChunks: number };
+};
+
+export type RagQueryResponse = {
+  answer: string;
+  sources: Array<{
+    documentId: string;
+    chunkId: string;
+    sourceType: string;
+    title: string;
+    url?: string;
+    score: number;
+    excerpt?: string;
+    citationIds?: string[];
+  }>;
+  retrieval: { candidateCount: number; usedChunks: number };
+  evidenceFound: boolean;
 };
 
 export type AssistantQuery = { question: string; conversationId?: string; context?: { entityId: string; entityType: EntityType } };

@@ -1,4 +1,5 @@
 import express, { type Request, type Response } from 'express';
+import { timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import type { Graph } from 'falkordb';
 import { query, rows } from '../db/falkordb.js';
@@ -44,10 +45,16 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
   const app=express();
   const agent1 = options.agent1 ?? getOrganizationIntelligenceAgent({ graph });
   let initialRagIndex: Promise<void> | undefined;
+  let ragWriteActive = false;
+  const acquireRagWrite = (res: Response) => {
+    if (ragWriteActive) { res.status(409).json({ error: 'A RAG ingestion or re-index operation is already running.' }); return false; }
+    ragWriteActive = true;
+    return true;
+  };
   const allowedOrigins=new Set((process.env.FRONTEND_ORIGINS??'http://localhost:3000,http://127.0.0.1:3000').split(',').map(origin=>origin.trim()).filter(Boolean));
   app.use((req,res,next)=>{
     const origin=req.headers.origin;
-    if(origin&&allowedOrigins.has(origin)){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type,x-orgmind-user-id');}
+    if(origin&&allowedOrigins.has(origin)){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Methods','GET,POST,OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type,x-orgmind-user-id,x-rag-admin-key');}
     if(req.method==='OPTIONS')return res.sendStatus(204);
     return next();
   });
@@ -56,6 +63,11 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     const identity = workspaceIdentitySchema.safeParse(req.header('x-orgmind-user-id'));
     if (!identity.success) { res.status(401).json({ error: 'Sign in to use persistent assistant conversations.' }); return undefined; }
     return memoryOwnerId(identity.data);
+  };
+  const ragIdentity = (req: Request, res: Response): string | undefined => {
+    const identity = workspaceIdentitySchema.safeParse(req.header('x-orgmind-user-id'));
+    if (!identity.success) { res.status(401).json({ error: 'Sign in to use company knowledge.' }); return undefined; }
+    return identity.data;
   };
   app.get('/health',async (_req,res)=>{ try { await query(graph,'RETURN 1 AS connected'); res.json({status:'ok',database:'connected'}); } catch(error){ console.error(error); res.status(503).json({status:'degraded',database:'unavailable'}); } });
   const dashboardResponse = async () => {
@@ -200,14 +212,11 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
 
   // Agent 1: Organization Intelligence & Knowledge Ingestion endpoints
   const adminOwner = (req: Request, res: Response): boolean => {
-    const authHeader = req.header('x-orgmind-user-id');
-    if (!authHeader) {
-      res.status(401).json({ error: 'Administrative action requires authorized workspace identity (x-orgmind-user-id).' });
-      return false;
-    }
-    const parsed = workspaceIdentitySchema.safeParse(authHeader);
-    if (!parsed.success) {
-      res.status(401).json({ error: 'Invalid workspace identity for administrative action.' });
+    if (!ragIdentity(req, res)) return false;
+    const expected = process.env.RAG_ADMIN_API_KEY;
+    const provided = req.header('x-rag-admin-key') ?? '';
+    if (!expected || !provided || Buffer.byteLength(expected) !== Buffer.byteLength(provided) || !timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
+      res.status(403).json({ error: 'Administrative RAG access is not authorized.' });
       return false;
     }
     return true;
@@ -215,24 +224,25 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
 
   const handleIngest = async (req: Request, res: Response) => {
     if (!adminOwner(req, res)) return;
+    if (!acquireRagWrite(res)) return;
     try {
-      const body = req.body ?? {};
-      const force = Boolean(body.force);
-      const sources = Array.isArray(body.sources) ? body.sources : undefined;
-      const result = await agent1.ingest({ forceReindex: force, selectedSources: sources });
+      const parsed = z.object({ force: z.boolean().optional().default(false), sources: z.array(z.string().trim().min(1).max(500)).max(100).optional() }).strict().safeParse(req.body ?? {});
+      if (!parsed.success) return res.status(400).json({ error: 'Invalid ingestion request', details: parsed.error.flatten() });
+      const result = await agent1.ingest({ forceReindex: parsed.data.force, selectedSources: parsed.data.sources });
       return res.status(result.status === 'failed' ? 503 : 200).json(result);
     } catch (error) {
       console.error('Agent 1 ingestion failed:', error);
       return res.status(503).json({ status: 'failed', errors: ['Ingestion workflow execution failed safely.'] });
-    }
+    } finally { ragWriteActive = false; }
   };
   app.post('/api/organization/ingest', handleIngest);
   app.post('/api/organization-intelligence/ingest', handleIngest);
 
   const handleStatus = async (_req: Request, res: Response) => {
+    if (!ragIdentity(_req, res)) return;
     try {
-      const stats = agent1.getStatus();
-      return res.json({ status: 'ready', stats, agent: 'organization-intelligence' });
+      const stats = await agent1.getStatus();
+      return res.json({ status: 'ready', stats, indexedDocuments: stats.totalSources, indexedChunks: stats.totalChunks, pendingWork: ragWriteActive ? 1 : 0, failedWork: stats.failed, lastSuccessfulIngestion: stats.lastIngestedAt ?? null, agent: 'organization-intelligence', embeddingModel: agent1.embeddingService.model, vectorStore: agent1.vectorStore instanceof Object && 'healthy' in agent1.vectorStore ? (agent1.vectorStore.healthy ? 'healthy' : 'unavailable') : 'local' });
     } catch (error) {
       console.error('Agent 1 status failed:', error);
       return res.status(500).json({ error: 'Failed to retrieve indexing status.' });
@@ -242,6 +252,8 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
   app.get('/api/organization-intelligence/status', handleStatus);
 
   const handleQuery = async (req: Request, res: Response) => {
+    const identity = ragIdentity(req, res);
+    if (!identity) return;
     const parsed = ragQueryInputSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: 'Invalid organization query request', details: parsed.error.flatten() });
@@ -249,7 +261,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     try {
       // A fresh install has no vectors until the admin ingestion endpoint is called.
       // Populate the index on the first user query so the built-in company data is searchable.
-      if (agent1.getStatus().totalChunks === 0) {
+      if ((await agent1.getStatus()).totalChunks === 0) {
         initialRagIndex ??= agent1.ingest().then((result) => {
           if (result.status === 'failed' || result.stats.totalChunks === 0) {
             console.error('Initial Organization RAG indexing did not produce searchable chunks:', {
@@ -265,7 +277,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
         }).finally(() => { initialRagIndex = undefined; });
         await initialRagIndex;
       }
-      const response = await agent1.query(parsed.data);
+      const response = await agent1.query({ ...parsed.data, orgId: process.env.ORGANIZATION_ID ?? 'hirenova' });
       if (response.status !== 'completed') console.error('Organization RAG query returned a degraded result:', { query: parsed.data.query, status: response.status, errors: response.errors, uncertainty: response.uncertainty });
       return res.status(response.status === 'failed' ? 503 : 200).json(response);
     } catch (error) {
@@ -283,8 +295,9 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
   app.post('/api/organization-intelligence/query', handleQuery);
 
   const handleSources = async (_req: Request, res: Response) => {
+    if (!ragIdentity(_req, res)) return;
     try {
-      const sources = agent1.getSources();
+      const sources = await agent1.getSources();
       return res.json({ sources, count: sources.length });
     } catch (error) {
       console.error('Agent 1 getSources failed:', error);
@@ -296,6 +309,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
 
   const handleReindex = async (req: Request, res: Response) => {
     if (!adminOwner(req, res)) return;
+    if (!acquireRagWrite(res)) return;
     try {
       const sourcePath = typeof req.body?.sourcePath === 'string' ? req.body.sourcePath : undefined;
       const result = await agent1.reindex(sourcePath);
@@ -303,10 +317,72 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     } catch (error) {
       console.error('Agent 1 reindexing failed:', error);
       return res.status(503).json({ status: 'failed', errors: ['Reindexing failed safely.'] });
-    }
+    } finally { ragWriteActive = false; }
   };
   app.post('/api/organization/reindex', handleReindex);
   app.post('/api/organization-intelligence/reindex', handleReindex);
+
+  const ragRequestSchema = z.object({
+    question: z.string().trim().min(1).max(4000),
+    filters: z.object({ sourceTypes: z.array(z.enum(['confluence', 'jira', 'github', 'slack', 'route', 'database'])).max(10).optional() }).strict().optional()
+  }).strict();
+  app.post('/api/rag/query', async (req, res) => {
+    const identity = ragIdentity(req, res);
+    if (!identity) return;
+    const parsed = ragRequestSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid RAG query', details: parsed.error.flatten() });
+    try {
+      const result = await agent1.query({ query: parsed.data.question, history: [], topK: 5, threshold: 0.1, orgId: process.env.ORGANIZATION_ID ?? 'hirenova', ...(parsed.data.filters?.sourceTypes ? { sourcePlatforms: parsed.data.filters.sourceTypes } : {}) });
+      const citations = result.sources.map((source) => {
+        const chunks = result.retrieved_chunks.flatMap((item, index) => item.sourcePath === source.sourcePath ? [{ item, index }] : []);
+        const chunk = chunks[0]?.item;
+        return {
+          documentId: source.sourcePath,
+          chunkId: chunk?.chunkId ?? '',
+          citationIds: chunks.map(({ index }) => `S${index + 1}`),
+          sourceType: source.platform ?? source.sourceType,
+          title: source.title,
+          ...(typeof source.url === 'string' ? { url: source.url } : {}),
+          ...(source.excerpt ? { excerpt: source.excerpt } : {}),
+          score: chunk?.score ?? 0
+        };
+      });
+      return res.status(result.status === 'failed' ? 503 : 200).json({ answer: result.answer, sources: citations, retrieval: result.retrieval ?? { candidateCount: result.retrieved_chunks.length, usedChunks: result.retrieved_chunks.length }, evidenceFound: result.retrieved_chunks.length > 0 });
+    } catch {
+      return res.status(503).json({ error: 'The company knowledge service is unavailable.' });
+    }
+  });
+  app.post('/api/rag/ingest', async (req, res) => {
+    if (!adminOwner(req, res)) return;
+    if (!acquireRagWrite(res)) return;
+    const schema = z.object({ sources: z.array(z.string().trim().min(1).max(500)).max(100).optional(), force: z.boolean().optional().default(false) }).strict();
+    const parsed = schema.safeParse(req.body ?? {});
+    if (!parsed.success) { ragWriteActive = false; return res.status(400).json({ error: 'Invalid ingestion request', details: parsed.error.flatten() }); }
+    try {
+      const result = await agent1.ingest({ selectedSources: parsed.data.sources, forceReindex: parsed.data.force, orgId: process.env.ORGANIZATION_ID ?? 'hirenova' });
+      return res.status(result.status === 'failed' ? 503 : 200).json(result);
+    } catch { return res.status(503).json({ error: 'Document ingestion failed.' }); }
+    finally { ragWriteActive = false; }
+  });
+  app.post('/api/rag/reindex', async (req, res) => {
+    if (!adminOwner(req, res)) return;
+    if (!acquireRagWrite(res)) return;
+    const schema = z.object({ sourcePath: z.string().trim().min(1).max(500).optional() }).strict();
+    const parsed = schema.safeParse(req.body ?? {});
+    if (!parsed.success) { ragWriteActive = false; return res.status(400).json({ error: 'Invalid re-index request', details: parsed.error.flatten() }); }
+    try {
+      const result = await agent1.reindex(parsed.data.sourcePath);
+      return res.status(result.status === 'failed' ? 503 : 200).json(result);
+    } catch { return res.status(503).json({ error: 'Re-indexing failed.' }); }
+    finally { ragWriteActive = false; }
+  });
+  app.get('/api/rag/status', async (req, res) => {
+    if (!ragIdentity(req, res)) return;
+    try {
+      const stats = await agent1.getStatus();
+      return res.json({ stats, indexedDocuments: stats.totalSources, indexedChunks: stats.totalChunks, pendingWork: ragWriteActive ? 1 : 0, failedWork: stats.failed, lastSuccessfulIngestion: stats.lastIngestedAt ?? null, embeddingModel: agent1.embeddingService.model, vectorStore: agent1.vectorStore instanceof Object && 'healthy' in agent1.vectorStore ? (agent1.vectorStore.healthy ? 'healthy' : 'unavailable') : 'local' });
+    } catch { return res.status(503).json({ error: 'Unable to read RAG status.' }); }
+  });
 
   return app;
 }

@@ -83,7 +83,7 @@ function isHttpUrl(value: string | undefined): value is string {
 /** The connector URL may be supplied as MOCK_API_BASE_URL or, for compatibility
  * with the supplied .env, as a URL-valued *_API_KEY entry. */
 export function sourceConnectorBase(source: MockSource, override?: string): string | undefined {
-  if (override) return override;
+  if (override !== undefined) return override;
   if (source === 'confluence' && env.CONFLUENCE_INGESTION_ENABLED !== 'false'
     && env.CONFLUENCE_BASE_URL && env.CONFLUENCE_EMAIL && (env.CONFLUENCE_API_TOKEN || env.CONFLUENCE_API_KEY)) return undefined;
   const setting = sourceSetting(source);
@@ -154,7 +154,11 @@ export async function fetchMockDocuments(source: MockSource, options: { baseUrl?
   };
   let records: unknown[];
   if (source === 'slack') {
-    const channelPayload = await requestJson('/api/slack/conversations.list', { limit: String(limit) });
+    const channelPayload = await requestJson(MOCK_ENDPOINTS.slack, { limit: String(limit) });
+    if (isRecord(channelPayload) && channelPayload.ok === false) throw new MockFetcherError('http-error', 'Slack source returned an unsuccessful response.');
+    if (isRecord(channelPayload) && Array.isArray(channelPayload.messages)) {
+      records = payloadRecords(channelPayload, 'slack');
+    } else {
     const channels = isRecord(channelPayload) && Array.isArray(channelPayload.channels) ? channelPayload.channels.filter(isRecord) : [];
     const channelMessages = await Promise.all(channels.slice(0, Math.min(12, limit)).map(async (channel) => {
       const channelId = text(channel.id) ?? text(channel.name);
@@ -163,6 +167,7 @@ export async function fetchMockDocuments(source: MockSource, options: { baseUrl?
       return payloadRecords(payload, 'slack').map((message) => isRecord(message) ? { ...message, channel, channelId, channelName: text(channel.name) } : message);
     }));
     records = channelMessages.flat();
+    }
   } else if (source === 'github') {
     const perKind = String(Math.max(1, Math.floor(limit / 3)));
     const [pulls, issues, commits] = await Promise.all([

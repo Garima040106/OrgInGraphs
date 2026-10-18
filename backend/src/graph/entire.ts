@@ -48,7 +48,10 @@ function nodeId(node: FalkorNode): string {
 }
 
 export async function fetchEntireGraph(graph: Graph): Promise<EntireGraph> {
-  const nodeResult = await query(graph, 'MATCH (n) RETURN n');
+  // The graph also contains backend-owned records such as RAG chunks and
+  // indexing status nodes. Those records intentionally use chunkId/orgId,
+  // not the stable entity id required by the graph API.
+  const nodeResult = await query(graph, 'MATCH (n) WHERE n.id IS NOT NULL RETURN n');
   const nodeRows = (nodeResult.data ?? []) as QueryRow[];
   const nodes: GraphApiNode[] = [];
   const internalToStable = new Map<string, string>();
@@ -79,7 +82,10 @@ export async function fetchEntireGraph(graph: Graph): Promise<EntireGraph> {
     const source = internalToStable.get(String(row.r.sourceId));
     const target = internalToStable.get(String(row.r.destinationId));
     const type = row.r.relationshipType;
-    if (!source || !target || !type) {
+    // Relationships attached to backend-owned nodes are outside this graph
+    // view, so omit them when either endpoint was excluded above.
+    if (!source || !target) continue;
+    if (!type) {
       throw new Error('Graph relationship references an unknown node or type');
     }
 
