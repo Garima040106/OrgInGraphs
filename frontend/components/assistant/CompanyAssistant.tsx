@@ -29,7 +29,7 @@ const graphGreeting: Message = {
 const ragSuggestions = [
   "What is the engineering team working on?",
   "Summarize recent incidents.",
-  "Who owns the checkout project?",
+  "who is responsible person for payment teams",
   "Find relevant documentation for a project.",
 ];
 const graphSuggestions = ["Who owns billing?", "Why did we change authentication?", "What could break if we deprecate Auth v1?"];
