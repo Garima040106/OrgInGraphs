@@ -123,6 +123,15 @@ export class PersistentVectorStore {
   }
 
   upsertDocumentChunks(docEntry: VectorStoreDocumentEntry, newChunks: DocumentChunk[], persist = true): void {
+    const dimensions = new Set(newChunks.map((chunk) => chunk.embedding?.length ?? 0));
+    if (newChunks.some((chunk) => !chunk.embedding || chunk.embedding.some((value) => !Number.isFinite(value))) || dimensions.has(0) || dimensions.size > 1) {
+      throw new Error('Every indexed chunk must have a finite embedding with one consistent vector dimension.');
+    }
+    const indexedDimensions = this.getEmbeddingDimensions();
+    const incomingDimension = newChunks[0]?.embedding?.length;
+    if (incomingDimension && indexedDimensions.length && !indexedDimensions.includes(incomingDimension)) {
+      throw new Error(`Embedding dimension ${incomingDimension} does not match the existing index (${indexedDimensions.join(', ')}). Re-index all sources with one model.`);
+    }
     const existing = this.documents.get(docEntry.path);
     if (existing) {
       // Remove stale chunks previously associated with this document
@@ -178,12 +187,17 @@ export class PersistentVectorStore {
     queryText?: string;
     orgId?: string;
     sourceTypes?: SourceType[];
+    sourcePlatforms?: Array<'jira' | 'confluence' | 'slack' | 'github' | 'route' | 'database'>;
     sourcePath?: string;
   } = {}): SearchResult[] {
+    if (!queryEmbedding.length || queryEmbedding.some((value) => !Number.isFinite(value))) throw new Error('Query embedding must be a finite non-empty vector.');
+    const indexedDimensions = this.getEmbeddingDimensions();
+    if (indexedDimensions.length && !indexedDimensions.includes(queryEmbedding.length)) throw new Error(`Query embedding dimension ${queryEmbedding.length} does not match indexed vectors (${indexedDimensions.join(', ')}).`);
     const topK = options.topK ?? 5;
     const threshold = options.threshold ?? 0.3;
     const targetOrg = options.orgId ?? this.orgId;
     const allowedTypes = options.sourceTypes ? new Set(options.sourceTypes) : undefined;
+    const allowedPlatforms = options.sourcePlatforms ? new Set(options.sourcePlatforms) : undefined;
     const queryTokens = (options.queryText ?? '').toLowerCase().split(/[^a-z0-9]+/)
       .filter((token) => token.length > 1 && !new Set(['what', 'who', 'how', 'many', 'is', 'are', 'the', 'a', 'an', 'of', 'for', 'in', 'on', 'there', 'does', 'do', 'tell', 'me', 'about']).has(token))
       .map((token) => token === 'dept' || token === 'depts' ? 'department' : token.replace(/s$/, ''));
@@ -199,6 +213,12 @@ export class PersistentVectorStore {
       // Source type filter
       if (allowedTypes && !allowedTypes.has(chunk.metadata.sourceType)) {
         continue;
+      }
+      if (allowedPlatforms) {
+        const path = chunk.metadata.sourcePath.toLowerCase();
+        const raw = typeof chunk.metadata.sourceSystem === 'string' ? chunk.metadata.sourceSystem.toLowerCase() : '';
+        const platform = raw || (path.includes('jira') ? 'jira' : path.includes('github') ? 'github' : path.includes('slack') ? 'slack' : path.startsWith('/api/') || path.startsWith('route:') ? 'route' : path.endsWith('.md') || path.includes('confluence') ? 'confluence' : 'database');
+        if (!allowedPlatforms.has(platform as 'jira' | 'confluence' | 'slack' | 'github' | 'route' | 'database')) continue;
       }
 
       // Source path filter

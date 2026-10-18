@@ -35,7 +35,14 @@ test('fetches and normalizes all supported synthetic source types', async () => 
         assert.equal(result.documents[0].metadata.project, 'Checkout');
       }
     }
-    assert.deepEqual(requested.map((url) => new URL(url).pathname), Object.values(MOCK_ENDPOINTS));
+    assert.deepEqual(requested.map((url) => new URL(url).pathname), [
+      MOCK_ENDPOINTS.confluence,
+      MOCK_ENDPOINTS.jira,
+      MOCK_ENDPOINTS.github,
+      '/api/github/issues',
+      '/api/github/commits',
+      MOCK_ENDPOINTS.slack
+    ]);
   } finally { globalThis.fetch = originalFetch; }
 });
 

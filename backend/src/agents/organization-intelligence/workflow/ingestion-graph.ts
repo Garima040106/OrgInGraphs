@@ -8,11 +8,12 @@ import { loadSeedGraphSources } from '../sources/seed-graph-loader.js';
 import { chunkSource } from '../chunking/chunker.js';
 import { GeminiEmbeddingService } from '../embeddings/gemini-embeddings.js';
 import { PersistentVectorStore } from '../vector-store/persistent-store.js';
+import { FalkorDBVectorStore } from '../vector-store/falkordb-vector-store.js';
 
 export interface IngestionGraphConfig {
   graph?: Graph;
   docsDir?: string;
-  vectorStore?: PersistentVectorStore;
+  vectorStore?: PersistentVectorStore | FalkorDBVectorStore;
   embeddingService?: GeminiEmbeddingService;
   forceReindex?: boolean;
   selectedSources?: string[];
@@ -44,7 +45,7 @@ export const IngestionState = Annotation.Root({
 export type IngestionWorkflowState = typeof IngestionState.State;
 
 export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
-  const store = config.vectorStore ?? new PersistentVectorStore({ orgId: config.orgId });
+  const store = config.vectorStore ?? (config.graph ? new FalkorDBVectorStore(config.graph, config.orgId) : new PersistentVectorStore({ orgId: config.orgId }));
   const embeddings = config.embeddingService ?? new GeminiEmbeddingService();
   const orgId = config.orgId ?? 'hirenova';
 
@@ -52,6 +53,7 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
     // 1. discover_sources
     .addNode('discover_sources', async (_state) => {
       try {
+        if (store instanceof FalkorDBVectorStore) await store.initialize();
         const routes = discoverRouteSources();
         return {
           routeSources: routes,
@@ -60,7 +62,7 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
       } catch (error) {
         return {
           status: 'failed' as const,
-          errors: [`Source discovery failed: ${error instanceof Error ? error.message : String(error)}`]
+          errors: [`${store instanceof FalkorDBVectorStore ? 'Vector index initialization' : 'Source discovery'} failed: ${error instanceof Error ? error.message : String(error)}`]
         };
       }
     })
@@ -114,7 +116,7 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
         let updated = 0;
 
         for (const source of state.discoveredSources) {
-          const isUnchanged = !config.forceReindex && store.hasDocumentWithHash(source.path, source.hash);
+          const isUnchanged = !config.forceReindex && await store.hasDocumentWithHash(source.path, source.hash);
 
           if (isUnchanged) {
             skipped++;
@@ -123,14 +125,14 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
               title: source.title,
               sourceType: source.type,
               status: 'skipped',
-              chunks: store.getDocument(source.path)?.chunkIds.length ?? 0,
+              chunks: (await store.getDocument(source.path))?.chunkIds.length ?? 0,
               docHash: source.hash,
               updatedAt: new Date().toISOString()
             });
             continue;
           }
 
-          const existing = store.getDocument(source.path);
+          const existing = await store.getDocument(source.path);
           const chunks = chunkSource(source, { orgId });
           chunksMap.set(source.path, chunks);
 
@@ -167,6 +169,8 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
             updated,
             failed: 0,
             totalChunks: 0,
+          generatedChunks: [...chunksMap.values()].reduce((sum, chunks) => sum + chunks.length, 0),
+          failedChunks: 0,
             sourceTypeBreakdown: breakdown
           }
         };
@@ -210,12 +214,17 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
     // 6. upsert_vector_store
     .addNode('upsert_vector_store', async (state) => {
       if (state.status === 'failed') return {};
-      try {
-        for (const [sourcePath, chunks] of state.chunksToEmbed.entries()) {
+      const sourceRecords = state.sourceRecords.map((record) => ({ ...record }));
+      let failed = 0;
+      let failedChunks = 0;
+      const errors = [...state.errors];
+      for (const [sourcePath, chunks] of state.chunksToEmbed.entries()) {
+        const record = sourceRecords.find((item) => item.path === sourcePath);
+        try {
           const source = state.discoveredSources.find((s) => s.path === sourcePath);
           if (!source) continue;
 
-          store.upsertDocumentChunks(
+          await store.upsertDocumentChunks(
             {
               path: source.path,
               title: source.title,
@@ -227,29 +236,63 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
             chunks,
             false
           );
+        } catch (error) {
+          failed++;
+          failedChunks += chunks.length;
+          if (record) {
+            record.status = 'failed';
+            record.chunks = 0;
+            record.error = error instanceof Error ? error.message : String(error);
+          }
+          errors.push(`Vector store upsert failed for ${sourcePath}: ${error instanceof Error ? error.message : String(error)}`);
+          // Persistence failures usually indicate a shared database/index issue.
+          // Mark the remaining generated sources as failed without hammering it.
+          let markRest = false;
+          for (const pending of sourceRecords) {
+            if (pending.path === sourcePath) { markRest = true; continue; }
+            if (markRest && (pending.status === 'processed' || pending.status === 'updated')) {
+              pending.status = 'failed';
+              pending.chunks = 0;
+              pending.error = 'Not attempted after an earlier vector-store persistence failure.';
+              failed++;
+              failedChunks += state.chunksToEmbed.get(pending.path)?.length ?? 0;
+            }
+          }
+          break;
         }
+      }
 
-        store.save();
+      try {
+        await store.save();
 
         // Clean stale sources only when a full re-scan was conducted
         if (!config.selectedSources || config.selectedSources.length === 0) {
           const currentPaths = new Set(state.discoveredSources.map((s) => s.path));
-          store.cleanStaleSources(currentPaths);
+          await store.cleanStaleSources(currentPaths);
         }
 
-        const currentStats = store.getStats();
+        const currentStats = await store.getStats();
+        const status = failed === 0 ? 'completed' as const : (failed === state.stats.processed + state.stats.updated ? 'failed' as const : 'partial' as const);
         return {
-          status: 'completed' as const,
+          status,
+          sourceRecords,
+          errors,
           stats: {
             ...state.stats,
             totalChunks: currentStats.totalChunks,
+            processed: sourceRecords.filter((record) => record.status === 'processed').length,
+            updated: sourceRecords.filter((record) => record.status === 'updated').length,
+            failed,
+            failedChunks,
             lastIngestedAt: new Date().toISOString()
           }
         };
       } catch (error) {
         return {
           status: 'failed' as const,
-          errors: [...state.errors, `Vector store upsert failed: ${error instanceof Error ? error.message : String(error)}`]
+          sourceRecords,
+          stats: { ...state.stats, failed: Math.max(failed, state.stats.processed + state.stats.updated), failedChunks: Math.max(failedChunks, state.stats.generatedChunks ?? 0) },
+          errors: [...errors, `Vector store finalization failed: ${error instanceof Error ? error.message : String(error)}`]
         };
       }
     })

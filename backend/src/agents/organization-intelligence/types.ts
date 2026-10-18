@@ -46,7 +46,12 @@ export interface IngestionStats {
   updated: number;
   failed: number;
   totalChunks: number;
+  generatedChunks?: number;
+  failedChunks?: number;
   lastIngestedAt?: string;
+  pendingWork?: number;
+  failedWork?: number;
+  lastSuccessfulIngestion?: string;
   sourceTypeBreakdown: Record<SourceType, number>;
 }
 
@@ -77,7 +82,8 @@ export const ragQueryInputSchema = z.object({
   topK: z.number().int().min(1).max(20).optional().default(5),
   threshold: z.number().min(0).max(1).optional().default(0.1),
   orgId: z.string().trim().min(1).max(100).optional().default('hirenova'),
-  sourceTypes: z.array(z.enum(['route', 'documentation', 'database', 'api'])).optional()
+  sourceTypes: z.array(z.enum(['route', 'documentation', 'database', 'api'])).optional(),
+  sourcePlatforms: z.array(z.enum(['jira', 'confluence', 'slack', 'github', 'route', 'database'])).max(10).optional()
 }).strict();
 
 export type RAGQueryInput = z.infer<typeof ragQueryInputSchema>;
@@ -88,6 +94,7 @@ export interface RAGSourceCitation {
   title: string;
   sourceType: SourceType;
   sourcePath: string;
+  url?: string;
   platform?: PlatformType;
   excerpt?: string;
 }
@@ -107,6 +114,7 @@ export interface RAGResponse {
   retrieved_chunks: RetrievedChunkInfo[];
   agent: 'organization-intelligence';
   status: 'completed' | 'partial' | 'failed';
+  retrieval?: { candidateCount: number; usedChunks: number };
   uncertainty?: string;
   errors?: string[];
 }

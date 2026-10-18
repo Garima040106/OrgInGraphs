@@ -8,8 +8,9 @@ export interface ChunkingOptions {
 }
 
 export function chunkSource(source: DiscoveredSource, options: ChunkingOptions = {}): DocumentChunk[] {
-  const targetSize = options.targetChunkSize ?? 900;
-  const overlap = options.overlap ?? 150;
+  // About 500 word tokens in English prose, using a conservative 4 chars/token estimate.
+  const targetSize = options.targetChunkSize ?? Number(process.env.RAG_CHUNK_MAX_CHARS ?? 2000);
+  const overlap = options.overlap ?? Number(process.env.RAG_CHUNK_OVERLAP_CHARS ?? 300);
   const orgId = options.orgId ?? 'hirenova';
   const now = new Date().toISOString();
 
@@ -54,6 +55,24 @@ export function chunkSource(source: DiscoveredSource, options: ChunkingOptions =
       let currentChunkText = '';
 
       for (const paragraph of paragraphs) {
+        if (paragraph.length > targetSize) {
+          if (currentChunkText.trim()) {
+            const textToCommit = sectionName && !currentChunkText.startsWith('#') ? `[${sectionName}]\n\n${currentChunkText}` : currentChunkText;
+            const contentHash = createHash('sha256').update(textToCommit).digest('hex');
+            const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${chunkIndex++}`;
+            chunks.push({ id: chunkId, text: textToCommit, metadata: { chunkId, orgId, sourceType: source.type, sourcePath: source.path, title: source.title, ...(sectionName ? { section: sectionName } : {}), contentHash, docHash: source.hash, createdAt: source.lastModified ?? now, updatedAt: now, ...source.metadata } });
+            currentChunkText = '';
+          }
+          for (let offset = 0; offset < paragraph.length; offset += Math.max(1, targetSize - overlap)) {
+            const fragment = paragraph.slice(offset, offset + targetSize).trim();
+            if (!fragment) continue;
+            const textToCommit = sectionName ? `[${sectionName}]\n\n${fragment}` : fragment;
+            const contentHash = createHash('sha256').update(textToCommit).digest('hex');
+            const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${chunkIndex++}`;
+            chunks.push({ id: chunkId, text: textToCommit, metadata: { chunkId, orgId, sourceType: source.type, sourcePath: source.path, title: source.title, ...(sectionName ? { section: sectionName } : {}), contentHash, docHash: source.hash, createdAt: source.lastModified ?? now, updatedAt: now, ...source.metadata } });
+          }
+          continue;
+        }
         if (!currentChunkText) {
           currentChunkText = paragraph;
         } else if (currentChunkText.length + paragraph.length + 2 <= targetSize) {

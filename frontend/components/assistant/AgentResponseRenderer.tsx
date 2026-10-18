@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import React from "react";
 import { useState } from "react";
 import {
   ArrowUpRight,
@@ -18,11 +19,14 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { api, entityName } from "@/lib/api";
+import { MarkdownAnswer } from "@/components/assistant/MarkdownAnswer";
+import { focusCitationSource, RagSourceList } from "@/components/assistant/RagSourceList";
 import { isProductGraphEntity } from "@/lib/graph/mode";
 import type {
   AssistantResponse,
   Entity,
   OrganizationRagResponse,
+  RagQueryResponse,
   PlatformType,
 } from "@/lib/types";
 
@@ -471,7 +475,7 @@ function FormattedTextAnswer({ text }: { text: string }) {
   );
 }
 
-function isRagResponse(payload: unknown): payload is OrganizationRagResponse {
+function isRagResponse(payload: unknown): payload is OrganizationRagResponse | RagQueryResponse {
   if (typeof payload !== "object" || payload === null) return false;
   const p = payload as Record<string, unknown>;
   return (
@@ -481,11 +485,29 @@ function isRagResponse(payload: unknown): payload is OrganizationRagResponse {
   );
 }
 
+function safeExternalSourceUrl(value?: string): string | undefined {
+  if (!value) return undefined;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.toString() : undefined;
+  } catch { return undefined; }
+}
+
+function CopyAnswerButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return <button type="button" className="rag-copy-answer" aria-label="Copy answer" onClick={() => {
+    if (!navigator.clipboard?.writeText) return;
+    void navigator.clipboard.writeText(text).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1600); }).catch(() => setCopied(false));
+  }}>{copied ? "Copied" : "Copy answer"}</button>;
+}
+
 export function AgentResponseRenderer({
   payload,
   onAction,
+  messageId = "response",
 }: {
   payload: unknown;
+  messageId?: string;
   onAction?: (
     type: "open_entity" | "show_dependencies" | "investigate",
     entityId: string
@@ -502,27 +524,23 @@ export function AgentResponseRenderer({
   // Case 1: Organization Intelligence Agent 1 RAG Response
   if (isRagResponse(payload)) {
     const rag = payload;
-    const sourceTitles = [...new Set(
-      (rag.sources?.length
-        ? rag.sources.map((source) => source.title)
-        : rag.retrieved_chunks.map((chunk) => String(chunk.metadata?.title ?? chunk.sourcePath)))
-        .filter(Boolean)
-    )];
-
+    const retrievedChunks = "retrieved_chunks" in rag ? rag.retrieved_chunks ?? [] : [];
+    const sources = rag.sources ?? [];
+    const hasEvidence = "evidenceFound" in rag ? rag.evidenceFound : retrievedChunks.length > 0;
     return (
-      <article className="agent-response-card">
-        <div className="agent-entity-summary">
-          <h3>Answer</h3>
-          <FormattedTextAnswer text={rag.answer} />
+      <article className="rag-answer">
+        <div className="rag-answer-actions">
+          <span className="rag-answer-label"><Sparkles size={13} aria-hidden="true" /> OrgMind</span>
+          <CopyAnswerButton text={rag.answer} />
         </div>
-        {sourceTitles.length > 0 && (
-          <section className="agent-response-section">
-            <h4>Sources</h4>
-            <ul className="rag-source-list">
-              {sourceTitles.map((title) => <li key={title}>{title}</li>)}
-            </ul>
-          </section>
+        <MarkdownAnswer text={rag.answer} citationCount={sources.reduce((max, source, index) => Math.max(max, ...( "citationIds" in source && source.citationIds?.length ? source.citationIds.map((id) => Number(id.slice(1))) : [index + 1])), 0)} onCitationClick={(number) => focusCitationSource(messageId, number)} />
+        {!hasEvidence && (
+          <p className="agent-uncertainty" role="status">No relevant evidence was found in the indexed company sources.</p>
         )}
+        {sources.length === 0 && hasEvidence && (
+          <p className="agent-muted" role="status">Evidence was retrieved, but no source citations were returned for this answer.</p>
+        )}
+        <RagSourceList sources={sources} messageId={messageId} />
       </article>
     );
   }
@@ -544,6 +562,7 @@ export function AgentResponseRenderer({
     const answer = fallback.data.answer;
     return (
       <article className="agent-response-card">
+        <div className="rag-answer-actions"><span className="rag-answer-label"><Sparkles size={13} aria-hidden="true" /> OrgMind</span><CopyAnswerButton text={[answer.title, answer.summary, ...(answer.citations ?? []).map((citation) => citation.title)].filter(Boolean).join("\n\n")} /></div>
         <div className="agent-entity-summary">
           <small>General response</small>
           <h3>{answer.title ?? "Workspace answer"}</h3>
@@ -616,6 +635,7 @@ export function AgentResponseRenderer({
 
   return (
     <article className="agent-response-card">
+      <div className="rag-answer-actions"><span className="rag-answer-label"><Sparkles size={13} aria-hidden="true" /> OrgMind</span><CopyAnswerButton text={[answer.title, answer.summary, ...answer.findings.map((item) => item.text)].filter(Boolean).join("\n\n")} /></div>
       <div className="agent-entity-summary">
         <small>{answer.type.replaceAll("_", " ")}</small>
         <h3>{answer.title}</h3>

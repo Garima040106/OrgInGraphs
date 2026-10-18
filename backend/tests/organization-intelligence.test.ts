@@ -86,15 +86,15 @@ test('Chunking: breaks long sources into overlapping chunks with complete metada
   assert.ok(chunks[0].id.startsWith('documentation:docs%2Ftest.md:'));
 });
 
-test('Embedding Service: produces normalized 3072-dimensional embeddings and calculates cosine similarity', async () => {
+test('Embedding Service: produces normalized 384-dimensional embeddings and calculates cosine similarity', async () => {
   const embeddingService = new GeminiEmbeddingService({ useMock: true });
   const vec1 = await embeddingService.embedText('Hirenova company overview and departments');
   const vec2 = await embeddingService.embedText('Hirenova organization departments and structure');
   const vec3 = await embeddingService.embedText('quantum astrophysics celestial planetary orbits');
 
-  assert.equal(vec1.length, 3072);
-  assert.equal(vec2.length, 3072);
-  assert.equal(vec3.length, 3072);
+  assert.equal(vec1.length, 384);
+  assert.equal(vec2.length, 384);
+  assert.equal(vec3.length, 384);
 
   const simRelated = cosineSimilarity(vec1, vec2);
   const simUnrelated = cosineSimilarity(vec1, vec3);
@@ -106,7 +106,7 @@ test('Vector Store: persists to disk, retrieves chunks, and enforces tenant isol
   const storagePath = tempStoragePath('tenant-test');
   try {
     const store = new PersistentVectorStore({ storagePath, orgId: 'tenant-a' });
-    const dummyEmbedding = new Array(3072).fill(0.01);
+    const dummyEmbedding = new Array(384).fill(0.01);
     dummyEmbedding[0] = 1;
 
     store.upsertDocumentChunks(
@@ -163,7 +163,7 @@ test('Vector Store: incremental indexing skips unchanged content and replaces up
   const storagePath = tempStoragePath('incremental-test');
   try {
     const store = new PersistentVectorStore({ storagePath, orgId: 'hirenova' });
-    const vec = new Array(3072).fill(0.01);
+    const vec = new Array(384).fill(0.01);
 
     // Initial insert
     store.upsertDocumentChunks(
@@ -291,7 +291,7 @@ test('LangGraph RAG Retrieval Workflow: retrieves relevant chunks and cites sour
     const mockModel = async (systemPrompt: string, userPrompt: string) => {
       assert.ok(systemPrompt.includes('Hirenova'));
       assert.ok(userPrompt.includes('employees'));
-      return 'Hirenova provides employee directory endpoints under /api/employees supporting department and team filtering. [Source: /api/employees]';
+      return 'Hirenova provides employee directory endpoints under /api/employees supporting department and team filtering. [S1]';
     };
 
     const ragResult = await runRetrievalGraph(
@@ -336,12 +336,15 @@ test('LangGraph RAG Retrieval Workflow: reports insufficient information when co
 
 test('Agent 1 API Endpoints: supports ingest, status, query, sources, and reindex with auth protection', async () => {
   const storagePath = tempStoragePath('api-agent1');
+  const originalAdminKey = process.env.RAG_ADMIN_API_KEY;
+  process.env.RAG_ADMIN_API_KEY = 'test-admin-key';
   let server: any;
   try {
     const agent1 = new OrganizationIntelligenceAgent({
       storagePath,
       useMockEmbeddings: true,
-      orgId: 'hirenova'
+      orgId: 'hirenova',
+      model: async () => 'Hirenova company knowledge answer. [S1]'
     });
 
     server = createApp({} as Graph, { agent1 }).listen(0, '127.0.0.1');
@@ -363,7 +366,8 @@ test('Agent 1 API Endpoints: supports ingest, status, query, sources, and reinde
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-orgmind-user-id': 'admin@hirenova.test'
+        'x-orgmind-user-id': 'admin@hirenova.test',
+        'x-rag-admin-key': 'test-admin-key'
       },
       body: JSON.stringify({ force: false })
     });
@@ -373,7 +377,7 @@ test('Agent 1 API Endpoints: supports ingest, status, query, sources, and reinde
     assert.ok(ingestData.stats.totalSources > 0);
 
     // 3. Status endpoint returns statistics
-    const statusRes = await fetch(`${base}/api/organization/status`);
+    const statusRes = await fetch(`${base}/api/organization/status`, { headers: { 'x-orgmind-user-id': 'admin@hirenova.test' } });
     assert.equal(statusRes.status, 200);
     const statusData = await statusRes.json() as { status: string; stats: { totalChunks: number }; agent: string };
     assert.equal(statusData.status, 'ready');
@@ -383,7 +387,7 @@ test('Agent 1 API Endpoints: supports ingest, status, query, sources, and reinde
     // 4. Query endpoint returns grounded response
     const queryRes = await fetch(`${base}/api/organization/query`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-orgmind-user-id': 'admin@hirenova.test' },
       body: JSON.stringify({ query: 'department Software Engineering', threshold: 0.05 })
     });
     assert.equal(queryRes.status, 200);
@@ -399,8 +403,45 @@ test('Agent 1 API Endpoints: supports ingest, status, query, sources, and reinde
     assert.ok(queryData.sources.length > 0);
     assert.ok(queryData.retrieved_chunks.length > 0);
 
+    const ragStatusRes = await fetch(`${base}/api/rag/status`, { headers: { 'x-orgmind-user-id': 'admin@hirenova.test' } });
+    assert.equal(ragStatusRes.status, 200);
+    const ragStatus = await ragStatusRes.json() as { indexedChunks: number; embeddingModel: string };
+    assert.ok(ragStatus.indexedChunks > 0);
+    assert.equal(ragStatus.embeddingModel, 'Xenova/all-MiniLM-L6-v2');
+
+    const noEvidenceRes = await fetch(`${base}/api/rag/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-orgmind-user-id': 'admin@hirenova.test' },
+      body: JSON.stringify({ question: 'What is the unknown policy?', filters: { sourceTypes: [] } })
+    });
+    assert.equal(noEvidenceRes.status, 200);
+    const noEvidence = await noEvidenceRes.json() as { evidenceFound: boolean; sources: unknown[]; retrieval: { usedChunks: number } };
+    assert.equal(noEvidence.evidenceFound, false);
+    assert.equal(noEvidence.retrieval.usedChunks, 0);
+    assert.deepEqual(noEvidence.sources, []);
+
+    const citedRes = await fetch(`${base}/api/rag/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-orgmind-user-id': 'admin@hirenova.test' },
+      body: JSON.stringify({ question: 'department Software Engineering' })
+    });
+    assert.equal(citedRes.status, 200);
+    const cited = await citedRes.json() as { sources: Array<{ citationIds: string[]; excerpt?: string; documentId: string; chunkId: string }>; answer: string };
+    assert.ok(cited.sources.length > 0);
+    assert.ok(cited.sources[0].documentId);
+    assert.ok(cited.sources[0].chunkId);
+    assert.ok(cited.sources[0].citationIds.some((id) => /^S\d+$/.test(id)));
+    assert.ok(cited.sources[0].excerpt);
+
+    const deniedAdmin = await fetch(`${base}/api/rag/reindex`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-orgmind-user-id': 'admin@hirenova.test' },
+      body: JSON.stringify({})
+    });
+    assert.equal(deniedAdmin.status, 403);
+
     // 5. Sources list endpoint returns indexed sources
-    const sourcesRes = await fetch(`${base}/api/organization/sources`);
+    const sourcesRes = await fetch(`${base}/api/organization/sources`, { headers: { 'x-orgmind-user-id': 'admin@hirenova.test' } });
     assert.equal(sourcesRes.status, 200);
     const sourcesData = await sourcesRes.json() as { sources: Array<{ path: string }>; count: number };
     assert.ok(sourcesData.count > 0);
@@ -411,7 +452,8 @@ test('Agent 1 API Endpoints: supports ingest, status, query, sources, and reinde
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-orgmind-user-id': 'admin@hirenova.test'
+        'x-orgmind-user-id': 'admin@hirenova.test',
+        'x-rag-admin-key': 'test-admin-key'
       },
       body: JSON.stringify({ sourcePath: '/api/company' })
     });
@@ -425,5 +467,7 @@ test('Agent 1 API Endpoints: supports ingest, status, query, sources, and reinde
     if (existsSync(storagePath)) {
       try { unlinkSync(storagePath); } catch {}
     }
+    if (originalAdminKey === undefined) delete process.env.RAG_ADMIN_API_KEY;
+    else process.env.RAG_ADMIN_API_KEY = originalAdminKey;
   }
 });

@@ -16,9 +16,27 @@ import type {
   AssistantResponse,
   DashboardResponse,
   SourceRecordResponse,
+  RagQueryResponse,
 } from "@/lib/types";
+import { z } from "zod";
 
 const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
+
+const ragQueryResponseSchema = z.object({
+  answer: z.string(),
+  sources: z.array(z.object({
+    documentId: z.string(),
+    chunkId: z.string(),
+    sourceType: z.string(),
+    title: z.string(),
+    url: z.string().optional(),
+    score: z.number().finite(),
+    excerpt: z.string().optional(),
+    citationIds: z.array(z.string().regex(/^S\d+$/)).optional(),
+  }).passthrough()).optional().default([]),
+  retrieval: z.object({ candidateCount: z.number().int().nonnegative(), usedChunks: z.number().int().nonnegative() }).optional(),
+  evidenceFound: z.boolean().optional(),
+}).passthrough();
 
 export class ApiError extends Error {
   constructor(
@@ -110,6 +128,26 @@ export const api = {
   organizationQuery: (input: { query: string; history?: { query: string; answer: string }[]; topK?: number; threshold?: number; orgId?: string }) => request<import("@/lib/types").OrganizationRagResponse>("/api/organization/query", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),
   }, 120_000),
+  ragQuery: async (question: string, signal?: AbortSignal): Promise<RagQueryResponse> => {
+    const payload = await request<unknown>("/api/rag/query", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+      signal,
+    }, 120_000);
+    const parsed = ragQueryResponseSchema.safeParse(payload);
+    if (!parsed.success) throw new ApiError("The company knowledge service returned an invalid response. Please try again.", null);
+    const answer = parsed.data.answer.trim();
+    if (!answer) throw new ApiError("The company knowledge service returned an empty answer. Please try again.", null);
+    const sources = parsed.data.sources;
+    return {
+      answer,
+      sources,
+      retrieval: parsed.data.retrieval ?? { candidateCount: sources.length, usedChunks: sources.length },
+      evidenceFound: parsed.data.evidenceFound ?? sources.length > 0,
+    };
+  },
+  ragStatus: () => request<{ stats: { totalSources: number; totalChunks: number; pendingWork?: number; failedWork?: number }; vectorStore: string; embeddingModel: string }>("/api/rag/status"),
   assistantConversations: () => request<{ conversations: import("@/lib/types").AssistantConversation[] }>("/api/assistant/conversations"),
   assistantConversation: (id: string) => request<{ conversationId: string; turns: import("@/lib/types").AssistantTurn[] }>(`/api/assistant/conversations/${encodeURIComponent(id)}`),
 };
