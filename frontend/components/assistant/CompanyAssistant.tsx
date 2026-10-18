@@ -267,7 +267,7 @@ export function CompanyAssistant({ open, onClose, selected }: {
   const connected = connection === "available" && (mode !== "intelligence" || ragStatus?.vectorStore !== "unavailable");
   if (!open) return null;
 
-  return <section className="assistant-panel" aria-label="OrgMind Assistant">
+  return <section className="assistant-panel" aria-label="OrgMind Assistant" data-lenis-prevent>
     <header className="assistant-header">
       <div className="assistant-title">
         <span className="assistant-title-icon"><img src="/img/logo.png" alt="" width={24} height={24} /></span>
