@@ -282,7 +282,7 @@ export function CompanyAssistant({ open, onClose, selected }: {
         {mode === "graph" && conversations.length > 0 && <select className="assistant-conversation-select" aria-label="Conversation history" value={conversationId ?? ""} onChange={(event) => void selectConversation(event.target.value)}>
           {conversations.map((conversation) => <option value={conversation.id} key={conversation.id}>{conversation.title}</option>)}
         </select>}
-        <button type="button" className="icon-button" aria-label="New chat" title="New chat" onClick={startNewChat}><MessageSquarePlus size={16} /></button>
+        <button type="button" className="assistant-new-chat" aria-label="New chat" title="New chat" onClick={startNewChat}><MessageSquarePlus size={14} /><span>New Chat</span></button>
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close assistant"><X size={16} /></button>
       </div>
     </header>
@@ -328,6 +328,7 @@ export function CompanyAssistant({ open, onClose, selected }: {
 
     <form className="assistant-form" onSubmit={submit}>
       <label className="sr-only" htmlFor="orgmind-composer">Ask anything about your company</label>
+      <Sparkles className="assistant-composer-icon" size={14} aria-hidden="true" />
       <textarea id="orgmind-composer" ref={composerRef} value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={handleComposerKeyDown} placeholder="Ask anything about your company…" rows={1} disabled={pending} />
       <button type="submit" disabled={pending || !draft.trim()} aria-label={pending ? "Waiting for response" : "Send message"} title="Send message">{pending ? <span className="spinner" /> : <Send size={16} />}</button>
       <span className="assistant-composer-hint">Enter to send · Shift+Enter for a new line</span>
