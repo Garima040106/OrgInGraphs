@@ -1,8 +1,9 @@
 # OrgInGraphs
 
 <p align="center">
-  <strong>Turn company data into a living, queryable intelligence graph.</strong><br />
-  Connect people, projects, decisions, documents, and engineering signals - then retrieve the evidence behind every answer.
+  <strong>Stop onboarding people to documents. Onboard them to how your company works.</strong>
+  <br />
+  Give every new hire instant access to your organization's knowledge, people, decisions, and workflows.
 </p>
 <p align="center">
   <img width="369" height="96" alt="image" src="https://github.com/user-attachments/assets/e97307b4-93fd-4575-986b-ad7fc4db192e" />
