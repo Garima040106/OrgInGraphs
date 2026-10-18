@@ -506,22 +506,15 @@ export default function Home() {
               <span className="usp-index">ORGANIZATIONAL GRAPH</span>
               <span className="usp-graph-status"><i /> Illustrative view</span>
             </div>
-            <svg className="usp-graph-art" viewBox="0 0 620 470" role="img" aria-label="Illustrative graph connecting people, teams, projects, and services">
-              <g className="usp-graph-lines">
-                <path d="M310 235 L156 125 L92 300 L238 390 L310 235 L472 142 L530 310 L382 394 L310 235" />
-                <path d="M156 125 L310 235 L472 142" />
-                <path d="M92 300 L310 235 L530 310" />
-                <path d="M238 390 L310 235 L382 394" />
-              </g>
-              <g className="usp-graph-node usp-graph-node-center"><circle cx="310" cy="235" r="42" /><text x="310" y="231">ORG</text><text x="310" y="247">CONTEXT</text></g>
-              <g className="usp-graph-node usp-graph-node-person"><circle cx="156" cy="125" r="25" /><text x="156" y="130">P</text><text x="156" y="88">PEOPLE</text></g>
-              <g className="usp-graph-node usp-graph-node-team"><circle cx="472" cy="142" r="25" /><text x="472" y="147">T</text><text x="472" y="105">TEAMS</text></g>
-              <g className="usp-graph-node usp-graph-node-project"><circle cx="92" cy="300" r="25" /><text x="92" y="305">P</text><text x="92" y="345">PROJECTS</text></g>
-              <g className="usp-graph-node usp-graph-node-service"><circle cx="530" cy="310" r="25" /><text x="530" y="315">S</text><text x="530" y="355">SERVICES</text></g>
-              <g className="usp-graph-node usp-graph-node-context"><circle cx="238" cy="390" r="21" /><text x="238" y="395">D</text><text x="238" y="430">DECISIONS</text></g>
-              <g className="usp-graph-node usp-graph-node-context"><circle cx="382" cy="394" r="21" /><text x="382" y="399">C</text><text x="382" y="434">CONTEXT</text></g>
-            </svg>
-            <p className="usp-graph-caption">A connected view of the entities and relationships behind the work.</p>
+            <Image
+              className="usp-feature-image"
+              src="/img/Graph.png"
+              alt="OrgInGraphs company graph showing Hirenova connected to its departments"
+              width={878}
+              height={869}
+              priority={false}
+            />
+            <p className="usp-graph-caption">Explore how your company connects to teams, departments, projects, and services.</p>
           </div>
 
           <div className="usp-chapters" aria-label="OrgInGraphs capabilities">
