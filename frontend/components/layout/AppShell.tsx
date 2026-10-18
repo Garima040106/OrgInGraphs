@@ -54,7 +54,7 @@ export function AppShell({
   const pathname = usePathname();
   const [searchOpen, setSearchOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
-  const [workspace, setWorkspace] = useState("Demo workspace");
+  const [workspace, setWorkspace] = useState("demo@hirenova.com");
   const [company, setCompany] = useState("Company workspace");
   const [health, setHealth] = useState<Health | null>(null);
   const [selected, setSelected] = useState<{ entity: Entity; entityType: GraphEntityType | "Unknown" } | null>(null);
@@ -62,7 +62,7 @@ export function AppShell({
 
   useEffect(() => {
     const email = window.localStorage.getItem("oig-demo-workspace");
-    if (email) setWorkspace(email);
+    setWorkspace(email ?? "demo@hirenova.com");
     setSidebarCollapsed(window.localStorage.getItem("oig-sidebar-collapsed") === "true");
     let mounted = true;
     api.company().then((item) => { if (mounted) setCompany(String(item.name ?? "Company workspace")); }).catch(() => { if (mounted) setCompany("Company workspace"); });

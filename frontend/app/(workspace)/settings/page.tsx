@@ -1,74 +1,23 @@
 "use client";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CircleAlert, CloudDownload, LoaderCircle, RefreshCw } from "lucide-react";
-import { api, friendlyApiError } from "@/lib/api";
-import type { IngestionResponse, IngestionSource } from "@/lib/types";
+import { Bell, Check, CircleAlert, Eye, LoaderCircle, Lock, SlidersHorizontal, UserRound, UsersRound } from "lucide-react";
+import { api, entityName } from "@/lib/api";
+import type { Employee, Entity } from "@/lib/types";
 
-const integrations: Array<{ id: IngestionSource; name: string; detail: string; logo: string; logoAlt: string }> = [
-  { id: "confluence", name: "Confluence", detail: "Knowledge pages · server credentials", logo: "/img/confluence.png", logoAlt: "Confluence logo" },
-  { id: "slack", name: "Slack", detail: "Team conversations · live connector required", logo: "/img/slack.png", logoAlt: "Slack logo" },
-  { id: "jira", name: "Jira", detail: "Issues and delivery · live connector required", logo: "/img/jira.webp", logoAlt: "Jira logo" },
-  { id: "github", name: "GitHub", detail: "Repositories and pull requests · live connector required", logo: "/img/github.png", logoAlt: "GitHub logo" },
-];
-
-function integrationRecordPath(outcome: IngestionResponse["outcomes"][number]) {
-  if (!outcome.entityId) return null;
-  const type = outcome.route === "ticket-identification" ? "Ticket" : outcome.route === "feature-update" ? "Activity" : outcome.route === "document-indexing" ? "Document" : "Unknown";
-  return `/org-graph?${type === "Ticket" || type === "Activity" ? "mode=product&" : ""}focus=${encodeURIComponent(outcome.entityId)}&type=${type}`;
-}
-
-function IntegrationCard({ integration }: { integration: (typeof integrations)[number] }) {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<IngestionResponse | null>(null);
-  const [error, setError] = useState("");
-
-  async function sync() {
-    setLoading(true); setError(""); setResult(null);
-    try { setResult(await api.processIngestion(integration.id)); }
-    catch (cause) { setError(friendlyApiError(cause)); }
-    finally { setLoading(false); }
-  }
-
-  return <article className="integration-setting" aria-label={`${integration.name} source`}>
-    <div className="integration-setting-logo" aria-hidden="true">
-      {/* eslint-disable-next-line @next/next/no-img-element */}<img src={integration.logo} alt={integration.logoAlt} />
-    </div>
-    <div className="integration-setting-copy">
-      <b>{integration.name}</b><span>{integration.detail}</span>
-      <span className="integration-status-badge" aria-live="polite"><span className={`integration-status-dot ${error ? "" : result?.status === "processed" ? "is-connected" : loading ? "is-busy" : ""}`} />{error ? "Unavailable" : loading ? "Fetching and processing" : result ? `${result.status} · ${result.fetchedDocumentCount} fetched` : integration.id === "confluence" ? "Server-side source · not yet synced" : "Live connector required"}</span>
-      <button className="integration-action-btn is-connect" type="button" onClick={() => void sync()} disabled={loading} aria-label={`Fetch and process ${integration.name} records`}>
-        {loading ? <LoaderCircle size={13} className="spin" /> : <CloudDownload size={13} />}{loading ? "Processing…" : "Fetch & process records"}
-      </button>
-    </div>
-    {result && <div className="ingestion-result" aria-live="polite">
-      <b>{result.outcomes.filter((item) => item.status === "processed").length} processed</b>
-      <span>{result.outcomes.filter((item) => item.status === "unresolved").length} need review · {result.outcomes.filter((item) => item.status === "skipped").length} skipped · {result.outcomes.filter((item) => item.status === "failed").length} failed</span>
-      {result.errors.map((item, index) => <span className="ingestion-error" key={`${index}:${item}`}><CircleAlert size={12} />{item}</span>)}
-      {result.outcomes.slice(0, 4).map((outcome) => {
-        const href = integrationRecordPath(outcome);
-        return <div className="ingestion-outcome" key={`${outcome.sourceSystem}:${outcome.sourceRecordId}`}>
-          <span className={`ingestion-status ${outcome.status}`}>{outcome.status}</span>
-          {href ? <Link href={href}>{outcome.sourceRecordId} <ArrowUpRight size={10} /></Link> : <span>{outcome.sourceRecordId}</span>}
-          {!!outcome.unresolvedReferences.length && <small>{outcome.unresolvedReferences.length} unresolved reference(s)</small>}
-          {outcome.error && <small>{outcome.error}</small>}
-        </div>;
-      })}
-      {result.outcomes.length > 4 && <small>Showing 4 of {result.outcomes.length} record outcomes.</small>}
-      {result.status === "empty" && <span>No records were returned by the configured source.</span>}
-    </div>}
-    {error && <div className="ingestion-error" role="alert"><CircleAlert size={13} />{error}<button type="button" className="small-button" onClick={() => void sync()} disabled={loading}><RefreshCw size={11} /> Retry</button></div>}
-  </article>;
-}
+type Preferences = { publicActivity: boolean; profileVisible: boolean; contributionsVisible: boolean; availabilityVisible: boolean; graphView: "company" | "product"; assistantAutoOpen: boolean; syncComplete: boolean; syncFailures: boolean };
+const defaults: Preferences = { publicActivity: false, profileVisible: true, contributionsVisible: true, availabilityVisible: true, graphView: "company", assistantAutoOpen: false, syncComplete: true, syncFailures: true };
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join("").toUpperCase() || "DU";
+function Toggle({ checked, onChange, label, description }: { checked: boolean; onChange: (value: boolean) => void; label: string; description: string }) { return <label className="settings-toggle-row"><span><b>{label}</b><small>{description}</small></span><button type="button" role="switch" aria-checked={checked} aria-label={label} className={`settings-toggle ${checked ? "is-on" : ""}`} onClick={() => onChange(!checked)}><span /></button></label>; }
 
 export default function WorkspaceSettingsPage() {
-  return <section className="workspace-settings" aria-labelledby="workspace-settings-title">
-    <div className="workspace-settings-heading">
-      <div><span className="eyebrow"><span className="eyebrow-mark" /> Workspace</span><h1 id="workspace-settings-title">Integrations</h1><p>Fetch backend sources and process returned records through the LangGraph ingestion workflow.</p></div>
-      <span className="settings-demo-note">Confluence credentials remain server-side</span>
-    </div>
-    <div className="integration-settings-grid">{integrations.map((integration) => <IntegrationCard key={integration.id} integration={integration} />)}</div>
-    <div className="settings-source-note"><span>Confluence uses the configured server-side API credentials. The documented Jira, GitHub, and Slack catalog routes currently return seeded fixtures; the backend refuses to write those records into FalkorDB. Configure live provider credentials and connector responses to populate their verified source pages.</span><Link href="/dashboard">Return to organization graph <ArrowUpRight size={13} /></Link></div>
-  </section>;
+ const [tab,setTab]=useState("My Profile"); const [loading,setLoading]=useState(true); const [saved,setSaved]=useState(false); const [error,setError]=useState(""); const [company,setCompany]=useState<Entity|null>(null); const [employee,setEmployee]=useState<Employee|null>(null); const [profile,setProfile]=useState({name:"Demo Workspace Member",email:"demo@hirenova.com",role:"Not configured",department:"Not configured"}); const [draft,setDraft]=useState(profile); const [preferences,setPreferences]=useState<Preferences>(defaults);
+ const identity=typeof window!=="undefined"?window.localStorage.getItem("oig-demo-workspace")??"demo@hirenova.com":"demo@hirenova.com";
+ useEffect(()=>{let mounted=true; Promise.all([api.company().catch(()=>null),api.employees().catch(()=>[])]).then(([companyResult,employees])=>{if(!mounted)return; const match=employees.find(item=>item.email?.toLowerCase()===identity.toLowerCase()); const stored=JSON.parse(window.localStorage.getItem("oig-settings-profile")??"null") as typeof profile|null; const next=stored??{name:match?.name??"Demo Workspace Member",email:identity,role:match?.jobTitle??"Not configured",department:match?.departmentId??"Not configured"}; setCompany(companyResult);setEmployee(match??null);setProfile(next);setDraft(next);try{setPreferences({...defaults,...JSON.parse(window.localStorage.getItem("oig-settings-preferences")??"{}")});}catch{/* demo storage */}setLoading(false);}).catch(()=>{if(mounted){setError("We couldn't load workspace details. Demo preferences are still available.");setLoading(false);}});return()=>{mounted=false};},[identity]);
+ const workspaceName=company?.name?entityName(company):"Hirenova"; const workspaceEmail=typeof company?.email==="string"?company.email:"Not configured"; const domain=workspaceEmail.includes("@")?workspaceEmail.split("@")[1]:"Not configured";
+ const update=(key:keyof Preferences,value:boolean|"company"|"product")=>{const next={...preferences,[key]:value} as Preferences;setPreferences(next);window.localStorage.setItem("oig-settings-preferences",JSON.stringify(next));setSaved(true);window.setTimeout(()=>setSaved(false),1800);};
+ function saveProfile(event:React.FormEvent){event.preventDefault();setError("");if(!draft.name.trim()||!draft.role.trim())return setError("Full name and job title / role are required.");if(!/^\S+@\S+\.\S+$/.test(draft.email))return setError("Enter a valid email address.");setProfile(draft);window.localStorage.setItem("oig-settings-profile",JSON.stringify(draft));setSaved(true);window.setTimeout(()=>setSaved(false),1800);}
+ const tabs=[{label:"My Profile",icon:UserRound},{label:"My Preferences",icon:Eye},{label:"Company Workspace",icon:SlidersHorizontal},{label:"Notifications",icon:Bell},{label:"Account",icon:Lock}];
+ if(loading)return <section className="workspace-settings"><div className="settings-loading"><LoaderCircle className="spin" size={18}/> Loading your workspace settings…</div></section>;
+ return <section className="workspace-settings" aria-labelledby="workspace-settings-title"><div className="workspace-settings-heading"><div><span className="eyebrow"><span className="eyebrow-mark"/> Company workspace</span><h1 id="workspace-settings-title">Settings</h1><p>Manage your demo profile and Hirenova workspace preferences.</p></div><span className="settings-demo-note">Demo data · Personal changes save in this browser</span></div><div className="settings-layout"><nav className="settings-tabs" aria-label="Settings sections">{tabs.map(({label,icon:Icon})=><button key={label} className={tab===label?"active":""} type="button" onClick={()=>setTab(label)}><Icon size={15}/>{label}</button>)}</nav><div className="settings-panels">{error&&<div className="settings-alert" role="alert"><CircleAlert size={14}/>{error}</div>}{tab==="My Profile"&&<form className="settings-card" onSubmit={saveProfile}><div className="settings-card-heading"><div><h2>My Profile</h2><p>Personal demo details. These do not modify Hirenova’s shared employee graph.</p></div><div className="settings-avatar">{initials(draft.name)}</div></div><div className="settings-form-grid"><label>Display name<input value={draft.name} onChange={e=>setDraft({...draft,name:e.target.value})} required/></label><label>Work email<input type="email" value={draft.email} disabled/><small>Read-only demo identity: {identity}</small></label><label>Job title<input value={draft.role} onChange={e=>setDraft({...draft,role:e.target.value})} /><small>{employee?"Loaded from the matched member record.":"Not configured · local demo field"}</small></label><label>Department<input value={draft.department} onChange={e=>setDraft({...draft,department:e.target.value})} /><small>{employee?"Loaded from the matched member record.":"Not configured · local demo field"}</small></label></div><div className="settings-actions"><button className="settings-button primary" type="submit"><Check size={14}/> Save changes</button><button className="settings-button" type="button" onClick={()=>{setDraft(profile);setError("")}}>Cancel</button>{saved&&<span className="settings-saved" role="status"><Check size={13}/> Saved in this browser</span>}</div></form>}{tab==="My Preferences"&&<section className="settings-card"><div className="settings-card-heading"><div><h2>My Preferences</h2><p>Personal preferences for this demo account. They do not change shared workspace behavior.</p></div><UsersRound size={22} className="settings-heading-icon"/></div><div className="settings-notice"><Lock size={14}/><span><b>Demo-only visibility controls</b><small>Saved in this browser. The current backend does not enforce profile or activity visibility for other members.</small></span></div><div className="settings-toggle-list"><Toggle checked={preferences.publicActivity} onChange={value=>{if(value&&!window.confirm("Share activity with workspace members? This demo only stores the preference locally and does not change backend visibility."))return;update("publicActivity",value)}} label="Share my activity with workspace members" description="If supported later, this would mean workspace members only—not the public internet. Current demo behavior is local-only."/><Toggle checked={preferences.profileVisible} onChange={value=>update("profileVisible",value)} label="Show my profile to workspace members" description="Local demo preference; the backend currently does not enforce it."/></div><label className="settings-select-label">Default graph view<select value={preferences.graphView} onChange={e=>update("graphView",e.target.value as Preferences["graphView"])}><option value="company">Company</option><option value="product">Product</option></select></label><div className="settings-toggle-list"><Toggle checked={preferences.assistantAutoOpen} onChange={value=>update("assistantAutoOpen",value)} label="Open OrgMind Assistant automatically" description="Saved locally; the current shell does not auto-open it yet."/><Toggle checked={preferences.syncComplete} onChange={value=>update("syncComplete",value)} label="Notify on sync completion" description="Local demo preference for ingestion success notifications."/><Toggle checked={preferences.syncFailures} onChange={value=>update("syncFailures",value)} label="Notify on sync failures" description="Local demo preference for ingestion failure notifications."/></div></section>}{tab==="Company Workspace"&&<section className="settings-card"><div className="settings-card-heading"><div><h2>Company Workspace</h2><p>Workspace-wide settings affect the shared Hirenova company environment, unlike My Profile and My Preferences.</p></div><SlidersHorizontal size={22} className="settings-heading-icon"/></div><div className="settings-readonly-grid"><div><span>Workspace name</span><b>{workspaceName}</b></div><div><span>Workspace email / domain</span><b>{workspaceEmail!=="Not configured"?`${workspaceEmail} · ${domain}`:"Not configured"}</b></div></div><div className="settings-notice"><Lock size={14}/><span><b>Workspace-wide</b><small>Company data is read-only here. No shared Hirenova graph or seeded employee data is changed by this page.</small></span></div><Link className="settings-button primary settings-link" href="/integrations">Manage integrations and connection status</Link></section>}{tab==="Account"&&<section className="settings-card"><div className="settings-card-heading"><div><h2>Account</h2><p>Current demo access for the Hirenova company workspace.</p></div><Lock size={22} className="settings-heading-icon"/></div><div className="settings-account-row"><span className="settings-avatar">{initials(profile.name)}</span><div><b>{identity}</b><small>Demo access · Workspace member</small></div></div><div className="settings-notice"><Lock size={14}/><span><b>Demo access</b><small>No sign-out handler or password controls exist in the current authentication flow.</small></span></div></section>}</div></div></section>;
 }
