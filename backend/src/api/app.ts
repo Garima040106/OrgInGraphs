@@ -11,6 +11,7 @@ import { assistantRequestSchema, runAssistantWorkflow } from '../workflow/assist
 import { conversationTurns, createConversation, listConversations, loadAssistantMemory, memoryOwnerId, ownsConversation, saveAssistantTurn } from '../agents/company-assistant/memory.js';
 import { getOrganizationIntelligenceAgent, type OrganizationIntelligenceAgent } from '../agents/organization-intelligence/agent.js';
 import { ragQueryInputSchema } from '../agents/organization-intelligence/types.js';
+import type { RAGSyncWorker } from '../agents/organization-intelligence/sync/rag-sync-worker.js';
 
 const idSchema = z.string().regex(/^[a-z0-9-]+$/);
 const conversationIdSchema = z.string().uuid();
@@ -41,7 +42,7 @@ const workflowStatus = (result: Awaited<ReturnType<typeof runOrgInGraphsWorkflow
   return 200;
 };
 
-export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowDependencies; agent1?: OrganizationIntelligenceAgent } = {}) {
+export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowDependencies; agent1?: OrganizationIntelligenceAgent; ragSyncWorker?: RAGSyncWorker } = {}) {
   const app=express();
   const agent1 = options.agent1 ?? getOrganizationIntelligenceAgent({ graph });
   let initialRagIndex: Promise<void> | undefined;
@@ -242,7 +243,8 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     if (!ragIdentity(_req, res)) return;
     try {
       const stats = await agent1.getStatus();
-      return res.json({ status: 'ready', stats, indexedDocuments: stats.totalSources, indexedChunks: stats.totalChunks, pendingWork: ragWriteActive ? 1 : 0, failedWork: stats.failed, lastSuccessfulIngestion: stats.lastIngestedAt ?? null, agent: 'organization-intelligence', embeddingModel: agent1.embeddingService.model, vectorStore: agent1.vectorStore instanceof Object && 'healthy' in agent1.vectorStore ? (agent1.vectorStore.healthy ? 'healthy' : 'unavailable') : 'local' });
+      const sync = options.ragSyncWorker ? await options.ragSyncWorker.status() : { enabled: false, running: false, pending: 0, processing: 0, completed: 0, failed: 0, retries: 0, lastObservedChange: null, lastSuccessfulSync: null, lastError: null, workerLagMs: 0 };
+      return res.json({ status: 'ready', stats, indexedDocuments: stats.totalSources, indexedChunks: stats.totalChunks, pendingWork: (ragWriteActive ? 1 : 0) + sync.pending + sync.processing, failedWork: stats.failed, lastSuccessfulIngestion: stats.lastIngestedAt ?? null, sync, agent: 'organization-intelligence', embeddingModel: agent1.embeddingService.model, vectorStore: agent1.vectorStore instanceof Object && 'healthy' in agent1.vectorStore ? (agent1.vectorStore.healthy ? 'healthy' : 'unavailable') : 'local' });
     } catch (error) {
       console.error('Agent 1 status failed:', error);
       return res.status(500).json({ error: 'Failed to retrieve indexing status.' });
@@ -376,11 +378,18 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     } catch { return res.status(503).json({ error: 'Re-indexing failed.' }); }
     finally { ragWriteActive = false; }
   });
+  app.post('/api/rag/sync/replay', async (req, res) => {
+    if (!adminOwner(req, res)) return;
+    if (!options.ragSyncWorker?.config.enabled) return res.status(503).json({ error: 'Automatic RAG synchronization is disabled.' });
+    try { return res.json({ replayed: await options.ragSyncWorker.replayDeadLetters() }); }
+    catch { return res.status(503).json({ error: 'Failed to replay RAG synchronization jobs.' }); }
+  });
   app.get('/api/rag/status', async (req, res) => {
     if (!ragIdentity(req, res)) return;
     try {
       const stats = await agent1.getStatus();
-      return res.json({ stats, indexedDocuments: stats.totalSources, indexedChunks: stats.totalChunks, pendingWork: ragWriteActive ? 1 : 0, failedWork: stats.failed, lastSuccessfulIngestion: stats.lastIngestedAt ?? null, embeddingModel: agent1.embeddingService.model, vectorStore: agent1.vectorStore instanceof Object && 'healthy' in agent1.vectorStore ? (agent1.vectorStore.healthy ? 'healthy' : 'unavailable') : 'local' });
+      const sync = options.ragSyncWorker ? await options.ragSyncWorker.status() : { enabled: false, running: false, pending: 0, processing: 0, completed: 0, failed: 0, retries: 0, lastObservedChange: null, lastSuccessfulSync: null, lastError: null, workerLagMs: 0 };
+      return res.json({ stats, indexedDocuments: stats.totalSources, indexedChunks: stats.totalChunks, pendingWork: (ragWriteActive ? 1 : 0) + sync.pending + sync.processing, failedWork: stats.failed, lastSuccessfulIngestion: stats.lastIngestedAt ?? null, sync, embeddingModel: agent1.embeddingService.model, vectorStore: agent1.vectorStore instanceof Object && 'healthy' in agent1.vectorStore ? (agent1.vectorStore.healthy ? 'healthy' : 'unavailable') : 'local' });
     } catch { return res.status(503).json({ error: 'Unable to read RAG status.' }); }
   });
 

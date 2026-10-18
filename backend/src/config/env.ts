@@ -24,7 +24,12 @@ const environmentSchema = z.object({
   GEMINI_API_KEY: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
   GEMINI_EMBEDDING_MODEL: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).default('gemini-embedding-001')),
   VECTOR_STORE_PATH: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).optional()),
-  ORGANIZATION_ID: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).default('hirenova'))
+  ORGANIZATION_ID: z.preprocess((value) => value === '' ? undefined : value, z.string().min(1).default('hirenova')),
+  RAG_AUTO_SYNC_ENABLED: z.enum(['true', 'false']).default('true'),
+  RAG_SYNC_POLL_INTERVAL_MS: z.coerce.number().int().min(1_000).max(86_400_000).default(60_000),
+  RAG_SYNC_BATCH_SIZE: z.coerce.number().int().min(1).max(1_000).default(25),
+  RAG_SYNC_CONCURRENCY: z.coerce.number().int().min(1).max(32).default(4),
+  RAG_SYNC_MAX_RETRIES: z.coerce.number().int().min(1).max(20).default(5)
 });
 
 export type Environment = z.infer<typeof environmentSchema>;

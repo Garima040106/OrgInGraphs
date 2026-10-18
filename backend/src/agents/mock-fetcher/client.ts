@@ -89,6 +89,12 @@ export function sourceConnectorBase(source: MockSource, override?: string): stri
   const setting = sourceSetting(source);
   return env.MOCK_API_BASE_URL ?? (isHttpUrl(setting) ? setting : undefined);
 }
+
+export function configuredSourceConnectors(): MockSource[] {
+  return mockSources.filter((source) => Boolean(sourceConnectorBase(source))
+    || (source === 'confluence' && env.CONFLUENCE_INGESTION_ENABLED !== 'false'
+      && Boolean(env.CONFLUENCE_BASE_URL && env.CONFLUENCE_EMAIL && (env.CONFLUENCE_API_TOKEN || env.CONFLUENCE_API_KEY))));
+}
 function sourceCredential(source: MockSource): string | undefined {
   const setting = sourceSetting(source);
   return setting && !isHttpUrl(setting) ? setting : undefined;

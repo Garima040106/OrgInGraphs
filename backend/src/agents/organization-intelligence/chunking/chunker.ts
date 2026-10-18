@@ -32,7 +32,7 @@ export function chunkSource(source: DiscoveredSource, options: ChunkingOptions =
     if (rawSection.length <= targetSize + overlap) {
       const chunkText = rawSection;
       const contentHash = createHash('sha256').update(chunkText).digest('hex');
-      const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${chunkIndex++}`;
+      const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${source.hash}:${chunkIndex++}`;
 
       const metadata: ChunkMetadata = {
         chunkId,
@@ -59,7 +59,7 @@ export function chunkSource(source: DiscoveredSource, options: ChunkingOptions =
           if (currentChunkText.trim()) {
             const textToCommit = sectionName && !currentChunkText.startsWith('#') ? `[${sectionName}]\n\n${currentChunkText}` : currentChunkText;
             const contentHash = createHash('sha256').update(textToCommit).digest('hex');
-            const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${chunkIndex++}`;
+            const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${source.hash}:${chunkIndex++}`;
             chunks.push({ id: chunkId, text: textToCommit, metadata: { chunkId, orgId, sourceType: source.type, sourcePath: source.path, title: source.title, ...(sectionName ? { section: sectionName } : {}), contentHash, docHash: source.hash, createdAt: source.lastModified ?? now, updatedAt: now, ...source.metadata } });
             currentChunkText = '';
           }
@@ -84,7 +84,7 @@ export function chunkSource(source: DiscoveredSource, options: ChunkingOptions =
             : currentChunkText;
 
           const contentHash = createHash('sha256').update(textToCommit).digest('hex');
-          const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${chunkIndex++}`;
+          const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${source.hash}:${chunkIndex++}`;
 
           chunks.push({
             id: chunkId,
@@ -116,7 +116,7 @@ export function chunkSource(source: DiscoveredSource, options: ChunkingOptions =
           : currentChunkText;
 
         const contentHash = createHash('sha256').update(textToCommit).digest('hex');
-        const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${chunkIndex++}`;
+        const chunkId = `${source.type}:${encodeURIComponent(source.path)}:${source.hash}:${chunkIndex++}`;
 
         chunks.push({
           id: chunkId,
