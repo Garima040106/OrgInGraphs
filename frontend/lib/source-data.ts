@@ -92,27 +92,58 @@ export function peopleSourceSummary(count: number | null): SourceSummary {
 }
 
 const liveSourceIds = ["confluence", "jira", "slack", "github"] as const;
+const finiteCount = (value: unknown): number | null => typeof value === "number" && Number.isFinite(value) ? value : null;
+
 export function integrationSummaries(response: IntegrationStatusResponse): Record<(typeof liveSourceIds)[number], SourceSummary> {
   const byId = new Map(response.sources.map((source) => [source.source, source]));
   return Object.fromEntries(liveSourceIds.map((id) => {
     const source = byId.get(id);
     if (!source) return [id, liveSourceSummary(id, null, "The backend did not return a status for this source.", null, { connectionState: "Unavailable", syncState: "failed" })];
-    return [id, liveSourceSummary(id, source.indexed, source.error, null, {
-      connectionState: source.connectionState,
-      fetchedRecords: source.fetched,
-      processedRecords: source.processed,
-      persistedRecords: source.persisted ?? null,
-      indexedThisRun: source.indexedThisRun ?? null,
-      failedRecords: source.failed,
-      skippedRecords: source.skipped,
-      pendingRecords: source.pending,
-      lastAttemptTime: source.attemptedAt ?? null,
-      lastSyncTime: source.lastSuccessfulSync,
-    syncState: source.syncState === "empty" ? "completed" : source.syncState,
+    const legacy = source as typeof source & {
+      indexedRecords?: unknown;
+      connectionStatus?: unknown;
+      lastSyncStatus?: unknown;
+      lastError?: unknown;
+      lastAttemptedSync?: unknown;
+      connectorConfigured?: unknown;
+    };
+    const indexed = finiteCount(source.indexed) ?? finiteCount(legacy.indexedRecords);
+    const rawConnection = source.connectionState ?? legacy.connectionStatus;
+    const normalizedConnection = typeof rawConnection === "string" ? rawConnection.toLowerCase().replace(/[_\s]+/g, "-") : "";
+    const connectionLabels: Record<string, string> = {
+      connected: "Connected",
+      "not-configured": "Not configured",
+      "authentication-failed": "Authentication failed",
+      "permission-missing": "Permission missing",
+      syncing: "Syncing",
+      "sync-failed": "Sync failed",
+      unavailable: "Unavailable",
+    };
+    const connectionState = connectionLabels[normalizedConnection]
+      ?? (typeof rawConnection === "string" && rawConnection.trim() ? rawConnection : "Unknown");
+    const rawSyncState = source.syncState ?? legacy.lastSyncStatus;
+    const normalizedSyncState = typeof rawSyncState === "string" ? rawSyncState.toLowerCase() : "unknown";
+    const syncState: SourceSummary["syncState"] = normalizedSyncState === "empty" ? "completed"
+      : (["idle", "running", "completed", "partial", "failed"] as const).find((state) => state === normalizedSyncState) ?? "unknown";
+    const error = typeof source.error === "string" ? source.error : typeof legacy.lastError === "string" ? legacy.lastError : undefined;
+    const lastSuccessfulSync = typeof source.lastSuccessfulSync === "string" ? source.lastSuccessfulSync : null;
+    const attemptedAt = typeof source.attemptedAt === "string" ? source.attemptedAt : typeof legacy.lastAttemptedSync === "string" ? legacy.lastAttemptedSync : null;
+    return [id, liveSourceSummary(id, indexed, error, null, {
+      connectionState,
+      fetchedRecords: finiteCount(source.fetched),
+      processedRecords: finiteCount(source.processed),
+      persistedRecords: finiteCount(source.persisted),
+      indexedThisRun: finiteCount(source.indexedThisRun),
+      failedRecords: finiteCount(source.failed),
+      skippedRecords: finiteCount(source.skipped),
+      pendingRecords: finiteCount(source.pending),
+      lastAttemptTime: attemptedAt,
+      lastSyncTime: lastSuccessfulSync,
+      syncState,
       failureCategory: source.failureCategory,
       endpoint: source.endpoint,
       indexedError: source.indexedError,
-      dataMode: source.sourceMode === "mock" ? "demo" : source.sourceMode === "live" ? "live" : SOURCE_CATALOG.find((item) => item.id === id)!.dataMode,
+      dataMode: source.sourceMode === "mock" ? "demo" : source.sourceMode === "live" || legacy.connectorConfigured === true ? "live" : SOURCE_CATALOG.find((item) => item.id === id)!.dataMode,
     })];
   })) as Record<(typeof liveSourceIds)[number], SourceSummary>;
 }
