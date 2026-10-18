@@ -34,6 +34,81 @@ Graph enrichment adds connections between organizational entities, supporting ri
 
 OrgInGraphs (OIG) is a company intelligence platform built around a company graph and two specialized AI workflows. **OrgMind Assistant** reasons over graph entities, typed relationships, and bounded neighborhoods. **Company Brain** runs a retrieval-augmented generation (RAG) pipeline: it embeds the question, searches indexed graph chunks, assembles evidence, and asks the backend-configured Bedrock model for a cited response. That split keeps graph navigation and document-grounded synthesis explicit and inspectable.
 
+## Prerequisites & setup
+
+Install Node.js 20 or newer, npm, Git, and access to a FalkorDB instance. The repository has independent frontend and backend packages, each with its own lockfile.
+
+```bash
+git clone https://github.com/Garima040106/OrgInGraphs.git
+cd OrgInGraphs
+
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+Edit `backend/.env` with the connection details for the FalkorDB graph you intend to use: `FALKORDB_HOST`, `FALKORDB_PORT`, `FALKORDB_USERNAME`, `FALKORDB_PASSWORD`, `FALKORDB_TLS`, and either `FALKORDB_DATABASE` or `FALKORDB_GRAPH`. Keep credentials in backend-only environment files and do not commit `.env` files. For a local backend, `frontend/.env.local` may set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`; the frontend API client uses that value and defaults to the same URL when it is absent.
+
+Seed the organization graph only after FalkorDB is configured. Product Progress data is seeded separately when needed:
+
+```bash
+cd backend
+npm run seed:falkordb
+npm run product:seed:falkordb
+```
+
+Start the services in separate terminals:
+
+```bash
+# Terminal 1
+cd OrgInGraphs/backend
+npm run dev
+
+# Terminal 2
+cd OrgInGraphs/frontend
+npm run dev
+```
+
+The backend listens on port `8080` by default and the Next.js frontend on port `3000`. Optional provider and model settings are documented in `backend/.env.example`; they are not required to inspect the graph itself.
+
+## Cypher queries
+
+The backend uses parameterized openCypher through the FalkorDB client to create nodes and relationships with `MERGE`, retrieve typed records with `MATCH`, and traverse connected entities through relationship patterns. These examples mirror the queries used by the API:
+
+```cypher
+MATCH (e:Employee)
+RETURN e
+ORDER BY e.name;
+```
+
+Lists employees ordered by name, matching the employee collection route.
+
+```cypher
+MATCH (p:Project {id: $projectId})
+OPTIONAL MATCH (p)<-[:WORKS_ON]-(e:Employee)
+OPTIONAL MATCH (p)<-[:IMPLEMENTS]-(pr:PullRequest)
+OPTIONAL MATCH (p)<-[:CREATES]-(t:Task)
+RETURN p, collect(DISTINCT e) AS employees,
+       collect(DISTINCT pr) AS pullRequests,
+       collect(DISTINCT t) AS tasks;
+```
+
+Returns a project with its recorded contributors, pull requests, and tasks using the route’s `$projectId` parameter.
+
+```cypher
+MATCH (start:Employee {id: $employeeId})-[r]-(n)
+RETURN start, n, type(r) AS relationship
+LIMIT 100;
+```
+
+Traverses incoming and outgoing relationships around one employee for a bounded connected-entity view.
+
+## Development & AI-assisted engineering
+
+Coding assistants and agents supported selected development tasks, including code auditing, identifying and fixing backend errors, resolving DevOps and configuration issues, and making reasonable code improvements. Generated changes were reviewed and tested where applicable; this does not mean every repository change was AI-generated or independently verified.
+
 
 ## System at a glance
 
