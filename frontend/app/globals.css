@@ -3498,6 +3498,28 @@ body {
 .app-shell .bento-insights-card .bento-list { max-height: 190px; overflow-y: auto; }
 .app-shell .bento-grid [id] { scroll-margin-top: 90px; }
 
+/* Keep workspace navigation fixed while long pages scroll in the content pane. */
+.app-shell {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+.app-shell .sidebar {
+  height: 100%;
+  min-height: 0;
+}
+.app-shell .main-column {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.app-shell .workspace-content {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
 @media (max-width: 1180px) {
   .app-shell .bento-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: none; grid-auto-rows: auto; }
   .app-shell .bento-metrics { grid-column: 1 / 7; grid-row: auto; grid-template-columns: repeat(4, minmax(0, 1fr)); }
