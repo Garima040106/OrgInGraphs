@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Background,
   Controls,
@@ -36,23 +37,41 @@ import { useExpandableGraph } from "@/lib/graph/useExpandableGraph";
 import type { GraphEntityType, GraphResponse, Neighborhood } from "@/lib/types";
 
 type GraphSelection = { entity: GraphNodeData["entity"]; entityType: GraphNodeData["entityType"] };
+const hirenovaSources = [
+  { name: "Confluence", src: "/img/confluence.png" },
+  { name: "Jira", src: "/img/jira.webp" },
+  { name: "GitHub", src: "/img/github.png" },
+  { name: "Slack", src: "/img/slack.png" },
+  { name: "FalkorDB", src: "/img/Falkor.jpg" },
+];
 
 function EntityCardNode({ data, selected }: NodeProps<Node<GraphNodeData>>) {
   const type = data.entityType;
   const Icon = type === "Employee" ? UserRound : type === "Department" ? Building2 : type === "Project" ? BriefcaseBusiness : Network;
   const initials = data.label.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const isHirenovaCompany = type === "Company" && data.label.trim().toLowerCase().startsWith("hirenova");
   return (
-    <div className={`entity-node ${type.toLowerCase()} ${selected ? "selected" : ""}`} title={`${data.label} · ${type}`}>
+    <div className={`entity-node ${type.toLowerCase()} ${isHirenovaCompany ? "hirenova-company" : ""} ${selected ? "selected" : ""}`} title={`${data.label} · ${type}`}>
       <Handle id="target-left" type="target" position={Position.Left} />
       <Handle id="source-left" type="source" position={Position.Left} />
       <div className="node-topline">
-        {type === "Employee" ? <span className="node-avatar">{initials}</span> : <span className="node-icon"><Icon size={14} /></span>}
+        {type === "Employee" ? <span className="node-avatar">{initials}</span> : <span className={`node-icon ${isHirenovaCompany ? "hirenova-logo-icon" : ""}`}>{isHirenovaCompany ? <Image src="/img/HirenovaLogo.png" alt="" width={36} height={36} /> : <Icon size={14} />}</span>}
         <div className="node-copy"><div className="node-label">{data.label}</div><div className="node-subtitle">{data.subtitle}</div></div>
       </div>
       <div className="node-footer">
         <span className="node-footer-labels">
-          <span className="node-type">{type}</span>
-          <span className="node-source" title="Record source">{entitySource(data.entity)}</span>
+          <span className="node-type">{isHirenovaCompany ? "Sources" : type}</span>
+          {isHirenovaCompany ? (
+            <span className="node-source-logos" role="img" aria-label="Sources: Confluence, Jira, GitHub, Slack, FalkorDB" title="Confluence, Jira, GitHub, Slack, FalkorDB">
+              {hirenovaSources.map((source, index) => (
+                <span className="node-source-logo" key={source.name} style={{ zIndex: index === hirenovaSources.length - 1 ? 10 : index + 1 }}>
+                  <Image src={source.src} alt="" width={20} height={20} />
+                </span>
+              ))}
+            </span>
+          ) : (
+            <span className="node-source" title="Record source">{entitySource(data.entity)}</span>
+          )}
         </span>
         <button
           className="node-expand-button"
