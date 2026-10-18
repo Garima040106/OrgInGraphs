@@ -4917,9 +4917,6 @@ body {
 .demo-sync-metrics small { font-size: 9px; }
 .demo-sync-metrics b { min-width: 0; color: #26352b; font-size: 16px; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
 .demo-sync-metrics b.demo-sync-date { font-size: 10px; font-weight: 550; }
-.demo-sync-connection { display: flex; min-height: 35px; align-items: flex-start; gap: 7px; padding: 8px 9px; border-radius: 8px; background: #f3f6f1; color: #45624c; font-size: 10px; line-height: 1.45; }
-.demo-sync-connection svg { flex: 0 0 auto; margin-top: 1px; }
-.demo-sync-connection.has-error { background: #fff5f1; color: #914b3e; }
 .demo-sync-details { padding: 0 9px; border: 1px solid #ece6df; border-radius: 8px; background: #fdfbf8; color: #667066; font-size: 10px; }
 .demo-sync-details summary { padding: 8px 0; color: #586a5b; cursor: pointer; font-weight: 600; }
 .demo-sync-details[open] { padding-bottom: 9px; }

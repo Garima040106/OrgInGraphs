@@ -52,6 +52,21 @@ export function integrationNeedsAttention(source: Pick<SourceSummary, "connectio
     || (source.failedRecords ?? 0) > 0;
 }
 
+/** Summarizes the latest run without treating connectivity alone as a successful sync. */
+export function integrationSyncLabel(source: Omit<Pick<SourceSummary, "connectionState" | "syncState" | "failedRecords" | "fetchedRecords" | "processedRecords" | "persistedRecords" | "skippedRecords">, "syncState"> & { syncState: SourceSummary["syncState"] | "empty" }): string {
+  if (source.connectionState === "Not configured") return "Not configured";
+  if (source.syncState === "failed") return "Sync failed";
+  if (source.syncState === "partial") return "Partial sync";
+  const incomplete = (source.failedRecords ?? 0) > 0
+    || (source.skippedRecords ?? 0) > 0
+    || (source.fetchedRecords !== null && source.processedRecords !== null && source.processedRecords < source.fetchedRecords)
+    || (source.processedRecords !== null && source.persistedRecords !== null && source.persistedRecords < source.processedRecords);
+  if (incomplete) return "Partial sync";
+  if (source.syncState === "completed" || source.syncState === "empty") return "Sync completed";
+  if (source.syncState === "running") return "Syncing";
+  return "No sync recorded";
+}
+
 /** Returns one card-level warning while keeping connectivity separate from sync health. */
 export function integrationWarning(source: Pick<SourceSummary, "connectionState" | "syncState" | "failedRecords" | "error">, transientError?: string): string {
   if (transientError) return transientError;

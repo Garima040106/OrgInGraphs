@@ -171,10 +171,8 @@ export default function DashboardPage() {
         const count=sourceData.totalAvailableRecords;
         const nodes=people;
         const sync=source.kind==="source"?syncResult[source.id as IngestionSource]:undefined;
-        const countStatus=source.kind==="people"?"Company graph":sourceData.connectionState;
         return <article className="hub-integration-card" key={source.id}>
           <div className="hub-integration-top"><span className="hub-integration-logo">{source.image?<Image src={source.image} alt="" width={30} height={30}/>:<UsersRound size={22}/>}</span><span className="hub-integration-copy"><b>{source.label}</b><small>{source.detail}</small></span><details className="hub-integration-menu"><summary aria-label={`${source.label} actions`}>•••</summary><div><Link href={source.href}>View data</Link>{source.kind==="source"&&<button type="button" disabled={syncing!==null} onClick={()=>void syncSource(source.id as IngestionSource)}>{syncing===source.id?"Syncing…":"Sync now"}</button>}<Link href="/integrations">Manage source</Link></div></details></div>
-          <div className="hub-source-status"><i className={count!==null&&count>0?"has-records":""}/><b>{countStatus}</b></div>
           <p className="hub-indexed-count">{(source.kind==="people"?(!loaded||dashboardStats===null):liveSourcesLoading)?"Loading source count…":count===null?sourceData?.error??"Count unavailable":source.kind==="people"?`${count.toLocaleString()} employees in company graph`:sourceData.dataMode==="demo"?`${count.toLocaleString()} indexed mock records`:`${count.toLocaleString()} verified indexed records`}</p>
           <p className="hub-sync-time">{syncing===source.id?"Backend sync in progress":sync?.error?`Sync failed: ${sync.error}`:sync?.result?`${sync.result.fetched} fetched · ${sync.result.processed} processed · ${sync.result.failed} failed`:sourceData.lastSyncTime?`Last successful sync ${new Date(sourceData.lastSyncTime).toLocaleString()}`:"Last successful sync unavailable"}</p>
           {sync?.result?.error&&<p className="hub-sync-error">{sync.result.error}</p>}

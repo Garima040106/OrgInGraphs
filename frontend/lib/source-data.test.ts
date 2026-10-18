@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DEMO_CONVERSATIONS, DEMO_TICKETS, filterDemoConversations, filterDemoTickets } from "./demo-data";
-import { DEMO_SOURCE_TOTALS, demoSourceSummary, integrationNeedsAttention, integrationSummaries, integrationWarning, liveSourceSummary, unavailableIntegrationSummaries } from "./source-data";
+import { DEMO_SOURCE_TOTALS, demoSourceSummary, integrationNeedsAttention, integrationSummaries, integrationSyncLabel, integrationWarning, liveSourceSummary, unavailableIntegrationSummaries } from "./source-data";
 
 test("demo source counts and filters use the source page fixtures", () => {
   assert.equal(DEMO_SOURCE_TOTALS.jira, DEMO_TICKETS.length);
@@ -64,6 +64,15 @@ test("connectivity does not mask partial ingestion health", () => {
   assert.equal(integrationNeedsAttention({ connectionState: "Connected", syncState: "idle", failedRecords: null }), true);
   assert.equal(integrationNeedsAttention({ connectionState: "Sync failed", syncState: "idle", failedRecords: null }), true);
   assert.equal(integrationNeedsAttention({ connectionState: "Connected", syncState: "completed", failedRecords: 0 }), false);
+});
+
+test("sync result labels reflect completed, partial, failed, and unconfigured runs", () => {
+  const base = { connectionState: "Connected", fetchedRecords: 10, processedRecords: 10, persistedRecords: 10, failedRecords: 0, skippedRecords: 0 } as const;
+  assert.equal(integrationSyncLabel({ ...base, syncState: "completed" }), "Sync completed");
+  assert.equal(integrationSyncLabel({ ...base, syncState: "completed", failedRecords: 1 }), "Partial sync");
+  assert.equal(integrationSyncLabel({ ...base, syncState: "failed" }), "Sync failed");
+  assert.equal(integrationSyncLabel({ ...base, connectionState: "Not configured", syncState: "failed" }), "Not configured");
+  assert.equal(integrationSyncLabel({ ...base, syncState: "completed", fetchedRecords: 10, processedRecords: 8 }), "Partial sync");
 });
 
 test("status keeps cumulative indexed totals distinct from the latest run counts", () => {

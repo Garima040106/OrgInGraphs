@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { AlertTriangle, Check, Clock3, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { api, friendlyApiError } from "@/lib/api";
-import { integrationNeedsAttention, integrationWarning, SOURCE_CATALOG } from "@/lib/source-data";
+import { integrationNeedsAttention, integrationSyncLabel, SOURCE_CATALOG } from "@/lib/source-data";
 import { useLiveSourceData } from "@/lib/useLiveSourceData";
 import type { IngestionSource, IntegrationSyncResponse } from "@/lib/types";
 
@@ -102,10 +102,17 @@ export function DemoSyncDashboard() {
         const connection = summary.connectionState;
         const syncState = running === id ? "running" : result?.syncState ?? summary.syncState;
         const transientError = failure?.message ?? result?.error;
-        const issue = integrationWarning(summary, transientError);
         const connectivityIssue = connection !== "Connected" ? conciseError(id, summary.error, summary.failureCategory) : "";
         const status = loading ? "Checking" : connection === "Connected" && summary.dataMode === "demo" ? "Mock API reachable" : connection;
-        const syncLabel = syncState === "partial" || (result?.failed ?? summary.failedRecords ?? 0) > 0 ? "Partial sync" : syncState === "failed" ? "Sync failed" : syncState === "completed" ? "Sync completed" : syncState === "running" ? "Syncing" : "No sync recorded";
+        const syncLabel = integrationSyncLabel({
+          connectionState: connection,
+          syncState,
+          failedRecords: result?.failed ?? summary.failedRecords,
+          fetchedRecords: result?.fetched ?? summary.fetchedRecords,
+          processedRecords: result?.processed ?? summary.processedRecords,
+          persistedRecords: result?.persisted ?? summary.persistedRecords,
+          skippedRecords: result?.skipped ?? summary.skippedRecords,
+        });
         const showCount = (value: number | null | undefined) => value ?? (loading ? "—" : "No run");
         const lastAttempt = result?.attemptedAt ?? summary.lastAttemptTime;
         const lastSuccess = result?.lastSuccessfulSync ?? summary.lastSyncTime;
@@ -114,7 +121,7 @@ export function DemoSyncDashboard() {
           <div className="demo-sync-card-heading">
             <span className="source-record-icon"><Image src={source.image} alt="" width={25} height={25} /></span>
             <div><b>{source.displayName}</b><small>{summary.dataMode === "demo" ? "Seeded mock data · not a live account" : "Live provider"}</small></div>
-            <span className={`demo-status demo-status-${statusTone(status)}`}>{status}</span>
+            {status !== "Sync failed" && status !== "Not configured" && <span className={`demo-status demo-status-${statusTone(status)}`}>{status}</span>}
           </div>
 
           <div className="demo-sync-metrics">
@@ -128,11 +135,6 @@ export function DemoSyncDashboard() {
             <div><small>Latest run · indexed this run</small><b>{showCount(result?.indexedThisRun ?? summary.indexedThisRun)}</b></div>
             <div><small>Latest run · failed</small><b>{showCount(result?.failed ?? summary.failedRecords)}</b></div>
             <div><small>Latest run · skipped</small><b>{showCount(result?.skipped ?? summary.skippedRecords)}</b></div>
-          </div>
-
-          <div className={`demo-sync-connection ${issue ? "has-error" : ""}`} role={issue ? "alert" : "status"}>
-            {issue ? <AlertTriangle size={15} aria-hidden="true" /> : connection === "Connected" ? <Check size={15} aria-hidden="true" /> : <Clock3 size={15} aria-hidden="true" />}
-            <span>{loading ? "Checking provider connection…" : issue || `${summary.dataMode === "demo" ? `Mock API ${connection === "Connected" ? "reachable" : connection.toLowerCase()}` : `Connection ${connection.toLowerCase()}`}. ${syncLabel}.`}</span>
           </div>
 
           <details className="demo-sync-details">
