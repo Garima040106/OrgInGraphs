@@ -13,6 +13,7 @@ export type SourceSummary = {
   readinessStatus: "available" | "unavailable" | "unknown";
   lastSyncTime: string | null;
   syncState: "idle" | "running" | "completed" | "partial" | "failed" | "unknown";
+  browserSyncAvailable: boolean;
   connectionState: string;
   fetchedRecords: number | null;
   processedRecords: number | null;
@@ -83,17 +84,17 @@ export function demoSourceSummary(id: "jira" | "slack", currentlyDisplayedRecord
     id, displayName: source.displayName, dataMode: "demo",
     totalAvailableRecords: DEMO_SOURCE_TOTALS[id], currentlyDisplayedRecords,
     verifiedIndexedRecordCount: null, readinessStatus: "available",
-    lastSyncTime: null, lastAttemptTime: null, syncState, connectionState: "Demo data", fetchedRecords: null, processedRecords: null, persistedRecords: null, indexedThisRun: null, failedRecords: null, skippedRecords: null, pendingRecords: null,
+    lastSyncTime: null, lastAttemptTime: null, syncState, browserSyncAvailable: false, connectionState: "Demo data", fetchedRecords: null, processedRecords: null, persistedRecords: null, indexedThisRun: null, failedRecords: null, skippedRecords: null, pendingRecords: null,
   };
 }
 
-export function liveSourceSummary(id: "confluence" | "jira" | "slack" | "github", count: number | null, error?: string, currentlyDisplayedRecords: number | null = null, details: Partial<Pick<SourceSummary, "connectionState" | "fetchedRecords" | "processedRecords" | "persistedRecords" | "indexedThisRun" | "failedRecords" | "skippedRecords" | "pendingRecords" | "lastSyncTime" | "lastAttemptTime" | "syncState" | "failureCategory" | "endpoint" | "indexedError" | "dataMode">> = {}): SourceSummary {
+export function liveSourceSummary(id: "confluence" | "jira" | "slack" | "github", count: number | null, error?: string, currentlyDisplayedRecords: number | null = null, details: Partial<Pick<SourceSummary, "connectionState" | "fetchedRecords" | "processedRecords" | "persistedRecords" | "indexedThisRun" | "failedRecords" | "skippedRecords" | "pendingRecords" | "lastSyncTime" | "lastAttemptTime" | "syncState" | "browserSyncAvailable" | "failureCategory" | "endpoint" | "indexedError" | "dataMode">> = {}): SourceSummary {
   const source = SOURCE_CATALOG.find((item) => item.id === id)!;
   return {
     id, displayName: source.displayName, dataMode: source.dataMode,
     totalAvailableRecords: count, currentlyDisplayedRecords,
     verifiedIndexedRecordCount: count, readinessStatus: error ? "unavailable" : count === null ? "unknown" : "available",
-    lastSyncTime: null, lastAttemptTime: null, syncState: "unknown", connectionState: "Checking", fetchedRecords: null, processedRecords: null, persistedRecords: null, indexedThisRun: null, failedRecords: null, skippedRecords: null, pendingRecords: null, ...details, ...(error ? { error } : {}),
+    lastSyncTime: null, lastAttemptTime: null, syncState: "unknown", browserSyncAvailable: false, connectionState: "Checking", fetchedRecords: null, processedRecords: null, persistedRecords: null, indexedThisRun: null, failedRecords: null, skippedRecords: null, pendingRecords: null, ...details, ...(error ? { error } : {}),
   };
 }
 
@@ -102,7 +103,7 @@ export function peopleSourceSummary(count: number | null): SourceSummary {
     id: "people", displayName: "People Directory", dataMode: "live",
     totalAvailableRecords: count, currentlyDisplayedRecords: null,
     verifiedIndexedRecordCount: null, readinessStatus: count === null ? "unknown" : "available",
-    lastSyncTime: null, lastAttemptTime: null, syncState: "unknown", connectionState: "Unknown", fetchedRecords: null, processedRecords: null, persistedRecords: null, indexedThisRun: null, failedRecords: null, skippedRecords: null, pendingRecords: null,
+    lastSyncTime: null, lastAttemptTime: null, syncState: "unknown", browserSyncAvailable: false, connectionState: "Unknown", fetchedRecords: null, processedRecords: null, persistedRecords: null, indexedThisRun: null, failedRecords: null, skippedRecords: null, pendingRecords: null,
   };
 }
 
@@ -155,6 +156,7 @@ export function integrationSummaries(response: IntegrationStatusResponse): Recor
       lastAttemptTime: attemptedAt,
       lastSyncTime: lastSuccessfulSync,
       syncState,
+      browserSyncAvailable: source.browserSyncAvailable === true,
       failureCategory: source.failureCategory,
       endpoint: source.endpoint,
       indexedError: source.indexedError,

@@ -394,12 +394,13 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
           status: 'completed' as const
         };
       } catch (error) {
-        console.warn('Model synthesis failed:', error instanceof Error ? error.message : String(error));
+        const errorType = error instanceof Error && /^[A-Za-z][A-Za-z0-9]*Error$/.test(error.name) ? error.name : 'UnknownError';
+        console.warn('Model synthesis failed:', { errorType });
         return {
           answer: 'I found relevant company records, but Bedrock could not generate an answer. Please check the backend console and try again.',
           uncertainty: 'Check Bedrock model access and inference quotas for the configured AWS region.',
           status: 'partial' as const,
-          errors: [`Model synthesis error: ${error instanceof Error ? error.message : String(error)}`]
+          errors: ['Model synthesis failed. Check backend model configuration and service availability.']
         };
       }
     })
