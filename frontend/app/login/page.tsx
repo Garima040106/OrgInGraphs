@@ -1,10 +1,11 @@
  
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, LockKeyhole } from "lucide-react";
 import { Brand } from "@/components/Brand";
+import { getDemoSession, setDemoSession } from "@/lib/demo-auth";
 
 const demoAccounts = [
   { id: "Judges", name: "Judges demo", email: "demo@hirenova.com" },
@@ -15,11 +16,14 @@ export default function LoginPage() {
   const router = useRouter();
   const [selectedAccount, setSelectedAccount] = useState<(typeof demoAccounts)[number]>(demoAccounts[0]);
 
+  useEffect(() => {
+    if (getDemoSession()) router.replace("/dashboard");
+  }, [router]);
+
   function enterDemo(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    window.localStorage.setItem("oig-demo-workspace", selectedAccount.email);
-    router.push("/dashboard");
+    if (setDemoSession(selectedAccount.email)) router.push("/dashboard");
   }
 
   return (
