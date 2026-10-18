@@ -18,7 +18,7 @@ export const RetrievalState = Annotation.Root({
   queryText: replace<string>(() => ''),
   queryEmbedding: replace<number[]>(() => []),
   queryEmbeddings: replace<number[][]>(() => []),
-  aggregateMetric: replace<'team-count' | 'people-count' | 'jira-issue-count' | 'recent-jira-issues' | undefined>(() => undefined),
+  aggregateMetric: replace<'team-count' | 'team-list' | 'people-count' | 'jira-issue-count' | 'recent-jira-issues' | 'latest-product' | undefined>(() => undefined),
   searchResults: replace<SearchResult[]>(() => []),
   retrievedChunks: replace<RetrievedChunkInfo[]>(() => []),
   sources: replace<RAGSourceCitation[]>(() => []),
@@ -117,10 +117,16 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
       const asksForCount = /\b(how many|number of|count of|total)\b/i.test(q);
       const hasLocalScope = /\b(?:department|within|per)\b/i.test(q);
       const asksForJiraIssues = /\bjira\b/i.test(q) && /\b(issues?|tickets?)\b/i.test(q);
+      const asksForLatestProduct = /\b(latest|lates|newest|most recent)\b/i.test(q) && /\b(product|products|working on)\b/i.test(q);
+      const asksForTeamList = (/\b(?:list|name|show)\b/i.test(q) && /\bteams?\b/i.test(q))
+        || /\b(?:what are|which)\s+(?:all\s+)?teams\b/i.test(q)
+        || (/\b(?:name|list)\s+(?:them|those)\b/i.test(q) && /\bteams?\b/i.test(previous?.query ?? ''));
       let aggregateMetric: RetrievalWorkflowState['aggregateMetric'];
       if (asksForCount && !hasLocalScope && asksForJiraIssues) aggregateMetric = 'jira-issue-count';
       else if (!asksForCount && asksForJiraIssues && /\b(recent|latest|newest|last)\b/i.test(q)) aggregateMetric = 'recent-jira-issues';
+      else if (asksForLatestProduct && !hasLocalScope) aggregateMetric = 'latest-product';
       else if (asksForCount && !hasLocalScope && /\bteams\b/i.test(q)) aggregateMetric = 'team-count';
+      else if (!asksForCount && !hasLocalScope && asksForTeamList) aggregateMetric = 'team-list';
       else if (asksForCount && !hasLocalScope && !/\bteams?\b/i.test(q) && /\b(people|persons?|employees?|headcount|staff)\b/i.test(q)) aggregateMetric = 'people-count';
       return {
         queryText: retrievalQuery,
@@ -189,6 +195,71 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
               candidateCount: 1,
               retrievedChunks: [{ chunkId, sourcePath, score: 1, text: evidence, platform: 'jira' as const, metadata }],
               sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'jira' as const, excerpt: evidence }],
+              answer,
+              status: 'completed' as const
+            };
+          }
+          if (state.aggregateMetric === 'latest-product') {
+            const product = await store.getLatestOrganizationProduct();
+            const sourcePath = 'database/Product/latest';
+            const title = 'Latest product record from FalkorDB';
+            const text = product
+              ? `Latest Product node by recorded updatedAt, updated, createdAt, or created timestamp: ${product.name}; ID: ${product.id}${product.status ? `; status: ${product.status}` : ''}${product.updatedAt ? `; last updated: ${product.updatedAt}` : ''}${product.description ? `; description: ${product.description}` : ''}.`
+              : 'No Product nodes are currently recorded in the live company graph.';
+            const chunkId = 'live-aggregate-latest-product';
+            const timestamp = new Date().toISOString();
+            const metadata = {
+              chunkId,
+              orgId: state.request.orgId ?? 'hirenova',
+              sourceType: 'database' as const,
+              sourcePath,
+              title,
+              contentHash: `live:latest-product:${product?.id ?? 'none'}:${product?.updatedAt ?? ''}`,
+              docHash: `live:latest-product:${product?.id ?? 'none'}:${product?.updatedAt ?? ''}`,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+              summaryKind: 'latest-product'
+            };
+            const answer = product
+              ? `The latest product record is **${product.name}**${product.status ? ` (${product.status})` : ''}${product.updatedAt ? `, last updated ${product.updatedAt}` : ''}. [S1]`
+              : 'There are no Product records in the live company graph, so I can’t identify a latest product. [S1]';
+            return {
+              candidateCount: 1,
+              retrievedChunks: [{ chunkId, sourcePath, score: 1, text, platform: 'database' as const, metadata }],
+              sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'database' as const, excerpt: text }],
+              answer,
+              status: 'completed' as const
+            };
+          }
+          if (state.aggregateMetric === 'team-list') {
+            const teams = await store.getOrganizationEntityNames('Team');
+            const count = teams.length;
+            const sourcePath = 'database/Organization/team-list';
+            const title = 'Live organization team names from FalkorDB';
+            const text = teams.length
+              ? `The live company graph contains ${count} distinct Team nodes. Their recorded names are:\n${teams.map((name) => `- ${name}`).join('\n')}`
+              : 'The live company graph contains no Team nodes with a recorded name.';
+            const chunkId = 'live-aggregate-team-list';
+            const timestamp = new Date().toISOString();
+            const metadata = {
+              chunkId,
+              orgId: state.request.orgId ?? 'hirenova',
+              sourceType: 'database' as const,
+              sourcePath,
+              title,
+              contentHash: `live:team-list:${teams.join('|')}`,
+              docHash: `live:team-list:${teams.join('|')}`,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+              summaryKind: 'team-list'
+            };
+            const answer = teams.length
+              ? `The live company graph contains **${count} teams**:\n\n${teams.map((name) => `- ${name}`).join('\n')}\n\n[S1]`
+              : 'The live company graph has no teams with recorded names. [S1]';
+            return {
+              candidateCount: 1,
+              retrievedChunks: [{ chunkId, sourcePath, score: 1, text, platform: 'database' as const, metadata }],
+              sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'database' as const, excerpt: text }],
               answer,
               status: 'completed' as const
             };
@@ -394,12 +465,13 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
           status: 'completed' as const
         };
       } catch (error) {
-        console.warn('Model synthesis failed:', error instanceof Error ? error.message : String(error));
+        const errorType = error instanceof Error && /^[A-Za-z][A-Za-z0-9]*Error$/.test(error.name) ? error.name : 'UnknownError';
+        console.warn('Model synthesis failed:', { errorType });
         return {
           answer: 'I found relevant company records, but Bedrock could not generate an answer. Please check the backend console and try again.',
           uncertainty: 'Check Bedrock model access and inference quotas for the configured AWS region.',
           status: 'partial' as const,
-          errors: [`Model synthesis error: ${error instanceof Error ? error.message : String(error)}`]
+          errors: ['Model synthesis failed. Check backend model configuration and service availability.']
         };
       }
     })

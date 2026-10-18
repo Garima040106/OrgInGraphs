@@ -174,6 +174,7 @@ export type IntegrationSourceStatus = {
   sourceMode?: "live" | "mock";
   connectionState: "Connected" | "Not configured" | "Authentication failed" | "Permission missing" | "Syncing" | "Sync failed" | string;
   syncState: "idle" | "running" | "completed" | "partial" | "failed" | "empty";
+  browserSyncAvailable?: boolean;
   fetched: number | null;
   processed: number | null;
   persisted?: number | null;

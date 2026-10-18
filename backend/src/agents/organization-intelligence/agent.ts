@@ -6,6 +6,8 @@ import { GeminiEmbeddingService } from './embeddings/gemini-embeddings.js';
 import { runIngestionGraph, type IngestionGraphConfig } from './workflow/ingestion-graph.js';
 import { runRetrievalGraph, type RetrievalGraphConfig } from './workflow/retrieval-graph.js';
 
+const errorType = (error: unknown) => error instanceof Error && /^[A-Za-z][A-Za-z0-9]*Error$/.test(error.name) ? error.name : 'UnknownError';
+
 export interface Agent1Options {
   graph?: Graph;
   docsDir?: string;
@@ -86,9 +88,9 @@ export class OrganizationIntelligenceAgent {
             console.log(`RAG embedding refresh complete: ${result.stats.totalChunks} chunks indexed.`);
             return runRetrievalGraph(input, config);
           }
-          console.error('RAG embedding refresh did not produce a searchable index:', result.errors);
+          console.error('RAG embedding refresh did not produce a searchable index:', { errorCount: result.errors.length });
         } catch (error) {
-          console.error('RAG embedding refresh failed:', error);
+          console.error('RAG embedding refresh failed:', { errorType: errorType(error) });
         }
       }
     }

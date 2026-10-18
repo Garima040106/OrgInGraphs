@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowDownUp,
   BriefcaseBusiness,
@@ -13,6 +13,7 @@ import {
   CircleHelp,
   Command,
   Home,
+  LogOut,
   SearchCheck,
   Search,
   ChartNoAxesCombined,
@@ -53,6 +54,7 @@ export function AppShell({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [workspace, setWorkspace] = useState("demo@hirenova.com");
@@ -107,6 +109,12 @@ export function AppShell({
     });
   }
 
+  function logout() {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+    router.replace("/login");
+  }
+
   return (
     <div className={`app-shell ${assistantOpen ? "assistant-open" : ""} ${pathname === "/dashboard" ? "dashboard-route" : ""} ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <aside className={`sidebar ${sidebarCollapsed ? "is-collapsed" : ""}`} data-lenis-prevent>
@@ -143,7 +151,15 @@ export function AppShell({
           <div className="topbar-actions">
             <div className={`connection-pill ${connection ? "" : "offline"}`} title={connection ? "Backend connected" : "Backend unavailable"}><span className="status-dot" /><span>{connection ? "Connected" : health ? "Offline" : "Checking"}</span></div>
             <button className="search-trigger" type="button" onClick={() => setSearchOpen(true)}><Search size={13} /><span>Search across Confluence, Jira, Slack, GitHub, people, projects, and more...</span><kbd><Command size={9} /> K</kbd></button>
-            <div className="topbar-user-profile"><span className="user-avatar">{workspace.slice(0, 1).toUpperCase()}</span><span><b>{workspace}</b><small>Workspace member</small></span></div>
+            <details className="topbar-account-menu">
+              <summary className="topbar-user-profile" aria-label={`Account menu for ${workspace}`} title="Account menu">
+                <span className="user-avatar">{workspace.slice(0, 1).toUpperCase()}</span><span><b>{workspace}</b><small>Workspace member</small></span><ChevronDown size={13} aria-hidden="true" />
+              </summary>
+              <div className="topbar-account-popover">
+                <div className="topbar-account-identity"><b>{workspace}</b><small>Demo workspace access</small></div>
+                <button type="button" onClick={logout}><LogOut size={14} /> Log out</button>
+              </div>
+            </details>
           </div>
         </header>
         <main className="workspace-content" data-lenis-prevent>{children}</main>

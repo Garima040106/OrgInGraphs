@@ -3313,6 +3313,53 @@ body {
   display: none;
 }
 
+.landing-video-section {
+  display: grid;
+  grid-template-columns: minmax(220px, .7fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: clamp(28px, 6vw, 76px);
+}
+
+.landing-video-copy .how-eyebrow {
+  margin-bottom: 14px;
+}
+
+.landing-video-copy h2 {
+  max-width: 390px;
+  color: #19191b;
+  font-family: var(--display);
+  font-size: clamp(30px, 3.7vw, 48px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+
+.landing-video-copy p {
+  max-width: 390px;
+  margin-top: 16px;
+  color: #66675f;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.landing-video-frame {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 1px solid #e9e4d5;
+  border-radius: 22px;
+  background: #19191b;
+  box-shadow: 0 24px 64px rgba(48, 43, 30, .12);
+}
+
+.landing-video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 @media (max-width: 760px) {
   .landing-nav {
     top: 8px;
@@ -3341,6 +3388,11 @@ body {
 
   .landing-hero-visual {
     width: 100%;
+  }
+
+  .landing-video-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
   }
 
 }
@@ -5203,15 +5255,6 @@ body {
   justify-content: space-between;
 }
 
-.platform-card-score {
-  font-size: 10px;
-  font-weight: 600;
-  color: #059669;
-  background: #d1fae5;
-  padding: 2px 6px;
-  border-radius: 10px;
-}
-
 .platform-card-title-row {
   display: flex;
   flex-direction: column;
@@ -5691,6 +5734,17 @@ body {
 .app-shell .topbar-user-profile > span:last-child { display: grid; gap: 2px; }
 .app-shell .topbar-user-profile b { max-width: 140px; overflow: hidden; color: #343832; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .app-shell .topbar-user-profile small { color: #77786f; font-size: 9px; }
+.app-shell .topbar-account-menu { position: relative; order: 2; flex: 0 0 auto; }
+.app-shell .topbar-account-menu > summary { cursor: pointer; list-style: none; }
+.app-shell .topbar-account-menu > summary::-webkit-details-marker { display: none; }
+.app-shell .topbar-account-menu > summary:focus-visible { outline: 2px solid #2d7657; outline-offset: 4px; border-radius: 8px; }
+.app-shell .topbar-account-menu > summary > svg { flex: 0 0 auto; color: #687268; }
+.app-shell .topbar-account-popover { position: absolute; z-index: 40; top: calc(100% + 10px); right: 0; width: min(250px, calc(100vw - 24px)); padding: 8px; border: 1px solid #e5e4d8; border-radius: 12px; background: #fffef7; box-shadow: 0 12px 32px rgba(25, 35, 28, .16); }
+.app-shell .topbar-account-identity { display: grid; gap: 4px; padding: 9px 10px 12px; border-bottom: 1px solid #eeede4; }
+.app-shell .topbar-account-identity b { overflow: hidden; color: #26372d; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell .topbar-account-identity small { color: #788078; font-size: 10px; }
+.app-shell .topbar-account-popover button { display: flex; width: 100%; align-items: center; gap: 9px; margin-top: 6px; padding: 10px; border: 0; border-radius: 8px; background: transparent; color: #34443a; cursor: pointer; font: inherit; font-size: 12px; text-align: left; }
+.app-shell .topbar-account-popover button:hover { background: #edf4ed; color: #174d35; }
 .app-shell .workspace-content { padding: 22px 24px 30px; background: #f6f5eb; }
 .dashboard-bento-heading { min-height: 75px; margin-bottom: 17px; align-items: center; }
 .dashboard-heading-copy .eyebrow { color: #176349; }
@@ -5819,7 +5873,7 @@ body {
   .app-shell .side-nav a, .app-shell .side-nav-action { justify-content: center; width: 42px; height: 42px; padding: 0; }
   .app-shell .side-nav-group { margin-top: 6px; padding-top: 6px; }
   .app-shell .topbar { padding-inline: 10px; }
-  .app-shell .topbar-user-profile > span:last-child, .app-shell .connection-pill { display: none; }
+  .app-shell .topbar-user-profile > span:nth-child(2), .app-shell .topbar-account-menu > summary > svg, .app-shell .connection-pill { display: none; }
   .app-shell .workspace-content { padding: 16px 10px 24px; }
   .dashboard-bento-heading { gap: 12px; flex-direction: column; align-items: flex-start; }
   .dashboard-heading-copy h1 { font-size: 30px; }

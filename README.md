@@ -29,6 +29,11 @@
 <p align="center"><b>770 Graph Relationships</b> &nbsp; | &nbsp; <b>223 Enrichment Relationships</b> &nbsp; | &nbsp; <b>FalkorDB-Powered Company Knowledge Graph</b></p>
 
 Graph enrichment adds connections between organizational entities, supporting richer graph traversal and more contextual retrieval. The configured FalkorDB graph contains 770 relationships, including 223 relationships identified with <code>sourceSystem = 'graph-enrichment'</code>; the enrichment count is not the total relationship count.
+## 🎥 Project Demo
+
+[![Watch the Demo](https://img.youtube.com/vi/dvfOqwWCB7Q/maxresdefault.jpg)](https://www.youtube.com/watch?v=dvfOqwWCB7Q)
+
+**▶ Click the thumbnail above to watch the full demo on YouTube.**
 
 > **On the roadmap:** exploring [**gRPC**](https://grpc.io/docs/) for a future typed, high-throughput service boundary alongside today's REST API. This is future exploration, not a currently implemented transport.
 
@@ -329,7 +334,7 @@ sequenceDiagram
 
 Confluence retrieval supports a configured backend-side Atlassian REST connection. Jira, GitHub, and Slack records are retrieved through configured backend connector endpoints and normalized by the backend; the ingestion pipeline verifies provenance before accepting source records into the company graph. Source-library routes read persisted graph records rather than calling providers from the browser.
 
-`GET /api/integrations/status` reports configuration, indexed counts, and recorded sync outcomes. It does not actively verify upstream credentials or connectivity. A configured endpoint or credential alone does not establish a healthy live connection.
+`GET /api/integrations/status` performs a bounded sample fetch for each configured source, reports cumulative distinct indexed counts, and returns the latest recorded sync outcome. Sample reachability does not establish a successful ingestion run. Confluence is the live provider; Jira, Slack, and GitHub currently use the seeded mock API.
 ## Screenshots 
 <img width="2873" height="1478" alt="image" src="https://github.com/user-attachments/assets/132d803e-f15d-4a38-a4d0-ef2bf0dcc1e6" />
  <img width="2878" height="1475" alt="image" src="https://github.com/user-attachments/assets/b4eb2d52-67c8-4668-87c6-ef3053ad7e4b" />
@@ -365,9 +370,10 @@ The backend currently exposes Express routes directly; it does not publish an Op
 | `GET /api/graph/neighborhood/:entityType/:entityId` | Bounded direct neighborhood with relationship direction. |
 | `GET /api/search?q=...` | Up to 50 name/title/email matches. |
 | `GET /api/documents`, `/api/tickets`, `/api/conversations`, `/api/proactive-insights` | Paginated indexed records by source family; these read graph data rather than calling upstream APIs. |
-| `GET /api/integrations/status` | Connector configuration and recorded sync/index status; not an active provider probe. |
+| `GET /api/integrations/status` | Bounded connector sample check plus recorded sync/index status. |
+| `POST /api/integrations/:source/sync` | Administrative source sync; requires `RAG_ADMIN_API_KEY`. |
 | `GET /api/product-progress/graph` | Product Progress graph in the common node/edge response shape. |
-| `POST /api/product-progress/tickets`, `/activities`, `/workflow` | Validated product/ticket/activity processing workflows. |
+| `POST /api/product-progress/tickets`, `/activities`, `/workflow` | Validated graph-writing workflows; requires `RAG_ADMIN_API_KEY`. |
 | `POST /api/assistant/query` | OrgMind structured graph answer; accepts `{ question, conversationId?, context? }`. |
 | `GET /api/assistant/conversations[/:conversationId]` | Conversation listing or persisted turns for the supplied workspace identity. |
 | `POST /api/rag/query` | Company Brain query; accepts `{ question, filters?: { sourceTypes? } }`. Returns `{ answer, sources, retrieval, evidenceFound }`. |
@@ -427,6 +433,52 @@ docs/
   rag-pipeline.md                  RAG, index, sync and operational details
   api-capability-inventory.md      Verified route inventory and integration limits
 ```
+<h1 align="center">✦ Team Prometheus ✦</h1>
+
+
+
+<br />
+
+<table align="center">
+  <tr>
+    <td align="center" width="220">
+      <a href="https://github.com/Garima040106">
+        <img src="https://avatars.githubusercontent.com/u/176151459?s=200&v=4" width="130" height="130" alt="Garima Varma" />
+        <br /><br />
+        <strong>Garima Varma</strong>
+        <br />
+        <sub>Team Prometheus</sub>
+        <br /><br />
+        <img src="https://img.shields.io/badge/GitHub-Profile-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile" />
+      </a>
+    </td>
+    <td align="center" width="220">
+      <a href="https://github.com/nickhil-verma">
+        <img src="https://avatars.githubusercontent.com/u/137506342?s=200&v=4" width="130" height="130" alt="Nick" />
+        <br /><br />
+        <strong>Nick</strong>
+        <br />
+        <sub>Team Prometheus</sub>
+        <br /><br />
+        <img src="https://img.shields.io/badge/GitHub-Profile-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile" />
+      </a>
+    </td>
+    <td align="center" width="220">
+      <a href="https://github.com/MohitSr2005">
+        <img src="https://avatars.githubusercontent.com/u/175561840?s=200&v=4" width="130" height="130" alt="Mohit Srivastava" />
+        <br /><br />
+        <strong>Mohit Srivastava</strong>
+        <br />
+        <sub>Team Prometheus</sub>
+        <br /><br />
+        <img src="https://img.shields.io/badge/GitHub-Profile-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile" />
+      </a>
+    </td>
+  </tr>
+</table>
+
+<br />
+
 
 ## Further reading
 
@@ -435,9 +487,3 @@ docs/
 - [Backend environment template](backend/.env.example)
 
 <p align="center"><sub>OrgInGraphs · graph-grounded company intelligence</sub></p>
-
-## Authors — Team Prometheus
-
-- Garima
-- Nikhil
-- Mohit

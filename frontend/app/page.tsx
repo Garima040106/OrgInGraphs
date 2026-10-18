@@ -360,6 +360,28 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── Product walkthrough video ─────────────────────────────────── */}
+      <section
+        className="landing-video-section lp-section mx-auto w-[calc(100%-40px)] max-w-[1240px] border-t border-[#e9e8dc] py-16 sm:w-[calc(100%-64px)] sm:py-20"
+        aria-labelledby="landing-video-heading"
+      >
+        <div className="landing-video-copy">
+          <div className="how-eyebrow">A CLOSER LOOK</div>
+          <h2 id="landing-video-heading">See your company context come together.</h2>
+          <p>Watch the OrgInGraphs walkthrough to explore the product and how connected organizational knowledge can be explored.</p>
+        </div>
+        <div className="landing-video-frame">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/dvfOqwWCB7Q?rel=0"
+            title="OrgInGraphs product walkthrough"
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+      </section>
+
       {/* ── Feature / Company graph section ───────────────────────────── */}
       <section
         className="lp-section mx-auto w-[calc(100%-40px)] max-w-[1424px] border-t border-slate-100 py-20 sm:w-[calc(100%-64px)] sm:py-28"

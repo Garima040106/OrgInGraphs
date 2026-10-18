@@ -361,7 +361,6 @@ export function PlatformEvidenceCard({
   platform,
   sourcePath,
   excerpt,
-  score,
   sourceUrl,
   entityId,
   entityType,
@@ -370,7 +369,6 @@ export function PlatformEvidenceCard({
   platform: PlatformType;
   sourcePath?: string;
   excerpt?: string;
-  score?: number;
   sourceUrl?: string;
   entityId?: string;
   entityType?: string;
@@ -379,11 +377,6 @@ export function PlatformEvidenceCard({
     <div className={`platform-card ${platform}`}>
       <div className="platform-card-header">
         <PlatformBadge platform={platform} />
-        {typeof score === "number" && (
-          <span className="platform-card-score">
-            {Math.round(score * 100)}% match
-          </span>
-        )}
       </div>
 
       <div className="platform-card-title-row">
@@ -485,25 +478,6 @@ function isRagResponse(payload: unknown): payload is OrganizationRagResponse | R
   );
 }
 
-function TypedRagAnswer({ text, citationCount, onCitationClick }: { text: string; citationCount: number; onCitationClick: (number: number) => void }) {
-  const [visibleText, setVisibleText] = useState("");
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisibleText(text);
-      return;
-    }
-    const characters = Array.from(text);
-    let visible = 0;
-    const timer = window.setInterval(() => {
-      visible = Math.min(characters.length, visible + 3);
-      setVisibleText(characters.slice(0, visible).join(""));
-      if (visible >= characters.length) window.clearInterval(timer);
-    }, 14);
-    return () => window.clearInterval(timer);
-  }, [text]);
-  return <><MarkdownAnswer text={visibleText} citationCount={citationCount} onCitationClick={onCitationClick} />{visibleText.length < text.length && <i className="rag-typing-caret" aria-hidden="true" />}</>;
-}
-
 function safeExternalSourceUrl(value?: string): string | undefined {
   if (!value) return undefined;
   try {
@@ -552,7 +526,7 @@ export function AgentResponseRenderer({
           <span className="rag-answer-label"><Sparkles size={13} aria-hidden="true" /> Nora · OrgMind</span>
           <CopyAnswerButton text={rag.answer} />
         </div>
-        <div className="rag-typed-answer"><TypedRagAnswer text={rag.answer} citationCount={sources.reduce((max, source, index) => Math.max(max, ...("citationIds" in source && source.citationIds?.length ? source.citationIds.map((id) => Number(id.slice(1))) : [index + 1])), 0)} onCitationClick={(number) => focusCitationSource(messageId, number)} /></div>
+        <div className="rag-typed-answer"><MarkdownAnswer text={rag.answer} citationCount={sources.reduce((max, source, index) => Math.max(max, ...("citationIds" in source && source.citationIds?.length ? source.citationIds.map((id) => Number(id.slice(1))) : [index + 1])), 0)} onCitationClick={(number) => focusCitationSource(messageId, number)} /></div>
         {!hasEvidence && (
           <p className="agent-uncertainty" role="status">No relevant evidence was found in the indexed company sources.</p>
         )}

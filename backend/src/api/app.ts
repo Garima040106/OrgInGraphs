@@ -22,9 +22,12 @@ const filterSchema = z.object({ departmentId:idSchema.optional(), teamId:idSchem
 const sourceRecordsQuerySchema = z.object({ q:z.string().trim().max(200).optional(), limit:z.coerce.number().int().min(1).max(200).default(100), offset:z.coerce.number().int().min(0).max(100_000).default(0) }).strict();
 const supported = new Set(['Company','Employee','Department','Team','Project','Repository','Service','Document','Decision','Incident','Task','PullRequest','Channel','Message','Product','ProductModule','Feature','FeatureRequest','Ticket','Bug','Release','Commit','Comment','Activity','Review']);
 const parse = <T>(schema:z.ZodType<T>, input:unknown): T => schema.parse(input);
+const logFailure = (event: string, error: unknown) => console.error(event, {
+  errorType: error instanceof Error && /^[A-Za-z][A-Za-z0-9]*Error$/.test(error.name) ? error.name : 'UnknownError'
+});
 const sendError = (res:Response, error:unknown) => {
   if (error instanceof z.ZodError) return res.status(400).json({ error:'Invalid request', details:error.flatten() });
-  console.error(error); return res.status(503).json({ error:'Database request failed' });
+  logFailure('Database request failed', error); return res.status(503).json({ error:'Database request failed' });
 };
 const one = async (graph:Graph, label:string, id:string) => rows(await query(graph,`MATCH (n:${label} {id:$id}) RETURN n`,{id}))[0]?.n;
 type ApiGraphNode = { id:string; labels:string[]; properties:Record<string,unknown> };
@@ -170,7 +173,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     }
     return true;
   };
-  app.get('/health',async (_req,res)=>{ try { await query(graph,'RETURN 1 AS connected'); res.json({status:'ok',database:'connected'}); } catch(error){ console.error(error); res.status(503).json({status:'degraded',database:'unavailable'}); } });
+  app.get('/health',async (_req,res)=>{ try { await query(graph,'RETURN 1 AS connected'); res.json({status:'ok',database:'connected'}); } catch(error){ logFailure('Health check failed', error); res.status(503).json({status:'degraded',database:'unavailable'}); } });
   const dashboardResponse = async () => {
     const [company, organization, productProgress] = await Promise.all([
       one(graph,'Company','hirenova').catch(() => undefined),
@@ -189,6 +192,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     catch (error) { return sendError(res, error); }
   });
   app.post('/api/integrations/:source/sync', async (req, res) => {
+    if (!adminOwner(req, res)) return;
     const params = z.object({ source: z.enum(mockSources) }).safeParse(req.params);
     const body = z.object({ limit: z.coerce.number().int().min(1).max(1000).default(500) }).strict().safeParse(req.body ?? {});
     const parsed = params.success && body.success ? { success: true as const, data: { source: params.data.source, limit: body.data.limit } } : { success: false as const };
@@ -205,7 +209,9 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
       const result = await runIngestionWorkflow({ source, limit }, dependencies);
       const processed = result.outcomes.filter((item) => item.status === 'processed').length;
       const skipped = result.outcomes.filter((item) => item.status === 'skipped').length;
-      const failed = result.outcomes.filter((item) => item.status === 'failed' || item.status === 'unresolved').length;
+      const failedOutcomeIds = new Set(result.outcomes.filter((item) => item.status === 'failed' || item.status === 'unresolved').map((item) => item.sourceRecordId));
+      const processedRecordIds = new Set(result.outcomes.filter((item) => item.status === 'processed').map((item) => item.sourceRecordId));
+      const outcomeRecordIds = new Set(result.outcomes.map((item) => item.sourceRecordId));
       const recordIds = [...new Set(result.documents.map((document) => document.sourceRecordId))];
       const confirmedIds = options.integrations?.indexedSourceRecordIds
         ? await options.integrations.indexedSourceRecordIds(source, recordIds)
@@ -213,15 +219,16 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
           ? recordIds.slice(0, await options.integrations.indexedSourceRecordCount(source, recordIds))
           : await indexedSourceRecordIds(source, recordIds);
       const confirmedIdSet = new Set(confirmedIds);
-      const confirmedIndexed = confirmedIdSet.size;
-      const indexingConfirmed = confirmedIndexed >= recordIds.length;
-      const succeeded = (result.status === 'processed' || result.status === 'empty') && result.errors.length === 0 && failed === 0 && indexingConfirmed;
+      const indexedProcessedIds = [...processedRecordIds].filter((id) => confirmedIdSet.has(id));
+      const persistedThisRun = indexedProcessedIds.length;
+      const indexingConfirmed = indexedProcessedIds.length === processedRecordIds.size;
+      const succeeded = (result.status === 'processed' || result.status === 'empty') && result.errors.length === 0 && failedOutcomeIds.size === 0 && indexingConfirmed;
       const previous = integrationRuns.get(source);
-      const failedOutcomeIds = new Set(result.outcomes.filter((item) => item.status === 'failed' || item.status === 'unresolved').map((item) => item.sourceRecordId));
-      const missingIndexedIds = recordIds.filter((id) => !confirmedIdSet.has(id));
-      const runFailed = new Set([...failedOutcomeIds, ...missingIndexedIds]).size;
-      const runState = succeeded ? 'completed' as const : confirmedIndexed > 0 ? 'partial' as const : 'failed' as const;
-      const run = { state: runState, fetched: result.documents.length, processed, persisted: confirmedIndexed, indexedThisRun: confirmedIndexed, skipped, failed: runFailed, attemptedAt: previous?.attemptedAt ?? new Date().toISOString(), lastSuccessfulSync: succeeded ? new Date().toISOString() : previous?.lastSuccessfulSync ?? null, ...(result.errors.length ? { error: result.errors.join(' ') } : !indexingConfirmed ? { error: `Indexed verification failed: only ${confirmedIndexed} of ${recordIds.length} fetched source record(s) were confirmed in the company graph.` } : runFailed ? { error: `${runFailed} unique source record(s) could not be fully processed or verified in the company graph.` } : {}) };
+      const missingIndexedIds = [...processedRecordIds].filter((id) => !confirmedIdSet.has(id));
+      const missingOutcomeIds = recordIds.filter((id) => !outcomeRecordIds.has(id));
+      const runFailed = new Set([...failedOutcomeIds, ...missingIndexedIds, ...missingOutcomeIds]).size;
+      const runState = succeeded ? 'completed' as const : persistedThisRun > 0 ? 'partial' as const : 'failed' as const;
+      const run = { state: runState, fetched: result.documents.length, processed, persisted: persistedThisRun, indexedThisRun: persistedThisRun, skipped, failed: runFailed, attemptedAt: previous?.attemptedAt ?? new Date().toISOString(), lastSuccessfulSync: succeeded ? new Date().toISOString() : previous?.lastSuccessfulSync ?? null, ...(result.errors.length ? { error: result.errors.join(' ') } : !indexingConfirmed ? { error: `Indexed verification failed: only ${indexedProcessedIds.length} of ${processedRecordIds.size} successfully processed source record(s) were confirmed in the company graph.` } : runFailed ? { error: `${runFailed} unique source record(s) could not be fully processed or verified in the company graph.` } : {}) };
       integrationRuns.set(source, run);
       await saveIntegrationRun(source, run);
       const indexed = await indexedCount(source);
@@ -265,7 +272,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     try {
       return res.json(await fetchEntireGraph(graph));
     } catch (error) {
-      console.error('Unable to fetch complete graph:', error);
+      logFailure('Unable to fetch complete graph', error);
       return res.status(500).json({ error: 'Unable to fetch graph' });
     }
   });
@@ -299,9 +306,10 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
   app.get('/api/search',async(req,res)=>{try{const q=parse(z.string().trim().min(1).max(100),req.query.q);const result=await query(graph,'MATCH (n) WHERE (n.name IS NOT NULL AND toLower(n.name) CONTAINS toLower($q)) OR (n.title IS NOT NULL AND toLower(n.title) CONTAINS toLower($q)) OR (n.email IS NOT NULL AND toLower(n.email) CONTAINS toLower($q)) RETURN labels(n)[0] AS entityType,n LIMIT 50',{q});return res.json(rows(result).map((item)=>({...item,n:item.n && 'properties' in item.n ? item.n.properties : item.n})));}catch(e){return sendError(res,e);}});
   app.get('/api/product-progress/graph', async (_req, res) => {
     try { return res.json(await fetchProductProgressGraph(graph)); }
-    catch (error) { console.error('Unable to fetch Product Progress graph:', error); return res.status(503).json({ error: 'Product Progress graph unavailable' }); }
+    catch (error) { logFailure('Unable to fetch Product Progress graph', error); return res.status(503).json({ error: 'Product Progress graph unavailable' }); }
   });
   const processWorkflow = (forcedType?: 'ticket' | 'feature-update') => async (req:Request, res:Response) => {
+    if (!adminOwner(req, res)) return;
     try {
       const body = parse(workflowBodySchema, { ...req.body, ...(forcedType ? { type: forcedType } : {}) });
       const result = await runOrgInGraphsWorkflow(body, { graph });
@@ -375,7 +383,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
       return res.status(result.status === 'failed' ? 503 : 200).json(response);
     } catch (error) {
       if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid request', details: error.flatten() });
-      console.error('Unable to process ingestion request:', error);
+      logFailure('Unable to process ingestion request', error);
       return res.status(500).json({ error: 'Ingestion processing failed' });
     }
   });
@@ -390,7 +398,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
       const result = await agent1.ingest({ forceReindex: parsed.data.force, selectedSources: parsed.data.sources });
       return res.status(result.status === 'failed' ? 503 : 200).json(result);
     } catch (error) {
-      console.error('Agent 1 ingestion failed:', error);
+      logFailure('Agent 1 ingestion failed', error);
       return res.status(503).json({ status: 'failed', errors: ['Ingestion workflow execution failed safely.'] });
     } finally { ragWriteActive = false; }
   };
@@ -404,7 +412,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
       const sync = options.ragSyncWorker ? await options.ragSyncWorker.status() : { enabled: false, running: false, pending: 0, processing: 0, completed: 0, failed: 0, retries: 0, lastObservedChange: null, lastSuccessfulSync: null, lastError: null, workerLagMs: 0 };
       return res.json({ status: 'ready', stats, indexedDocuments: stats.totalSources, indexedChunks: stats.totalChunks, pendingWork: (ragWriteActive ? 1 : 0) + sync.pending + sync.processing, failedWork: stats.failed, lastSuccessfulIngestion: stats.lastIngestedAt ?? null, sync, agent: 'organization-intelligence', embeddingModel: agent1.embeddingService.model, vectorStore: agent1.vectorStore instanceof Object && 'healthy' in agent1.vectorStore ? (agent1.vectorStore.healthy ? 'healthy' : 'unavailable') : 'local' });
     } catch (error) {
-      console.error('Agent 1 status failed:', error);
+      logFailure('Agent 1 status failed', error);
       return res.status(500).json({ error: 'Failed to retrieve indexing status.' });
     }
   };
@@ -426,22 +434,22 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
           if (result.status === 'failed' || result.stats.totalChunks === 0) {
             console.error('Initial Organization RAG indexing did not produce searchable chunks:', {
               status: result.status,
-              stats: result.stats,
-              errors: result.errors
+              failedSources: result.stats.failed,
+              errorCount: result.errors.length
             });
           } else {
             console.log(`Initial Organization RAG index ready: ${result.stats.totalChunks} chunks from ${result.stats.totalSources} sources.`);
           }
         }).catch((error) => {
-          console.error('Initial Organization RAG indexing failed:', error);
+          logFailure('Initial Organization RAG indexing failed', error);
         }).finally(() => { initialRagIndex = undefined; });
         await initialRagIndex;
       }
       const response = await agent1.query({ ...parsed.data, orgId: process.env.ORGANIZATION_ID ?? 'hirenova' });
-      if (response.status !== 'completed') console.error('Organization RAG query returned a degraded result:', { query: parsed.data.query, status: response.status, errors: response.errors, uncertainty: response.uncertainty });
+      if (response.status !== 'completed') console.error('Organization RAG query returned a degraded result:', { status: response.status, errorCount: response.errors?.length ?? 0 });
       return res.status(response.status === 'failed' ? 503 : 200).json(response);
     } catch (error) {
-      console.error('Agent 1 query failed:', { query: parsed.data.query, error });
+      logFailure('Agent 1 query failed', error);
       return res.status(503).json({
         answer: 'The organization intelligence query could not be completed safely.',
         sources: [],
@@ -460,7 +468,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
       const sources = await agent1.getSources();
       return res.json({ sources, count: sources.length });
     } catch (error) {
-      console.error('Agent 1 getSources failed:', error);
+      logFailure('Agent 1 getSources failed', error);
       return res.status(500).json({ error: 'Failed to retrieve indexed sources.' });
     }
   };
@@ -475,7 +483,7 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
       const result = await agent1.reindex(sourcePath);
       return res.status(result.status === 'failed' ? 503 : 200).json(result);
     } catch (error) {
-      console.error('Agent 1 reindexing failed:', error);
+      logFailure('Agent 1 reindexing failed', error);
       return res.status(503).json({ status: 'failed', errors: ['Reindexing failed safely.'] });
     } finally { ragWriteActive = false; }
   };
