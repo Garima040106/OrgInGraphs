@@ -177,6 +177,14 @@ export class FalkorDBVectorStore {
     return count;
   }
 
+  async getOrganizationEntityNames(entity: 'Employee' | 'Team'): Promise<string[]> {
+    const result = rows(await this.graph.query(`MATCH (n:${entity}) WHERE coalesce(n.name,n.title,n.id) IS NOT NULL RETURN DISTINCT coalesce(n.name,n.title,n.id) AS name ORDER BY name`));
+    return result.flatMap((row) => {
+      const name = typeof row.name === 'string' ? row.name.trim() : '';
+      return name ? [name] : [];
+    });
+  }
+
   async countVerifiedJiraIssues(): Promise<number> {
     const result = rows(await this.graph.query(`MATCH (n) WHERE (n:Ticket OR n:Bug)
       AND toLower(coalesce(n.sourceSystem,''))='jira'
