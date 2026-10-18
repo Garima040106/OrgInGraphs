@@ -108,7 +108,7 @@ export function AppShell({
   return (
     <div className={`app-shell ${assistantOpen ? "assistant-open" : ""} ${pathname === "/dashboard" ? "dashboard-route" : ""} ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <aside className={`sidebar ${sidebarCollapsed ? "is-collapsed" : ""}`} data-lenis-prevent>
-        <div className="sidebar-brand-row"><Brand href="/dashboard" compact={sidebarCollapsed} /><button className="sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}</button></div>
+        <div className="sidebar-brand-row"><Brand href="/dashboard" compact={sidebarCollapsed} showMark={false} /><button className="sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}</button></div>
         <div className="sidebar-kicker">{company}</div>
         <button className="workspace-switch" type="button" aria-label={`${company} workspace`}>
           <span className="workspace-mark">{company.slice(0, 1).toUpperCase()}</span>

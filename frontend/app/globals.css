@@ -5495,26 +5495,32 @@ body {
 
 /* Company Intelligence Hub dashboard. */
 .app-shell { background: #f6f5eb; color: #20211f; }
-.app-shell .sidebar { width: 228px; flex-basis: 228px; padding: 14px 10px; background: #D5E2D8; border-right-color: #B9CDBF; }
+.app-shell .sidebar { width: 228px; flex-basis: 228px; padding: 14px 10px; background: #123F32; border-right-color: #1F5947; color: #E4F2E9; }
 .app-shell .sidebar .brand { padding: 0 8px 12px; }
-.app-shell .sidebar-kicker { margin: 0 8px 12px; color: #176349; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-.app-shell .workspace-switch { min-height: 54px; margin-bottom: 19px; padding: 7px 9px; border-color: #AFC5B7; border-radius: 11px; background: #C5D7CA; }
-.app-shell .workspace-switch b { color: #173D30; opacity: 1; }
-.app-shell .workspace-switch small { color: #173D30; opacity: 1; }
-.app-shell .nav-section-label { margin: 0; padding: 8px 10px; color: #294D3E; font-size: 9px; letter-spacing: .13em; }
+.app-shell .sidebar .brand-mark { background: #0D3026; color: #F2FBF5; }
+.app-shell .sidebar .brand-wordmark strong { color: #F2FBF5; font-weight: 800; }
+.app-shell .sidebar .brand-wordmark span { color: #B9D8C7; font-weight: 700; letter-spacing: .16em; }
+.app-shell .sidebar-kicker { margin: 0 8px 12px; color: #A9CBB9; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.app-shell .workspace-switch { min-height: 54px; margin-bottom: 19px; padding: 7px 9px; border-color: #28604D; border-radius: 11px; background: #194B3C; }
+.app-shell .workspace-switch b { color: #F2FBF5; opacity: 1; }
+.app-shell .workspace-switch small { color: #B9D8C7; opacity: 1; }
+.app-shell .workspace-switch > svg { color: #B9D8C7; }
+.app-shell .workspace-mark { background: #2C6B55; color: #F2FBF5; }
+.app-shell .nav-section-label { margin: 0; padding: 8px 10px; color: #A9CBB9; font-size: 9px; letter-spacing: .13em; }
 .app-shell .side-nav { gap: 2px; }
-.app-shell .side-nav a, .app-shell .side-nav-action { min-height: 35px; padding: 7px 9px; border-radius: 7px; color: #234536; opacity: 1; font-size: 12px; }
-.app-shell .side-nav a svg, .app-shell .side-nav-action svg { width: 15px; height: 15px; color: #245C45; opacity: 1; stroke: #245C45; }
-.app-shell .side-nav a.active, .app-shell .side-nav-action.active, .app-shell .side-nav-action:hover { background: #B5D8C8; color: #173D30; }
-.app-shell .side-nav a.active svg, .app-shell .side-nav-action.active svg { color: #245C45; opacity: 1; stroke: #245C45; }
-.app-shell .side-nav a:hover { background: #C4DFD0; color: #173D30; }
-.app-shell .side-nav-group { margin-top: 8px; padding-top: 7px; border-top: 1px solid #AFC5B7; }
-.app-shell .sidebar-settings-nav { border-top-color: #AFC5B7; }
-.app-shell .sidebar-help { min-height: 38px; color: #234536; font-size: 11px; opacity: 1; }
-.app-shell .sidebar-help svg { color: #245C45; }
-.app-shell .sidebar-user { border-top: 1px solid #AFC5B7; margin-top: 7px; padding-top: 11px; }
-.app-shell .sidebar-user b { font-size: 10px; color: #173D30; }
-.app-shell .sidebar-user small { font-size: 9px; color: #294D3E; }
+.app-shell .side-nav a, .app-shell .side-nav-action { min-height: 35px; padding: 7px 9px; border-radius: 7px; color: #E4F2E9; opacity: 1; font-size: 12px; }
+.app-shell .side-nav a svg, .app-shell .side-nav-action svg { width: 15px; height: 15px; color: #C3E1D0; opacity: 1; stroke: #C3E1D0; }
+.app-shell .side-nav a.active, .app-shell .side-nav-action.active { background: #3A705A; color: #FFFFFF; }
+.app-shell .side-nav a.active svg, .app-shell .side-nav-action.active svg { color: #E4F2E9; opacity: 1; stroke: #E4F2E9; }
+.app-shell .side-nav a:hover, .app-shell .side-nav-action:hover { background: #285A48; color: #FFFFFF; }
+.app-shell .side-nav a:hover svg, .app-shell .side-nav-action:hover svg { color: #F2FBF5; stroke: #F2FBF5; }
+.app-shell .side-nav-group { margin-top: 8px; padding-top: 7px; border-top: 1px solid #28604D; }
+.app-shell .sidebar-settings-nav { border-top-color: #28604D; }
+.app-shell .sidebar-help { min-height: 38px; color: #E4F2E9; font-size: 11px; opacity: 1; }
+.app-shell .sidebar-help svg { color: #C3E1D0; }
+.app-shell .sidebar-user { border-top: 1px solid #28604D; margin-top: 7px; padding-top: 11px; }
+.app-shell .sidebar-user b { font-size: 10px; color: #F2FBF5; }
+.app-shell .sidebar-user small { font-size: 9px; color: #B9D8C7; }
 .app-shell .main-column { background: #f6f5eb; }
 .app-shell .topbar { min-height: 58px; padding: 0 22px; background: rgba(255,254,247,.94); border-bottom-color: #e8e6d8; }
 .app-shell .breadcrumbs { display: none; }
