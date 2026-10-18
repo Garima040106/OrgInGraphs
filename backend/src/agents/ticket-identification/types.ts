@@ -13,8 +13,10 @@ export interface TicketInput {
   text: string;
   source?: string;
   sourceRecordId?: string;
+  sourceRecordKey?: string;
+  sourceUrl?: string;
   receivedAt?: string;
-  provenance?: 'synthetic' | 'user-provided' | 'external-verified';
+  provenance?: 'synthetic' | 'user-provided' | 'external-verified' | 'mock-verified';
   metadata?: Record<string, unknown>;
 }
 
@@ -40,8 +42,12 @@ export interface IdentifiedTicket {
   references: ReferenceCandidate[];
   sourceSystem: string;
   sourceRecordId: string;
+  sourceRecordKey?: string;
+  sourceUrl?: string;
+  sourceMetadataJson?: string;
   graphDomain: 'product-progress';
   synthetic: boolean;
+  provenance: 'synthetic' | 'user-provided' | 'external-verified' | 'mock-verified';
   createdAt: string;
   updatedAt: string;
   projectName?: string;

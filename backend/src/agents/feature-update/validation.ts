@@ -20,7 +20,7 @@ export const featureUpdateSchema = z.object({
     candidates: z.array(z.string()).optional()
   })),
   sourceSystem: z.string().min(1), sourceRecordId: z.string().min(1),
-  provenance: z.enum(['synthetic', 'user-provided', 'external-verified']),
+  provenance: z.enum(['synthetic', 'user-provided', 'external-verified', 'mock-verified']),
   verifiedExternalEvent: z.literal(false), graphDomain: z.literal('product-progress'),
   createdAt: z.string().min(1), updatedAt: z.string().min(1)
 });

@@ -48,6 +48,29 @@ test("backend health is read from the configured API health endpoint", async () 
   } finally { globalThis.fetch = originalFetch; }
 });
 
+test("integration status reads the live backend contract and preserves unavailable indexed counts", async () => {
+  let requestUrl = "";
+  let requestInit: RequestInit | undefined;
+  globalThis.fetch = async (input, init) => {
+    requestUrl = String(input);
+    requestInit = init;
+    return response({ sources: [{
+      source: "jira", connectionState: "Sync failed", syncState: "idle", fetched: null,
+      processed: null, indexed: null, skipped: null, failed: null, pending: 0,
+      lastSuccessfulSync: null, failureCategory: "dns", error: "Connector hostname did not resolve.",
+      endpoint: { hostname: "proxy.example.test", paths: ["/api/jira/issues"] },
+    }] });
+  };
+  try {
+    const result = await api.integrationStatus();
+    assert.equal(requestUrl, "http://localhost:8080/api/integrations/status");
+    assert.equal(requestInit?.method, undefined);
+    assert.equal(result.sources[0]?.indexed, null);
+    assert.equal(result.sources[0]?.failureCategory, "dns");
+    assert.deepEqual(result.sources[0]?.endpoint?.paths, ["/api/jira/issues"]);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 test("RAG query accepts empty citations and missing optional citation fields", async () => {
   globalThis.fetch = async () => response({ answer: "No relevant evidence was found.", sources: [], retrieval: { candidateCount: 0, usedChunks: 0 }, evidenceFound: false });
   try {

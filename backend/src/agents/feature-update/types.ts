@@ -8,7 +8,7 @@ export interface FeatureUpdateInput {
   source?: string;
   sourceRecordId?: string;
   receivedAt?: string;
-  provenance?: 'synthetic' | 'user-provided' | 'external-verified';
+  provenance?: 'synthetic' | 'user-provided' | 'external-verified' | 'mock-verified';
   metadata?: Record<string, unknown>;
 }
 
@@ -36,7 +36,7 @@ export interface FeatureUpdate {
   references: UpdateReference[];
   sourceSystem: string;
   sourceRecordId: string;
-  provenance: 'synthetic' | 'user-provided' | 'external-verified';
+  provenance: 'synthetic' | 'user-provided' | 'external-verified' | 'mock-verified';
   verifiedExternalEvent: false;
   graphDomain: 'product-progress';
   createdAt: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { ArrowDown, ArrowUpRight, Bot, Compass, MessageSquarePlus, Send, Sparkles, UserRound, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Bot, MessageSquarePlus, Send, Sparkles, UserRound, X } from "lucide-react";
 import { AgentResponseRenderer } from "@/components/assistant/AgentResponseRenderer";
 import { api, entityName, friendlyApiError } from "@/lib/api";
 import { isProductGraphEntity } from "@/lib/graph/mode";
@@ -19,7 +19,7 @@ const newMessageId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 
 const ragGreeting: Message = {
   id: "rag-greeting",
   role: "assistant",
-  content: "Ask about your company’s projects, people, incidents, decisions, and documentation. OrgMind searches indexed company evidence and cites the sources it uses.",
+  content: "Ask about your company’s projects, people, incidents, decisions, and documentation. Nora searches indexed OrgMind evidence and cites the sources it uses.",
 };
 const graphGreeting: Message = {
   id: "graph-greeting",
@@ -27,6 +27,8 @@ const graphGreeting: Message = {
   content: "Ask about indexed company graph records. I can inspect ownership, decisions, dependencies, and connected evidence.",
 };
 const ragSuggestions = [
+  "What are the most recent Jira issues?",
+  "How many Jira tickets are indexed?",
   "What is the engineering team working on?",
   "Summarize recent incidents.",
   "who is responsible person for payment teams",
@@ -39,7 +41,7 @@ export function CompanyAssistant({ open, onClose, selected }: {
   onClose: () => void;
   selected?: { entity: Entity; entityType: GraphEntityType | "Unknown" } | null;
 }) {
-  const [mode, setMode] = useState<"intelligence" | "graph">("intelligence");
+  const [mode] = useState<"intelligence" | "graph">("intelligence");
   const [messages, setMessages] = useState<Message[]>([ragGreeting]);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -87,16 +89,6 @@ export function CompanyAssistant({ open, onClose, selected }: {
     lastFailedRequest.current = null;
     nearBottom.current = true;
     setShowJump(false);
-  }
-
-  function handleModeChange(newMode: "intelligence" | "graph") {
-    if (newMode === mode) return;
-    invalidateActiveRequest();
-    setMode(newMode);
-    setConversationId(null);
-    setError("");
-    lastFailedRequest.current = null;
-    setMessages([newMode === "intelligence" ? ragGreeting : graphGreeting]);
   }
 
   async function selectConversation(id: string) {
@@ -188,7 +180,10 @@ export function CompanyAssistant({ open, onClose, selected }: {
     const requestController = new AbortController();
     controller.current = requestController;
     const userMessageId = newMessageId();
-    if (appendUser) setMessages((previous) => [...previous, { id: userMessageId, role: "user", content: question }]);
+    if (appendUser) {
+      setMessages((previous) => [...previous, { id: userMessageId, role: "user", content: question }]);
+      setDraft((previous) => previous === question ? "" : previous);
+    }
     setPending(true);
     setError("");
     lastFailedRequest.current = null;
@@ -267,12 +262,13 @@ export function CompanyAssistant({ open, onClose, selected }: {
   const connected = connection === "available" && (mode !== "intelligence" || ragStatus?.vectorStore !== "unavailable");
   if (!open) return null;
 
-  return <section className="assistant-panel" aria-label="OrgMind Assistant" data-lenis-prevent>
+  return <section className="assistant-panel" aria-label="Nora company assistant" data-lenis-prevent>
     <header className="assistant-header">
       <div className="assistant-title">
         <span className="assistant-title-icon"><img src="/img/logo.png" alt="" width={24} height={24} /></span>
         <div className="assistant-heading-copy">
-          <b>OrgMind Assistant</b>
+          <b>Nora</b>
+          <span className="assistant-brand-caption">OrgMind company intelligence</span>
           <span className={`assistant-connection ${connected ? "is-available" : connection === "checking" ? "is-checking" : "is-unavailable"}`} role="status">
             <i aria-hidden="true" />{connected ? "Connected" : connection === "checking" ? "Checking connection" : "Backend unavailable"}
           </span>
@@ -286,11 +282,6 @@ export function CompanyAssistant({ open, onClose, selected }: {
         <button type="button" className="icon-button" onClick={onClose} aria-label="Close assistant"><X size={16} /></button>
       </div>
     </header>
-
-    <div className="assistant-mode-bar" role="tablist" aria-label="Assistant mode">
-      <button type="button" role="tab" aria-selected={mode === "intelligence"} className={`assistant-mode-pill ${mode === "intelligence" ? "active" : ""}`} onClick={() => handleModeChange("intelligence")}><Sparkles size={14} /><span>Company knowledge</span></button>
-      <button type="button" role="tab" aria-selected={mode === "graph"} className={`assistant-mode-pill ${mode === "graph" ? "active" : ""}`} onClick={() => handleModeChange("graph")}><Compass size={14} /><span>Graph Explorer</span></button>
-    </div>
 
     <div className="assistant-context-line">
       <span>{mode === "intelligence" ? "Search across indexed company knowledge" : selected ? `Context: ${selected.entityType} · ${entityName(selected.entity)}` : "Explore relationships in the company graph"}</span>
@@ -317,7 +308,7 @@ export function CompanyAssistant({ open, onClose, selected }: {
           {message.ragResponse && <AgentResponseRenderer payload={message.ragResponse} messageId={message.id} />}
           {!message.ragResponse && message.response && <AgentResponseRenderer payload={message.response} onAction={action} messageId={message.id} />}
         </div>)}
-        {pending && <div className="assistant-pending" role="status"><span className="spinner" />{mode === "intelligence" ? "Searching company sources and preparing an answer…" : "Retrieving graph evidence…"}</div>}
+        {pending && <div className="assistant-pending" role="status"><span className="orgmind-thinking-orb" aria-hidden="true"><i /><i /><i /><b /></span><span>{mode === "intelligence" ? "Nora is connecting the evidence…" : "Nora is exploring graph relationships…"}</span></div>}
         {error && <div className="assistant-error" role="alert"><span>{error}</span>{lastFailedRequest.current && <button className="small-button" type="button" onClick={() => {
           const failed = lastFailedRequest.current;
           if (failed) void answer(failed.question, failed.context, false, failed.mode);

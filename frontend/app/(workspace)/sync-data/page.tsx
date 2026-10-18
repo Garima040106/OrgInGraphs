@@ -1,5 +1,5 @@
-import { IntegrationStatusView } from "@/components/integrations/IntegrationStatusView";
+import { DemoSyncDashboard } from "@/components/sources/DemoSyncDashboard";
 
 export default function SyncDataPage() {
-  return <IntegrationStatusView syncPage />;
+  return <DemoSyncDashboard />;
 }

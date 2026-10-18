@@ -6,40 +6,50 @@ import Image from "next/image";
 import { Activity, ArrowRight, ArrowUpRight, BookOpen, Building2, CircleAlert, Clock3, ExternalLink, FileText, GitPullRequest, MessagesSquare, Network, Plug, RefreshCw, Search, Server, Sparkles, UsersRound } from "lucide-react";
 import { api, friendlyApiError } from "@/lib/api";
 import { isProductGraphEntity } from "@/lib/graph/mode";
-import type { DashboardResponse, Entity, GraphApiNode, GraphResponse, IngestionSource } from "@/lib/types";
+import { peopleSourceSummary } from "@/lib/source-data";
+import { useLiveSourceData } from "@/lib/useLiveSourceData";
+import type { DashboardResponse, Entity, GraphApiNode, GraphResponse, IntegrationSyncResponse, IngestionSource } from "@/lib/types";
 
 type GraphState = { data: GraphResponse; loading: boolean; error: string };
 type EntityFilter = { label: string; nodes: GraphApiNode[] } | null;
 const emptyGraph: GraphResponse = { nodes: [], edges: [] };
 const productTypes = new Set(["Product","ProductModule","Feature","FeatureRequest","Ticket","Bug","Release","PullRequest","Commit","Comment","Activity","Review","Task"]);
 const sourceOptions: Array<{ id: IngestionSource; label: string; detail: string; image: string }> = [
-  { id: "confluence", label: "Confluence", detail: "Server credentials", image: "/img/confluence.png" },
-  { id: "jira", label: "Jira", detail: "Backend demo source", image: "/img/jira.webp" },
-  { id: "github", label: "GitHub", detail: "Backend demo source", image: "/img/github.png" },
-  { id: "slack", label: "Slack", detail: "Backend demo source", image: "/img/slack.png" },
+  { id: "confluence", label: "Confluence", detail: "Live indexed records", image: "/img/confluence.png" },
+  { id: "jira", label: "Jira", detail: "Seeded mock data", image: "/img/jira.webp" },
+  { id: "github", label: "GitHub", detail: "Seeded mock data", image: "/img/github.png" },
+  { id: "slack", label: "Slack", detail: "Seeded mock data", image: "/img/slack.png" },
 ];
 const integrationCards = [
   { id: "confluence", label: "Confluence", detail: "Documentation & knowledge", image: "/img/confluence.png", href: "/documents", kind: "source" as const },
-  { id: "jira", label: "Jira", detail: "Issues & project tracking", image: "/img/jira.webp", href: "/tickets", kind: "source" as const },
-  { id: "slack", label: "Slack", detail: "Team discussions & decisions", image: "/img/slack.png", href: "/conversations", kind: "source" as const },
-  { id: "github", label: "GitHub", detail: "Code, PRs & repositories", image: "/img/github.png", href: "/projects", kind: "source" as const },
+  { id: "jira", label: "Jira", detail: "Seeded mock issues", image: "/img/jira.webp", href: "/tickets", kind: "source" as const },
+  { id: "slack", label: "Slack", detail: "Seeded mock messages", image: "/img/slack.png", href: "/conversations", kind: "source" as const },
+  { id: "github", label: "GitHub", detail: "Seeded mock code records", image: "/img/github.png", href: "/proactive-insights", kind: "source" as const },
   { id: "people", label: "People Directory", detail: "Company & team information", image: "", href: "/people", kind: "people" as const },
 ];
 const activityFilters = ["All", "Confluence", "Jira", "Slack", "GitHub", "People"] as const;
 const knowledgeFilters = ["All", "Documents", "Issues", "Messages", "Code", "People"] as const;
 
 function typeOf(node: GraphApiNode) { return node.labels.find((label) => productTypes.has(label)) ?? node.labels[0] ?? "Unknown"; }
+function isRealLiveSourceRecord(node: GraphApiNode) {
+  const source=String(node.properties.sourceSystem??"").toLowerCase();
+  if(!source)return true;
+  if(["confluence","jira","slack","github"].includes(source))return node.properties.provenance==="mock-verified"||(node.properties.synthetic!==true&&["external-verified","user-provided"].includes(String(node.properties.provenance??"")));
+  return true;
+}
 function isVerifiedProviderRecord(node: GraphApiNode) {
   const source = String(node.properties.sourceSystem ?? "").toLowerCase();
   if (!["confluence", "jira", "slack", "github"].includes(source)) return true;
-  return node.properties.synthetic !== true && ["external-verified", "user-provided"].includes(String(node.properties.provenance ?? ""));
+  return node.properties.provenance === "mock-verified"
+    || (node.properties.synthetic !== true && ["external-verified", "user-provided"].includes(String(node.properties.provenance ?? "")));
 }
 function recordTitle(node: GraphApiNode) { const value = node.properties.name ?? node.properties.title ?? node.properties.key ?? node.id; return typeof value === "string" ? value : node.id; }
 function recordTime(node: GraphApiNode) { return [node.properties.occurredAt,node.properties.validFrom,node.properties.mergedAt,node.properties.updatedAt,node.properties.createdAt].find((value) => typeof value === "string") as string | undefined; }
 function recordPath(node: GraphApiNode) {
   const type=typeOf(node);const id=encodeURIComponent(node.id);
   const graphMode=isProductGraphEntity(type,node.properties.graphDomain)?"product":"team";
-  return `/org-graph?mode=${graphMode}&focus=${id}&type=${encodeURIComponent(type)}`;
+  const documentParams=type==="Document"?`&from=documents&sourceId=${encodeURIComponent(String(node.properties.sourceRecordId??node.id))}&sourceSystem=${encodeURIComponent(String(node.properties.sourceSystem??"confluence"))}`:"";
+  return `/org-graph?mode=${graphMode}&focus=${id}&type=${encodeURIComponent(type)}${documentParams}`;
 }
 function RecordLink({ node, children }: { node: GraphApiNode; children?: ReactNode }) {
   const type=typeOf(node);const entity={...node.properties,id:node.id,entityType:type} as Entity;
@@ -94,20 +104,27 @@ function relativeDate(value?: string) {
 export default function DashboardPage() {
   const [organization,setOrganization]=useState<GraphState>({data:emptyGraph,loading:true,error:""});
   const [product,setProduct]=useState<GraphState>({data:emptyGraph,loading:true,error:""});
-  const [dashboardStats,setDashboardStats]=useState<Pick<DashboardResponse,"sourceCounts"|"totals">|null>(null);
+  const [dashboardStats,setDashboardStats]=useState<Pick<DashboardResponse,"totals">|null>(null);
   const [filter,setFilter]=useState<EntityFilter>(null);
+  const [syncing,setSyncing]=useState<IngestionSource|null>(null);
+  const [syncResult,setSyncResult]=useState<Partial<Record<IngestionSource,{result?:IntegrationSyncResponse;error?:string}>>>({});
   const [activityFilter,setActivityFilter]=useState<(typeof activityFilters)[number]>("All");
   const [knowledgeFilter,setKnowledgeFilter]=useState<(typeof knowledgeFilters)[number]>("All");
   const [knowledgeQuery,setKnowledgeQuery]=useState("");
-  const loadDashboard=useCallback(async()=>{setOrganization(previous=>({...previous,loading:true,error:""}));setProduct(previous=>({...previous,loading:true,error:""}));try{const result=await api.dashboard();setDashboardStats({sourceCounts:result.sourceCounts,totals:result.totals});setOrganization({data:result.organization,loading:false,error:""});setProduct({data:result.productProgress,loading:false,error:""});}catch(error){const message=friendlyApiError(error);setOrganization(previous=>({...previous,loading:false,error:message}));setProduct(previous=>({...previous,loading:false,error:message}));}},[]);
+  const [refreshMessage,setRefreshMessage]=useState("");
+  const { sources: liveSourceData, loading: liveSourcesLoading, refresh: refreshLiveSources } = useLiveSourceData(false);
+  const loadDashboard=useCallback(async(showSuccess=false)=>{if(showSuccess)setRefreshMessage("");setOrganization(previous=>({...previous,loading:true,error:""}));setProduct(previous=>({...previous,loading:true,error:""}));try{const [result,sourceCountsAvailable]=await Promise.all([api.dashboard(),refreshLiveSources()]);setDashboardStats({totals:result.totals});setOrganization({data:result.organization,loading:false,error:""});setProduct({data:result.productProgress,loading:false,error:""});if(showSuccess)setRefreshMessage(sourceCountsAvailable?"Dashboard graph and live source counts refreshed.":"Dashboard graph refreshed; one or more live source counts are unavailable.");}catch(error){const message=friendlyApiError(error);setOrganization(previous=>({...previous,loading:false,error:message}));setProduct(previous=>({...previous,loading:false,error:message}));}},[refreshLiveSources]);
+  async function syncSource(source:IngestionSource){setSyncing(source);setSyncResult(previous=>({...previous,[source]:{}}));try{const result=await api.syncIntegration(source);setSyncResult(previous=>({...previous,[source]:{result}}));void loadDashboard();}catch(error){setSyncResult(previous=>({...previous,[source]:{error:friendlyApiError(error)}}));}finally{setSyncing(null);}}
+
   useEffect(()=>{void loadDashboard();},[loadDashboard]);
   const combinedNodes=useMemo(()=>[...new Map([...organization.data.nodes,...product.data.nodes].map(node=>[node.id,node])).values()], [organization.data.nodes,product.data.nodes]);
-  const combinedEdges=useMemo(()=>[...organization.data.edges,...product.data.edges], [organization.data.edges,product.data.edges]);
+  const nodeIds=useMemo(()=>new Set(combinedNodes.map(node=>node.id)),[combinedNodes]);
+  const combinedEdges=useMemo(()=>[...organization.data.edges,...product.data.edges].filter(edge=>nodeIds.has(edge.source)&&nodeIds.has(edge.target)), [organization.data.edges,product.data.edges,nodeIds]);
   const loaded=!organization.loading&&!product.loading;
   const decisions=useMemo(()=>combinedNodes.filter(node=>typeOf(node)==="Decision").sort((a,b)=>Date.parse(recordTime(b)??"")-Date.parse(recordTime(a)??"")),[combinedNodes]);
   const incidents=useMemo(()=>combinedNodes.filter(node=>typeOf(node)==="Incident"&&node.properties.resolvedAt==null&&!/resolved|closed|complete/i.test(String(node.properties.status??""))),[combinedNodes]);
-  const activities=useMemo(()=>combinedNodes.filter(node=>isVerifiedProviderRecord(node)&&["Activity","PullRequest","Incident","Task","Ticket","Bug","Message","Commit","Release","Employee","Team"].includes(typeOf(node))&&recordTime(node)).sort((a,b)=>Date.parse(recordTime(b)??"")-Date.parse(recordTime(a)??"")),[combinedNodes]);
-  const timeline=useMemo(()=>combinedNodes.filter(node=>isVerifiedProviderRecord(node)&&["Decision","Incident","Activity","PullRequest","Release","Commit","Document"].includes(typeOf(node))&&recordTime(node)).sort((a,b)=>Date.parse(recordTime(b)??"")-Date.parse(recordTime(a)??"")),[combinedNodes]);
+  const activities=useMemo(()=>combinedNodes.filter(node=>isRealLiveSourceRecord(node)&&["Activity","PullRequest","Incident","Task","Ticket","Bug","Message","Commit","Release","Employee","Team"].includes(typeOf(node))&&recordTime(node)).sort((a,b)=>Date.parse(recordTime(b)??"")-Date.parse(recordTime(a)??"")),[combinedNodes]);
+  const timeline=useMemo(()=>combinedNodes.filter(node=>isRealLiveSourceRecord(node)&&["Decision","Incident","Activity","PullRequest","Release","Commit","Document"].includes(typeOf(node))&&recordTime(node)).sort((a,b)=>Date.parse(recordTime(b)??"")-Date.parse(recordTime(a)??"")),[combinedNodes]);
   const teams=combinedNodes.filter(node=>typeOf(node)==="Team");
   const people=combinedNodes.filter(node=>typeOf(node)==="Employee");
   const projects=combinedNodes.filter(node=>["Project","Service","Product","ProductModule"].includes(typeOf(node)));
@@ -116,7 +133,8 @@ export default function DashboardPage() {
     const hasOwner=combinedEdges.some(edge=>["MAINTAINS","OWNS","OWNED_BY","OWNED"].includes(edge.type)&&[edge.source,edge.target].includes(service.id));
     return !hasOwner&&!service.properties.teamId&&!service.properties.ownerId;
   });
-  const metricsLoading=!loaded||dashboardStats===null;
+  const metricsLoading=!loaded||dashboardStats===null||liveSourcesLoading;
+  const sourceSummary=(id:"confluence"|"github"|"jira"|"slack")=>liveSourceData[id];
   const visibleActivity=activities.filter(node=>{
     if(activityFilter==="All")return true;
     if(activityFilter==="People")return ["Employee","Team"].includes(typeOf(node));
@@ -137,25 +155,30 @@ export default function DashboardPage() {
       .some(value=>typeof value==="string"&&value.toLowerCase().includes(term));
     return categoryMatch&&matchesQuery;
   }).slice(0,8);
-  const apiFailures=organization.error?[{label:"Dashboard data",error:organization.error,retry:loadDashboard}]:[];
+  const apiFailures=organization.error?[{label:"Dashboard data",error:organization.error,retry:()=>loadDashboard()}]:[];
 
   return <>
     <div className="page-heading dashboard-bento-heading" id="company-intelligence">
       <div className="dashboard-heading-copy"><div className="eyebrow"><span className="eyebrow-mark"/> Company intelligence</div><h1>Company Intelligence Hub</h1><p>Unified knowledge from your tools, people, and projects — all in one place.</p></div>
-      <div className="heading-actions"><button className="small-button" type="button" onClick={()=>void loadDashboard()} disabled={organization.loading||product.loading}><RefreshCw size={12}/> Refresh data</button><Link className="small-button primary-action" href="/integrations"><Plug size={12}/> Connect source</Link></div>
+      <div className="heading-actions"><button className="small-button" type="button" onClick={()=>void loadDashboard(true)} disabled={organization.loading||product.loading||liveSourcesLoading}><RefreshCw size={12} className={organization.loading||product.loading||liveSourcesLoading?"source-spin":""}/> Refresh data</button><Link className="small-button primary-action" href="/integrations"><Plug size={12}/> Connect source</Link></div>
     </div>
+    {refreshMessage&&<div className="source-library-success" role="status">{refreshMessage}</div>}
     {apiFailures.map(item=><div className="bento-api-alert" role="alert" key={item.label}><CircleAlert size={14}/><span><b>{item.label} unavailable.</b> {item.error}</span><button className="small-button" type="button" onClick={item.retry}>Retry</button></div>)}
 
     <section className="hub-integrations" aria-label="Connected company sources" aria-busy={metricsLoading}>
       {integrationCards.map((source)=>{
-        const count=source.kind==="people"?dashboardStats?.totals.people??0:dashboardStats?.sourceCounts[source.id as IngestionSource]??0;
-        const nodes=source.kind==="people"?people:combinedNodes.filter(node=>String(node.properties.sourceSystem??"").toLowerCase()===source.id&&isVerifiedProviderRecord(node));
+        const sourceData=source.kind==="people"?peopleSourceSummary(dashboardStats?.totals.people??null):sourceSummary(source.id as "confluence"|"github"|"jira"|"slack");
+        const count=sourceData.totalAvailableRecords;
+        const nodes=people;
+        const sync=source.kind==="source"?syncResult[source.id as IngestionSource]:undefined;
+        const countStatus=source.kind==="people"?"Company graph":sourceData.connectionState;
         return <article className="hub-integration-card" key={source.id}>
-          <div className="hub-integration-top"><span className="hub-integration-logo">{source.image?<Image src={source.image} alt="" width={30} height={30}/>:<UsersRound size={22}/>}</span><span className="hub-integration-copy"><b>{source.label}</b><small>{source.detail}</small></span><details className="hub-integration-menu"><summary aria-label={`${source.label} actions`}>···</summary><div><Link href={source.href}>View data</Link><Link href="/integrations">Manage source</Link></div></details></div>
-          <div className="hub-source-status"><i className={count>0?"has-records":""}/><b>{count>0?"Indexed":"No records indexed"}</b></div>
-          <p className="hub-indexed-count">{metricsLoading?"Loading indexed count…":`${count.toLocaleString()} ${source.kind==="people"?"employees":"records"} indexed`}</p>
-          <p className="hub-sync-time">Last successful sync time unavailable</p>
-          <div className="hub-integration-actions"><button type="button" onClick={()=>setFilter({label:`${source.label} records`,nodes})}>View records <ArrowRight size={13}/></button><Link href={source.href} aria-label={`Open ${source.label} data`}>↗</Link></div>
+          <div className="hub-integration-top"><span className="hub-integration-logo">{source.image?<Image src={source.image} alt="" width={30} height={30}/>:<UsersRound size={22}/>}</span><span className="hub-integration-copy"><b>{source.label}</b><small>{source.detail}</small></span><details className="hub-integration-menu"><summary aria-label={`${source.label} actions`}>•••</summary><div><Link href={source.href}>View data</Link>{source.kind==="source"&&<button type="button" disabled={syncing!==null} onClick={()=>void syncSource(source.id as IngestionSource)}>{syncing===source.id?"Syncing…":"Sync now"}</button>}<Link href="/integrations">Manage source</Link></div></details></div>
+          <div className="hub-source-status"><i className={count!==null&&count>0?"has-records":""}/><b>{countStatus}</b></div>
+          <p className="hub-indexed-count">{(source.kind==="people"?(!loaded||dashboardStats===null):liveSourcesLoading)?"Loading source count…":count===null?sourceData?.error??"Count unavailable":source.kind==="people"?`${count.toLocaleString()} employees in company graph`:sourceData.dataMode==="demo"?`${count.toLocaleString()} indexed mock records`:`${count.toLocaleString()} verified indexed records`}</p>
+          <p className="hub-sync-time">{syncing===source.id?"Backend sync in progress":sync?.error?`Sync failed: ${sync.error}`:sync?.result?`${sync.result.fetched} fetched · ${sync.result.processed} processed · ${sync.result.failed} failed`:sourceData.lastSyncTime?`Last successful sync ${new Date(sourceData.lastSyncTime).toLocaleString()}`:"Last successful sync unavailable"}</p>
+          {sync?.result?.error&&<p className="hub-sync-error">{sync.result.error}</p>}
+          <div className="hub-integration-actions">{source.kind==="people"?<button type="button" onClick={()=>setFilter({label:`${source.label} records`,nodes})}>View records <ArrowRight size={13}/></button>:<Link href={source.href}>View records <ArrowRight size={13}/></Link>}</div>
         </article>;
       })}
     </section>
@@ -171,14 +194,14 @@ export default function DashboardPage() {
       </section>
 
       <section className="bento-card bento-activity-card" id="conversations">
-        <div className="bento-card-heading"><div><span className="bento-kicker"><Activity size={12}/> Recent activity</span><h2>Latest company updates</h2><p>Timestamped events in indexed graph records</p></div><Link className="bento-text-button" href="/conversations">View all <ArrowRight size={12}/></Link></div>
+        <div className="bento-card-heading"><div><span className="bento-kicker"><Activity size={12}/> Recent activity</span><h2>Latest company updates</h2><p>Indexed live and seeded mock records from connected sources.</p></div><Link className="bento-text-button" href="/conversations">View all <ArrowRight size={12}/></Link></div>
         <div className="hub-filter-tabs" role="group" aria-label="Filter recent activity">{activityFilters.map(item=><button type="button" key={item} className={activityFilter===item?"active":""} aria-pressed={activityFilter===item} onClick={()=>setActivityFilter(item)}>{item}</button>)}</div>
-        <div className="bento-list">{!loaded?<div className="bento-loading"><span className="spinner"/>Loading records…</div>:visibleActivity.length?visibleActivity.map(node=><div className="bento-event" key={node.id}><span className="hub-record-type-icon">{sourceOptions.find(source=>String(node.properties.sourceSystem??"").toLowerCase().includes(source.id))?<Image src={sourceOptions.find(source=>String(node.properties.sourceSystem??"").toLowerCase().includes(source.id))!.image} alt="" width={24} height={24}/>:<Activity size={14}/>}</span><span className="bento-event-main"><RecordLink node={node}/><small>{String(node.properties.description??node.properties.summary??node.properties.projectName??typeOf(node))}</small></span><span className="bento-event-time">{relativeDate(recordTime(node))}</span></div>):<div className="bento-empty"><Activity size={16}/><p>{activityFilter==="All"?"No activity records are indexed yet.":`No ${activityFilter} activity records were returned.`}</p></div>}</div>
+        <div className="bento-list">{!loaded?<div className="bento-loading"><span className="spinner"/>Loading records…</div>:visibleActivity.length?visibleActivity.map(node=><div className="bento-event" key={node.id}><span className="hub-record-type-icon">{sourceOptions.find(source=>String(node.properties.sourceSystem??"").toLowerCase().includes(source.id))?<Image src={sourceOptions.find(source=>String(node.properties.sourceSystem??"").toLowerCase().includes(source.id))!.image} alt="" width={24} height={24}/>:<Activity size={14}/>}</span><span className="bento-event-main"><RecordLink node={node}/>{node.properties.provenance==="mock-verified"&&<small className="mock-source-label">Mock demo record</small>}<small>{String(node.properties.description??node.properties.summary??node.properties.projectName??typeOf(node))}</small></span><span className="bento-event-time">{relativeDate(recordTime(node))}</span></div>):<div className="bento-empty"><Activity size={16}/><p>{activityFilter==="All"?"No timestamped indexed activity records are available.":`No ${activityFilter} indexed activity records were returned.`}</p></div>}</div>
       </section>
 
       <section className="bento-card hub-quick-insights">
-        <div className="bento-card-heading"><div><span className="bento-kicker"><Sparkles size={12}/> Quick insights</span><h2>Indexed source totals</h2><p>Counts currently available from the dashboard API</p></div></div>
-        <div className="hub-insight-grid">{sourceOptions.map(source=><div className="hub-insight-item" key={source.id}><Image src={source.image} alt="" width={22} height={22}/><b>{metricsLoading?"—":(dashboardStats?.sourceCounts[source.id]??0).toLocaleString()}</b><span>{source.label} records</span></div>)}</div>
+        <div className="bento-card-heading"><div><span className="bento-kicker"><Sparkles size={12}/> Quick insights</span><h2>Source record totals</h2><p>Counts come from the indexed graph; seeded mock sources are labeled as demo data.</p></div></div>
+        <div className="hub-insight-grid">{integrationCards.map(source=>{const info=source.kind==="people"?peopleSourceSummary(dashboardStats?.totals.people??null):sourceSummary(source.id as "confluence"|"github"|"jira"|"slack");const count=info.verifiedIndexedRecordCount??info.totalAvailableRecords;const loadingCount=source.kind==="people"?(!loaded||dashboardStats===null):info.dataMode==="live"&&liveSourcesLoading;return <div className="hub-insight-item" key={source.id}>{source.image?<Image src={source.image} alt="" width={22} height={22}/>:<UsersRound size={20}/>}<b>{loadingCount||count===null?"—":count.toLocaleString()}</b><span>{source.label} {source.kind==="people"?"employees in graph":info.dataMode==="demo"?"demo records":"verified indexed"}</span></div>})}</div>
       </section>
 
       <section className="bento-card hub-top-teams">
@@ -195,7 +218,7 @@ export default function DashboardPage() {
         <div className="bento-card-heading"><div><span className="bento-kicker"><Search size={12}/> Knowledge explorer</span><h2>Company records</h2><p>Search and filter indexed knowledge</p></div><Link className="bento-text-button" href="/documents">View all <ArrowRight size={12}/></Link></div>
         <label className="hub-knowledge-search"><Search size={14}/><input value={knowledgeQuery} onChange={event=>setKnowledgeQuery(event.target.value)} placeholder="Search titles and summaries" aria-label="Search company records"/></label>
         <div className="hub-filter-tabs hub-knowledge-tabs" role="group" aria-label="Filter company records">{knowledgeFilters.map(item=><button type="button" key={item} className={knowledgeFilter===item?"active":""} aria-pressed={knowledgeFilter===item} onClick={()=>setKnowledgeFilter(item)}>{item}</button>)}</div>
-        <div className="hub-knowledge-list">{!loaded?<div className="bento-loading"><span className="spinner"/>Loading records…</div>:knowledgeRecords.length?knowledgeRecords.map(node=><div className="hub-knowledge-row" key={node.id}><span className="hub-record-type-icon">{typeOf(node)==="Employee"||typeOf(node)==="Team"?<UsersRound size={14}/>:typeOf(node)==="Ticket"||typeOf(node)==="Bug"?<CircleAlert size={14}/>:typeOf(node)==="PullRequest"||typeOf(node)==="Commit"?<GitPullRequest size={14}/>:typeOf(node)==="Message"||typeOf(node)==="Channel"?<MessagesSquare size={14}/>:<FileText size={14}/>}</span><span className="hub-knowledge-copy"><RecordLink node={node}/><small>{String(node.properties.description??node.properties.summary??node.properties.sourceSystem??typeOf(node))}</small></span><time>{relativeDate(recordTime(node))}</time></div>):<div className="bento-empty"><BookOpen size={16}/><p>No matching indexed records.</p></div>}</div>
+        <div className="hub-knowledge-list">{!loaded?<div className="bento-loading"><span className="spinner"/>Loading records…</div>:knowledgeRecords.length?knowledgeRecords.map(node=><div className="hub-knowledge-row" key={node.id}><span className="hub-record-type-icon">{typeOf(node)==="Employee"||typeOf(node)==="Team"?<UsersRound size={14}/>:typeOf(node)==="Ticket"||typeOf(node)==="Bug"?<CircleAlert size={14}/>:typeOf(node)==="PullRequest"||typeOf(node)==="Commit"?<GitPullRequest size={14}/>:typeOf(node)==="Message"||typeOf(node)==="Channel"?<MessagesSquare size={14}/>:<FileText size={14}/>}</span><span className="hub-knowledge-copy"><RecordLink node={node}/>{node.properties.provenance==="mock-verified"&&<small className="mock-source-label">Mock demo record</small>}<small>{String(node.properties.description??node.properties.summary??node.properties.sourceSystem??typeOf(node))}</small></span><time>{relativeDate(recordTime(node))}</time></div>):<div className="bento-empty"><BookOpen size={16}/><p>No matching indexed records.</p></div>}</div>
       </section>
 
       <section className="bento-card hub-featured-knowledge">
@@ -229,9 +252,9 @@ export default function DashboardPage() {
       </section>
 
       <section className="bento-card bento-sources-card">
-        <div className="bento-card-heading"><div><span className="bento-kicker"><Plug size={12}/> Data connections</span><h2>Connected sources</h2><p>Counts reflect indexed source metadata. Sync runs through backend workflows.</p></div></div>
-        <div className="bento-list">{sourceOptions.map(source=>{const count=dashboardStats?.sourceCounts[source.id]??0;return <div className="bento-source-row" key={source.id}><Image src={source.image} alt="" width={27} height={27} className="bento-source-image"/><span className="bento-source-copy"><b>{source.label}</b><small>{metricsLoading?"Loading indexed count…":`${count.toLocaleString()} verified indexed records`}</small><small>Last successful sync time unavailable</small></span><Link className="bento-sync-button" href="/sync-data" aria-label={`Open ${source.label} sync status`}>Status</Link></div>})}</div>
-        <Link className="bento-source-settings" href="/sync-data">View sync status <ArrowUpRight size={12}/></Link>
+        <div className="bento-card-heading"><div><span className="bento-kicker"><Plug size={12}/> Data connections</span><h2>Connected sources</h2><p>Backend counts distinguish the live Confluence provider from seeded mock integrations.</p></div></div>
+        <div className="bento-list">{sourceOptions.map(source=>{const info=sourceSummary(source.id);const count=info.verifiedIndexedRecordCount??info.totalAvailableRecords;const sync=syncResult[source.id];return <div className="bento-source-row" key={source.id}><Image src={source.image} alt="" width={27} height={27} className="bento-source-image"/><span className="bento-source-copy"><b>{source.label}</b><small>{liveSourcesLoading?"Checking source…":count===null?info.error??"Count unavailable":`${count} verified indexed records · ${info.connectionState}`}</small>{sync?.error&&<small className="bento-source-error">{sync.error}</small>}{sync?.result&&<small className="bento-source-result">{sync.result.fetched} fetched · {sync.result.processed} processed · {sync.result.indexed} indexed · {sync.result.failed} failed</small>}</span><button className="bento-sync-button" type="button" onClick={()=>void syncSource(source.id)} disabled={syncing!==null} aria-label={`Sync ${source.label}`}>{syncing===source.id?<span className="spinner"/>:<RefreshCw size={12}/>}<span>{syncing===source.id?"Syncing":"Sync"}</span></button></div>})}</div>
+        <Link className="bento-source-settings" href="/settings">Manage source workflows <ArrowUpRight size={12}/></Link>
       </section>
     </section>
   </>;

@@ -37,22 +37,37 @@ export function deterministicTicket(input: TicketInput) {
   const timestamp = input.receivedAt ?? '2026-01-01T00:00:00.000Z';
   const sourceSystem = input.source ?? 'synthetic';
   const sourceRecordId = input.sourceRecordId ?? createHash('sha256').update(text).digest('hex').slice(0, 16);
+  const provenance = input.provenance ?? (sourceSystem === 'synthetic' || sourceSystem === 'seed' ? 'synthetic' : 'user-provided');
+  const issueType = typeof input.metadata?.issueType === 'string' ? input.metadata.issueType.toLowerCase() : '';
+  const kind: TicketKind = /bug|defect/.test(issueType) ? 'bug' : /feature.?request/.test(issueType) ? 'feature-request' : /improvement/.test(issueType) ? 'improvement' : /question/.test(issueType) ? 'question' : classifyTicket(text);
+  const rawPriority = input.metadata?.priority;
+  const priorityName = typeof rawPriority === 'string' ? rawPriority : rawPriority && typeof rawPriority === 'object' && 'name' in rawPriority ? String((rawPriority as { name: unknown }).name) : '';
+  const priority = /^P[0-3]$/i.test(priorityName) ? priorityName.toUpperCase() as TicketPriority : extractPriority(text);
+  const rawStatus = input.metadata?.status;
+  const statusName = typeof rawStatus === 'string' ? rawStatus : rawStatus && typeof rawStatus === 'object' && 'name' in rawStatus ? String((rawStatus as { name: unknown }).name) : '';
+  const statusValue = statusName.toLowerCase().replace(/\s+/g, '-');
+  const knownStatus: TicketStatus[] = ['open', 'triaged', 'in-progress', 'blocked', 'done', 'unknown'];
+  const status = knownStatus.includes(statusValue as TicketStatus) ? statusValue as TicketStatus : extractStatus(text);
   const metadata = input.metadata ?? {};
   const nested = (value: unknown, key: string) => value && typeof value === 'object' ? (value as Record<string, unknown>)[key] : undefined;
   const valueText = (value: unknown) => typeof value === 'string' && value.trim() ? value.trim() : undefined;
   const providerField = (field: string, nestedField: string) => valueText(nested(metadata[field], nestedField)) ?? valueText(metadata[field]);
   return {
-    kind: classifyTicket(text), title: title || 'Untitled ticket', description: text,
-    priority: extractPriority(text), status: extractStatus(text), references: [],
+    kind, title: title || 'Untitled ticket', description: text,
+    priority, status, references: [],
     sourceSystem, sourceRecordId, graphDomain: 'product-progress' as const,
-    synthetic: input.provenance === 'synthetic' || (!input.provenance && (sourceSystem === 'synthetic' || sourceSystem === 'seed')),
-    createdAt: timestamp, updatedAt: timestamp,
+    synthetic: provenance === 'synthetic' || provenance === 'mock-verified',
+    provenance,
+    ...(input.sourceRecordKey ? { sourceRecordKey: input.sourceRecordKey } : {}),
+    ...(input.sourceRecordKey ? { issueKey: input.sourceRecordKey } : valueText(metadata.issueKey) ? { issueKey: valueText(metadata.issueKey) } : {}),
+    ...(input.sourceUrl ? { sourceUrl: input.sourceUrl } : {}),
     ...(providerField('project', 'name') ? { projectName: providerField('project', 'name') } : {}),
-    ...(valueText(metadata.issueKey) ? { issueKey: valueText(metadata.issueKey) } : {}),
     ...(providerField('status', 'name') ? { originalStatus: providerField('status', 'name') } : {}),
     ...(providerField('priority', 'name') ? { originalPriority: providerField('priority', 'name') } : {}),
     ...(providerField('assignee', 'displayName') ? { assigneeName: providerField('assignee', 'displayName') } : {}),
     ...(providerField('reporter', 'displayName') ? { reporterName: providerField('reporter', 'displayName') } : {}),
-    ...(valueText(metadata.externalUrl) ? { externalUrl: valueText(metadata.externalUrl) } : {})
+    ...(valueText(metadata.externalUrl) ? { externalUrl: valueText(metadata.externalUrl) } : input.sourceUrl ? { externalUrl: input.sourceUrl } : {}),
+    ...(input.metadata ? { sourceMetadataJson: JSON.stringify(input.metadata) } : {}),
+    createdAt: timestamp, updatedAt: timestamp
   };
 }

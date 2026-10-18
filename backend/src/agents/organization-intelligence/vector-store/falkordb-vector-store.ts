@@ -170,6 +170,43 @@ export class FalkorDBVectorStore {
     return { totalSources: Number(found.documents ?? 0), processed: Number(found.documents ?? 0), skipped: 0, updated: 0, failed: Number(job.failedWork ?? 0), failedWork: Number(job.failedWork ?? 0), pendingWork: Number(job.pendingWork ?? 0), totalChunks: Number(found.chunks ?? 0), lastIngestedAt: String(job.lastSuccessfulIngestion ?? found.updatedAt ?? this.lastUpdated), lastSuccessfulIngestion: typeof job.lastSuccessfulIngestion === 'string' ? job.lastSuccessfulIngestion : undefined, sourceTypeBreakdown: breakdown };
   }
 
+  async countOrganizationEntities(entity: 'Employee' | 'Team'): Promise<number> {
+    const result = rows(await this.graph.query(`MATCH (n:${entity}) RETURN count(DISTINCT n) AS count`));
+    const count = Number(result[0]?.count);
+    if (!Number.isSafeInteger(count) || count < 0) throw new Error(`FalkorDB returned an invalid ${entity} count.`);
+    return count;
+  }
+
+  async countVerifiedJiraIssues(): Promise<number> {
+    const result = rows(await this.graph.query(`MATCH (n) WHERE (n:Ticket OR n:Bug)
+      AND toLower(coalesce(n.sourceSystem,''))='jira'
+      AND ((coalesce(n.synthetic,false)=false AND n.provenance IN ['external-verified','user-provided']) OR n.provenance='mock-verified')
+      AND n.sourceRecordId IS NOT NULL
+      RETURN count(DISTINCT n.sourceRecordId) AS count`));
+    const count = Number(result[0]?.count);
+    if (!Number.isSafeInteger(count) || count < 0) throw new Error('FalkorDB returned an invalid verified Jira issue count.');
+    return count;
+  }
+
+  async getRecentVerifiedJiraIssues(limit = 5): Promise<Array<{ id: string; key: string; summary: string; status?: string; priority?: string; updatedAt?: string; url?: string }>> {
+    const result = rows(await this.graph.query(`MATCH (n) WHERE (n:Ticket OR n:Bug)
+      AND toLower(coalesce(n.sourceSystem,''))='jira'
+      AND ((coalesce(n.synthetic,false)=false AND n.provenance IN ['external-verified','user-provided']) OR n.provenance='mock-verified')
+      AND n.sourceRecordId IS NOT NULL
+      RETURN n.id AS id, coalesce(n.key,n.sourceRecordKey,n.sourceRecordId) AS issueKey,
+        coalesce(n.summary,n.title,n.name) AS summary, n.status AS status, n.priority AS priority,
+        coalesce(n.updatedAt,n.updated,n.createdAt,n.created) AS updatedAt,
+        coalesce(n.externalUrl,n.url) AS url
+      ORDER BY updatedAt DESC LIMIT $limit`, { params: { limit } }));
+    return result.flatMap((row) => {
+      const id = String(row.id ?? '');
+      const key = String(row.issueKey ?? '');
+      const summary = String(row.summary ?? '').trim();
+      if (!key || !summary) return [];
+      return [{ id, key, summary, ...(typeof row.status === 'string' ? { status: row.status } : {}), ...(typeof row.priority === 'string' ? { priority: row.priority } : {}), ...(typeof row.updatedAt === 'string' ? { updatedAt: row.updatedAt } : {}), ...(typeof row.url === 'string' ? { url: row.url } : {}) }];
+    });
+  }
+
   getEmbeddingDimensions(): number[] { return [EMBEDDING_DIMENSIONS]; }
   async save(): Promise<void> { this.lastUpdated = new Date().toISOString(); }
   async clear(): Promise<void> {

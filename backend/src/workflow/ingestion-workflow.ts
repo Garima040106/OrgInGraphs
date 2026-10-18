@@ -7,7 +7,7 @@ import { processDocuments } from '../agents/document-processor/agent.js';
 import type { DocumentOutcome, DocumentProcessorOptions } from '../agents/document-processor/types.js';
 import { env } from '../config/env.js';
 
-export const ingestionRequestSchema = z.object({ source: z.enum(mockSources), limit: z.number().int().min(1).max(100).optional() }).strict();
+export const ingestionRequestSchema = z.object({ source: z.enum(mockSources), limit: z.number().int().min(1).max(1000).optional() }).strict();
 export type IngestionStatus = 'received' | 'failed' | 'fetched' | 'processed' | 'partial' | 'empty';
 export type IngestionRequest = MockFetcherRequest;
 export interface IngestionResult { status: IngestionStatus; source?: string; documents: NormalizedDocument[]; fetchedDocumentCount: number; excludedSyntheticCount: number; outcomes: DocumentOutcome[]; errors: string[]; }
@@ -59,7 +59,7 @@ export function createIngestionWorkflow(dependencies: IngestionWorkflowDependenc
         if (result.source !== state.request.source) return { status: 'failed' as const, errors: ['Source connector returned records for a different source.'] };
         const validated = z.array(normalizedDocumentSchema).safeParse(result.documents);
         if (!validated.success || validated.data.some((document) => document.sourceSystem !== result.source)) return { status: 'failed' as const, errors: ['Fetched records failed the normalized ingestion schema.'] };
-        const verified = validated.data.filter((document) => !document.synthetic && document.provenance !== 'synthetic');
+        const verified = validated.data.filter((document) => !document.synthetic || document.provenance === 'mock-verified');
         const excludedSyntheticCount = validated.data.length - verified.length;
         if (validated.data.length && !verified.length) {
           return { documents: [], fetchedDocumentCount: validated.data.length, excludedSyntheticCount, status: 'failed' as const, errors: [`${result.source} returned only demo or synthetic records. They were not written to FalkorDB.`] };

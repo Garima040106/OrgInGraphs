@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { api, friendlyApiError } from "@/lib/api";
 import { buildInitialGraph } from "@/lib/graph/layout";
-import { graphRootId, normalizeNeighborhood, organizationGraph, toGraphNode, type GraphNodeData } from "@/lib/graph/normalize";
+import { graphEntity, graphRootId, normalizeNeighborhood, organizationGraph, toGraphNode, type GraphNodeData } from "@/lib/graph/normalize";
 import { useExpandableGraph } from "@/lib/graph/useExpandableGraph";
 import type { GraphEntityType, GraphResponse, Neighborhood } from "@/lib/types";
 
@@ -153,6 +153,10 @@ export function GraphRenderer({
   const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [panelError, setPanelError] = useState("");
+  const [traceMode, setTraceMode] = useState(false);
+  const [traceExpandedIds, setTraceExpandedIds] = useState<Set<string>>(new Set());
+  const [traceExpandingId, setTraceExpandingId] = useState<string | null>(null);
+  const [traceExpansionChildren, setTraceExpansionChildren] = useState<Record<string, string[]>>({});
   const { fitView, zoomIn, zoomOut } = useReactFlow();
 
   useEffect(() => {
@@ -205,20 +209,36 @@ export function GraphRenderer({
 
   useEffect(() => {
     if (!focusId) return;
-    const target = nodes.find((node) => node.id === focusId);
-    if (target) {
-      setSelectedId(target.id);
-      window.setTimeout(() => void fitView({ nodes: [target], duration: 500, padding: .45 }), 100);
+    const graphTarget = fullGraph.nodes.find((node) => node.id === focusId);
+    if (graphTarget) {
+      const relatedEdges = fullGraph.edges.filter((edge) => edge.source === focusId || edge.target === focusId);
+      const neighborIds = new Set([focusId, ...relatedEdges.flatMap((edge) => [edge.source, edge.target])]);
+      const rootEntity = graphEntity(graphTarget);
+      const rootNode = toGraphNode(rootEntity, { x: 900, y: 360 });
+      rootNode.data.hasChildren = relatedEdges.length > 0;
+      const neighborhood = {
+        nodes: fullGraph.nodes.filter((node) => neighborIds.has(node.id)).map(graphEntity),
+        edges: relatedEdges.map((edge) => ({ from: edge.source, to: edge.target, type: edge.type })),
+      };
+      const normalized = normalizeNeighborhood(neighborhood, rootEntity, [rootNode], rootNode.position);
+      setTraceMode(true);
+      setTraceExpandedIds(new Set());
+      setTraceExpansionChildren({});
+      replaceGraph([rootNode, ...normalized.nodes.map((node) => ({ ...node, data: { ...node.data, hasChildren: true } }))], normalized.edges);
+      setSelectedId(focusId);
+      window.setTimeout(() => void fitView({ nodes: [rootNode], duration: 500, padding: .45 }), 100);
     } else if (focusType && focusType !== "Unknown") {
       void api.neighborhood(focusType, focusId).then((data) => {
         const root = data.nodes.find((node) => node.id === focusId);
         if (!root) return;
         const rootEntity = { ...root, entityType: root.entityType ?? focusType as GraphEntityType };
         const rootNode = toGraphNode(rootEntity, { x: 900, y: 360 });
-        const normalized = normalizeNeighborhood(data, rootEntity, [...nodes, rootNode], rootNode.position);
-        // Focus navigation is intentionally additive; ordinary graph expansion remains hook-owned.
-        // This preserves existing search/deep-link behavior without changing the graph data source.
-        replaceGraph([rootNode, ...normalized.nodes], normalized.edges);
+        const normalized = normalizeNeighborhood(data, rootEntity, [rootNode], rootNode.position);
+        rootNode.data.hasChildren = data.edges.length > 0;
+        setTraceMode(true);
+        setTraceExpandedIds(new Set());
+        setTraceExpansionChildren({});
+        replaceGraph([rootNode, ...normalized.nodes.map((node) => ({ ...node, data: { ...node.data, hasChildren: true } }))], normalized.edges);
         setSelectedId(root.id);
         window.setTimeout(() => void fitView({ nodes: [rootNode], duration: 500, padding: .45 }), 100);
       }).catch((error: unknown) => setPanelError(friendlyApiError(error)));
@@ -239,6 +259,37 @@ export function GraphRenderer({
       return;
     }
     setPanelError("");
+    if (traceMode) {
+      if (traceExpandedIds.has(nodeToExpand.id)) {
+        const removed = new Set<string>();
+        const collect = (id: string) => { for (const child of traceExpansionChildren[id] ?? []) { if (!removed.has(child)) { removed.add(child); collect(child); } } };
+        collect(nodeToExpand.id);
+        const retainedNodes = nodes.filter((node) => !removed.has(node.id));
+        const retainedEdges = edges.filter((edge) => !removed.has(edge.source) && !removed.has(edge.target));
+        replaceGraph(retainedNodes, retainedEdges);
+        setTraceExpandedIds((current) => { const next = new Set(current); next.delete(nodeToExpand.id); for (const id of removed) next.delete(id); return next; });
+        setTraceExpansionChildren((current) => { const next = { ...current }; delete next[nodeToExpand.id]; for (const id of removed) delete next[id]; return next; });
+        return;
+      }
+      setTraceExpandingId(nodeToExpand.id);
+      try {
+        const data = await api.neighborhood(type, nodeToExpand.id);
+        const additions = normalizeNeighborhood(data, nodeToExpand.data.entity, nodes, nodeToExpand.position);
+        const connectedIds = new Set(data.nodes.map((entity) => entity.id));
+        const nextNodes = nodes.map((node) => node.id === nodeToExpand.id ? { ...node, data: { ...node.data, hasChildren: data.edges.length > 0, isExpanded: data.edges.length > 0 } } : node);
+        const uniqueNodes = [...nextNodes, ...additions.nodes.filter((node) => !nextNodes.some((current) => current.id === node.id)).map((node) => ({ ...node, data: { ...node.data, hasChildren: true } }))];
+        const uniqueEdges = new Map([...edges, ...additions.edges].map((edge) => [edge.id, edge]));
+        replaceGraph(uniqueNodes, [...uniqueEdges.values()]);
+        setTraceExpandedIds((current) => new Set(current).add(nodeToExpand.id));
+        setTraceExpansionChildren((current) => ({ ...current, [nodeToExpand.id]: additions.nodes.map((node) => node.id) }));
+        if (connectedIds.size <= 1) setPanelError("No linked records or relationships found for this entity.");
+      } catch (error) {
+        setPanelError(friendlyApiError(error));
+      } finally {
+        setTraceExpandingId(null);
+      }
+      return;
+    }
     try {
       const toggled = toggleExpansion(nodeToExpand.id);
       if (toggled) {
@@ -305,8 +356,8 @@ export function GraphRenderer({
                   setSelectedId(node.id);
                   void expandNode(node);
                 },
-                isExpanded: expandedIds.has(node.id),
-                isExpanding: expandingId === node.id,
+                isExpanded: traceMode ? traceExpandedIds.has(node.id) : expandedIds.has(node.id),
+                isExpanding: traceMode ? traceExpandingId === node.id : expandingId === node.id,
               },
             }))}
             edges={activeEdges}
@@ -379,7 +430,9 @@ export function GraphRenderer({
             {panelError && <div className="panel-error">{panelError}</div>}
             {detailLoading && <div className="inspector-section"><span className="inline-loading"><span className="spinner" />Loading record details…</span></div>}
             {fieldRows.length > 0 && <div className="inspector-section"><h4>Available information</h4>{fieldRows.map(([key, value]) => <div className="metadata-row" key={key}><span>{key.replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)}</span><span>{String(value)}</span></div>)}</div>}
-            {!!connected.length && <div className="inspector-section"><h4>Connected records · {connected.length}</h4>{connected.slice(0, 7).map((item) => <div className="connection-item" key={`${item.id}:${item.relationship}`}><span className="connection-bullet"><ChevronRight size={11} /></span><span>{item.node?.data.label}<small style={{ display: "block", color: "#a0a7b3", marginTop: 2 }}>{String(item.relationship || "connected")} · {item.direction}</small></span></div>)}</div>}
+            {!!connected.length && <div className="inspector-section"><h4>Connected records · {connected.length}</h4>{connected.map((item) => <div className="connection-item" key={`${item.id}:${item.relationship}`}><span className="connection-bullet"><ChevronRight size={11} /></span><span>{item.node?.data.label}<small style={{ display: "block", color: "#a0a7b3", marginTop: 2 }}>{String(item.relationship || "connected")} · {item.direction}</small></span></div>)}</div>}
+            {!connected.length && selectedNode.data.entityType === "Document" && <div className="inspector-section"><h4>Document trace</h4><p className="document-trace-empty">No linked tasks or relationships found.</p></div>}
+            {selectedNode.data.entityType === "Document" && <div className="inspector-section"><h4>Document details</h4><div className="metadata-row"><span>Document ID</span><span>{String(selectedNode.data.entity.sourceRecordId ?? selectedNode.data.entity.id)}</span></div><div className="metadata-row"><span>Source</span><span>{entitySource(selectedNode.data.entity)}</span></div>{typeof selectedNode.data.entity.title === "string" && <div className="metadata-row"><span>Title</span><span>{selectedNode.data.entity.title}</span></div>}{typeof selectedNode.data.entity.content === "string" && <div className="document-content">{selectedNode.data.entity.content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim()}</div>}{typeof selectedNode.data.entity.summary === "string" && typeof selectedNode.data.entity.content !== "string" && <div className="document-content">{selectedNode.data.entity.summary}</div>}</div>}
             {selectedNode.data.entityType !== "Employee" && selectedNode.data.entityType !== "Department" && selectedNode.data.entityType !== "Project" && <div className="inspector-section"><h4>Connection note</h4><div className="metadata-row"><span>Backend provides</span><span>Graph neighborhood</span></div></div>}
           </aside>
         )}

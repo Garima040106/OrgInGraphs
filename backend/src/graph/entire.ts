@@ -51,7 +51,7 @@ export async function fetchEntireGraph(graph: Graph): Promise<EntireGraph> {
   // The graph also contains backend-owned records such as RAG chunks and
   // indexing status nodes. Those records intentionally use chunkId/orgId,
   // not the stable entity id required by the graph API.
-  const nodeResult = await query(graph, 'MATCH (n) WHERE n.id IS NOT NULL RETURN n');
+  const nodeResult = await query(graph, 'MATCH (n) WHERE n.id IS NOT NULL AND NOT n:IntegrationSyncStatus RETURN n');
   const nodeRows = (nodeResult.data ?? []) as QueryRow[];
   const nodes: GraphApiNode[] = [];
   const internalToStable = new Map<string, string>();
