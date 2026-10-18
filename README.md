@@ -240,6 +240,22 @@ sequenceDiagram
 Confluence retrieval supports a configured backend-side Atlassian REST connection. Jira, GitHub, and Slack records are retrieved through configured backend connector endpoints and normalized by the backend; the ingestion pipeline verifies provenance before accepting source records into the company graph. Source-library routes read persisted graph records rather than calling providers from the browser.
 
 `GET /api/integrations/status` reports configuration, indexed counts, and recorded sync outcomes. It does not actively verify upstream credentials or connectivity. A configured endpoint or credential alone does not establish a healthy live connection.
+## Screenshots 
+<img width="2873" height="1478" alt="image" src="https://github.com/user-attachments/assets/132d803e-f15d-4a38-a4d0-ef2bf0dcc1e6" />
+ <img width="2878" height="1475" alt="image" src="https://github.com/user-attachments/assets/b4eb2d52-67c8-4668-87c6-ef3053ad7e4b" />
+ <img width="2878" height="1478" alt="image" src="https://github.com/user-attachments/assets/a803cd5c-eeb2-49bb-8417-d74fc8533c0e" />
+<img width="2878" height="1473" alt="image" src="https://github.com/user-attachments/assets/b9e48037-ef3f-4e1a-aa5b-d75bef12c8dd" />
+<img width="908" height="1335" alt="image" src="https://github.com/user-attachments/assets/b175e2f3-9344-41e7-8757-654a955d9557" />
+<img width="2877" height="1475" alt="image" src="https://github.com/user-attachments/assets/1631aa16-94e9-4cf4-a87b-5ead7ee9ae17" />
+<img width="2843" height="1475" alt="image" src="https://github.com/user-attachments/assets/8d5d9a38-7fb5-4fad-b803-e5f17b9a25c4" />
+<img width="2878" height="1475" alt="image" src="https://github.com/user-attachments/assets/75c41d9c-07c3-4efd-a068-d5fc36af24be" />
+
+
+
+
+
+
+
 
 ## API surface
 
