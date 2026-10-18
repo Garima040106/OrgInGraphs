@@ -70,7 +70,7 @@ export type IntegrationSyncRun = {
   skipped: number;
   error: string | null;
 };
-export type IntegrationStatusResponse = {
+export type ConnectorHistoryStatusResponse = {
   sources: IntegrationStatus[];
   syncHistoryAvailable: boolean;
   syncAuthorization: "backend-admin-key-required";
@@ -167,6 +167,30 @@ export type IngestionResponse = {
   outcomes: IngestionOutcome[];
   errors: string[];
 };
+
+export type IntegrationSource = IngestionSource;
+export type IntegrationSourceStatus = {
+  source: IntegrationSource;
+  sourceMode?: "live" | "mock";
+  connectionState: "Connected" | "Not configured" | "Authentication failed" | "Permission missing" | "Syncing" | "Sync failed" | string;
+  syncState: "idle" | "running" | "completed" | "partial" | "failed" | "empty";
+  fetched: number | null;
+  processed: number | null;
+  persisted?: number | null;
+  indexedThisRun?: number | null;
+  indexed: number | null;
+  indexedError?: string;
+  skipped: number | null;
+  failed: number | null;
+  pending: number;
+  attemptedAt?: string | null;
+  lastSuccessfulSync: string | null;
+  failureCategory?: string;
+  endpoint?: { hostname: string; paths: string[] };
+  error?: string;
+};
+export type IntegrationStatusResponse = { sources: IntegrationSourceStatus[] };
+export type IntegrationSyncResponse = IntegrationSourceStatus & { outcomes: IngestionOutcome[]; errors: string[] };
 
 export type PlatformType = "jira" | "confluence" | "slack" | "github" | "route" | "database";
 

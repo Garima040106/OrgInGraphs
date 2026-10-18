@@ -18,13 +18,7 @@ const displayTime = (value: string | null | undefined) => {
   const date = new Date(value);
   return Number.isNaN(date.valueOf()) ? "Not available" : date.toLocaleString();
 };
-const connectionLabel = (value: string | undefined) => ({
-  "not-configured": "Not configured",
-  "not-tested": "Not tested",
-  available: "Available",
-  "fixture-data": "Fixture data detected",
-  error: "Sync failed"
-}[value ?? "not-tested"] ?? "Not tested");
+const connectionLabel = (value: string | undefined) => value ?? "Not tested";
 
 export function IntegrationStatusView({ syncPage = false, title }: { syncPage?: boolean; title?: string }) {
   const [result, setResult] = useState<IntegrationStatusResponse | null>(null);
@@ -63,14 +57,16 @@ export function IntegrationStatusView({ syncPage = false, title }: { syncPage?: 
         return <article className="integration-status-card" key={provider.id}>
           <div className="integration-status-card-head"><Image src={provider.image} alt="" width={34} height={34}/><div><h2>{provider.name}</h2><p>{provider.details}</p></div></div>
           <dl>
-            <div><dt>Backend connector</dt><dd>{loading ? "Checking…" : status?.connectorConfigured ? "Endpoint configured" : "Not configured"}</dd></div>
-            <div><dt>Verified indexed records</dt><dd>{loading ? "—" : (status?.indexedRecords ?? 0).toLocaleString()}</dd></div>
-            <div><dt>Last sync health</dt><dd>{loading ? "Checking…" : connectionLabel(status?.connectionStatus)}</dd></div>
+            <div><dt>Integration mode</dt><dd>{provider.id === "confluence" ? "Live provider" : "Mock/demo source"}</dd></div>
+            <div><dt>Connector reachability</dt><dd>{loading ? "Checking…" : connectionLabel(status?.connectionState)}</dd></div>
+            <div><dt>Verified indexed records</dt><dd>{loading ? "—" : status?.indexed === null || status?.indexed === undefined ? "Unavailable" : status.indexed.toLocaleString()}</dd></div>
+            <div><dt>Latest sync</dt><dd>{loading ? "Checking…" : status?.syncState ?? "Unknown"}</dd></div>
             <div><dt>Last successful sync</dt><dd>{displayTime(status?.lastSuccessfulSync)}</dd></div>
-            <div><dt>Last attempt</dt><dd>{displayTime(status?.lastAttemptedSync)}</dd></div>
+            <div><dt>Last attempt</dt><dd>{displayTime(status?.attemptedAt)}</dd></div>
+            {status?.fetched !== null && status?.fetched !== undefined && <div><dt>Latest run counts</dt><dd>{status.fetched} fetched · {status.processed ?? 0} processed · {status.persisted ?? 0} persisted/indexed · {status.skipped ?? 0} skipped · {status.failed ?? 0} failed</dd></div>}
           </dl>
-          {status?.lastError && <p className="integration-status-error" role="status">{status.lastError}</p>}
-          {!!status?.history?.length && <div className="integration-sync-history"><b>Recent syncs</b>{status.history.slice(0, 5).map((run) => <div key={run.id}><span>{displayTime(run.finishedAt)}</span><span>{run.status}</span><span>{run.fetched} fetched · {run.processed} stored · {run.excludedSynthetic} fixtures excluded · {run.failed + run.unresolved + run.skipped} need attention</span></div>)}</div>}
+          {status?.error && <p className="integration-status-error" role="status">{status.error}</p>}
+          {status?.indexedError && <p className="integration-status-error" role="status">{status.indexedError}</p>}
           <div className="integration-status-card-footer"><Link href={provider.href}>View indexed records <ArrowUpRight size={13}/></Link><span>Browser sync unavailable</span></div>
         </article>;
       })}

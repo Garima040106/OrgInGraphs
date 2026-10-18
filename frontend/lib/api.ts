@@ -13,9 +13,12 @@ import type {
   AssistantQuery,
   AssistantResponse,
   DashboardResponse,
+  IntegrationStatusResponse,
+  IntegrationSyncResponse,
   SourceRecordResponse,
   RagQueryResponse,
-  IntegrationStatusResponse,
+  IngestionSource,
+  IngestionResponse,
 } from "@/lib/types";
 import { z } from "zod";
 
@@ -112,7 +115,15 @@ export const api = {
     request<Neighborhood>(`/api/graph/neighborhood/${encodeURIComponent(type)}/${encodeURIComponent(id)}`),
   search: (term: string, signal?: AbortSignal) =>
     request<SearchResult[]>(`/api/search${query({ q: term })}`, { signal }),
-  integrationStatus: (signal?: AbortSignal) => request<IntegrationStatusResponse>("/api/integrations/status", { signal }),
+  processIngestion: (source: IngestionSource, limit = 20) => request<IngestionResponse>("/api/ingestion/process", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source, limit }),
+  }),
+  integrationStatus: (signal?: AbortSignal) => request<IntegrationStatusResponse>("/api/integrations/status", { signal }, 20_000),
+  syncIntegration: (source: IngestionSource, limit = 500) => request<IntegrationSyncResponse>(`/api/integrations/${source}/sync`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ limit }),
+  }, 120_000),
   documents: (params: { q?: string; limit?: number; offset?: number; signal?: AbortSignal } = {}) => request<SourceRecordResponse>(`/api/documents${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`, { signal: params.signal }),
   tickets: (params: { q?: string; limit?: number; offset?: number; signal?: AbortSignal } = {}) => request<SourceRecordResponse>(`/api/tickets${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`, { signal: params.signal }),
   conversations: (params: { q?: string; limit?: number; offset?: number; signal?: AbortSignal } = {}) => request<SourceRecordResponse>(`/api/conversations${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`, { signal: params.signal }),

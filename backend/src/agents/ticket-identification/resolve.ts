@@ -10,7 +10,7 @@ export async function resolveReference(graph: Graph | undefined, kind: Reference
       ? await query(graph, 'MATCH (n:Product) WHERE n.graphDomain = $domain AND (n.id = $text OR toLower(n.name) = toLower($text)) RETURN n', { text, domain: 'product-progress' })
       : kind === 'module'
         ? await query(graph, 'MATCH (n:ProductModule) WHERE n.graphDomain = $domain AND (n.id = $text OR toLower(n.name) = toLower($text)) RETURN n', { text, domain: 'product-progress' })
-        : await query(graph, 'MATCH (n) WHERE n.graphDomain = $domain AND (n:Ticket OR n:Bug OR n:Feature OR n:FeatureRequest) AND (n.id = $text OR toLower(n.title) = toLower($text)) RETURN n', { text, domain: 'product-progress' });
+        : await query(graph, 'MATCH (n) WHERE n.graphDomain = $domain AND (n:Ticket OR n:Bug OR n:Feature OR n:FeatureRequest) AND (n.id = $text OR n.sourceRecordKey = $text OR toLower(n.title) = toLower($text)) RETURN n', { text, domain: 'product-progress' });
   const candidates = rows(result).map((row) => row.n?.id).filter((id): id is string => typeof id === 'string');
   if (candidates.length === 1) return { kind, text, id: candidates[0], status: 'resolved' };
   if (candidates.length > 1) return { kind, text, status: 'ambiguous', candidates };

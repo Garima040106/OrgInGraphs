@@ -6,7 +6,7 @@ import type { FeatureUpdateModel } from '../agents/feature-update/types.js';
 
 export const workflowEventKinds = ['auto', 'ticket', 'feature-update'] as const;
 export type WorkflowEventKind = (typeof workflowEventKinds)[number];
-export const workflowProvenances = ['synthetic', 'user-provided', 'external-verified'] as const;
+export const workflowProvenances = ['synthetic', 'user-provided', 'external-verified', 'mock-verified'] as const;
 export type WorkflowProvenance = (typeof workflowProvenances)[number];
 
 export interface WorkflowInputEvent {

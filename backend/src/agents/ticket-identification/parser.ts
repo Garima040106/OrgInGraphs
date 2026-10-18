@@ -16,8 +16,12 @@ export async function parseTicket(input: TicketInput, model?: TicketModel) {
     id: `ticket-${createHash('sha256').update(`${fallback.sourceSystem}:${fallback.sourceRecordId}`).digest('hex').slice(0, 16)}`,
     sourceSystem: fallback.sourceSystem,
     sourceRecordId: fallback.sourceRecordId,
+    sourceRecordKey: fallback.sourceRecordKey,
+    sourceUrl: fallback.sourceUrl,
+    sourceMetadataJson: fallback.sourceMetadataJson,
     graphDomain: 'product-progress' as const,
     synthetic: fallback.synthetic,
+    provenance: fallback.provenance,
     createdAt: fallback.createdAt,
     updatedAt: fallback.updatedAt
   };
