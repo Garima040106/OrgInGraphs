@@ -29,7 +29,7 @@ npm start
 
 ## Configuration
 
-Set `NEXT_PUBLIC_API_BASE_URL` in `.env.local` to the browser-accessible backend URL. Development falls back to `http://localhost:8080`; production builds fail requests with a clear configuration error when the variable is missing instead of calling the visitor's localhost.
+Set `NEXT_PUBLIC_API_BASE_URL` in `.env.local` to the browser-accessible backend URL. Development falls back to `http://localhost:8080`; production falls back to `https://orgingraphs.onrender.com`. Set the variable in Vercel when deploying to a different backend; the configured value overrides these defaults.
 
 The backend CORS allowlist includes `https://orgingraphs-ysq7.vercel.app`. Set `FRONTEND_ORIGINS` in the backend environment to a comma-separated list for local development or any additional deployment origins.
 
