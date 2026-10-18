@@ -12,14 +12,14 @@ export function useExpandableGraph(
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
-    graphMode === "product" ? new Set(initialNodes.map((n) => n.id)) : new Set(),
+    new Set(),
   );
   const [expandingId, setExpandingId] = useState<string | null>(null);
 
   const reset = useCallback(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
-    setExpandedIds(graphMode === "product" ? new Set(initialNodes.map((n) => n.id)) : new Set());
+    setExpandedIds(new Set());
     setExpandingId(null);
   }, [initialEdges, initialNodes, graphMode]);
 
