@@ -100,7 +100,7 @@ export function AppShell({
 
   return (
     <div className={`app-shell ${assistantOpen ? "assistant-open" : ""}`}>
-      <aside className="sidebar">
+      <aside className="sidebar" data-lenis-prevent>
         <Brand href="/dashboard" />
         <div className="sidebar-kicker">{company}</div>
         <button className="workspace-switch" type="button" aria-label={`${company} workspace`}>
@@ -134,7 +134,7 @@ export function AppShell({
             <button className="topbar-user" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open OrgMind Assistant"><Sparkles size={13} /></button>
           </div>
         </header>
-        <main className="workspace-content">{children}</main>
+        <main className="workspace-content" data-lenis-prevent>{children}</main>
       </div>
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <button className="assistant-launch" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open OrgMind Assistant"><Sparkles size={14} /> OrgMind Assistant</button>
