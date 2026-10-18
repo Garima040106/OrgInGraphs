@@ -5203,15 +5203,6 @@ body {
   justify-content: space-between;
 }
 
-.platform-card-score {
-  font-size: 10px;
-  font-weight: 600;
-  color: #059669;
-  background: #d1fae5;
-  padding: 2px 6px;
-  border-radius: 10px;
-}
-
 .platform-card-title-row {
   display: flex;
   flex-direction: column;
