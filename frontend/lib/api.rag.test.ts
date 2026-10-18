@@ -28,7 +28,7 @@ test("RAG query posts the backend contract to the configured local API", async (
     assert.equal(requestInit?.method, "POST");
     assert.equal(new Headers(requestInit?.headers).get("content-type"), "application/json");
     assert.deepEqual(JSON.parse(String(requestInit?.body)), { question: "What does the company do?" });
-    assert.equal(new Headers(requestInit?.headers).get("x-orgmind-user-id"), "demo@hirenova.example");
+  assert.equal(new Headers(requestInit?.headers).get("x-orgmind-user-id"), "demo@hirenova.com");
     assert.equal(result.sources[0]?.documentId, "docs/company.md");
     assert.equal(result.sources[0]?.score, 0.87);
     assert.deepEqual(result.sources[0]?.citationIds, ["S1"]);

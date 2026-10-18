@@ -54,7 +54,7 @@ async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 1
     ? AbortSignal.any([controller.signal, options.signal])
     : controller.signal;
   try {
-    const identity = typeof window !== "undefined" ? window.localStorage.getItem("oig-demo-workspace") ?? "demo@hirenova.example" : "demo@hirenova.example";
+    const identity = typeof window !== "undefined" ? window.localStorage.getItem("oig-demo-workspace") ?? "demo@hirenova.com" : "demo@hirenova.com";
     const response = await fetch(`${baseUrl}${path}`, {
       ...options,
       signal,
