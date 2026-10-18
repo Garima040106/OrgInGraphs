@@ -5377,18 +5377,23 @@ body {
 .assistant-welcome h2 { font-size: clamp(23px, 4vw, 30px); }
 .assistant-form {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
   flex: 0 0 auto;
   min-width: 0;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  padding-bottom: 25px;
+  align-items: end;
+  row-gap: 4px;
+  padding-bottom: 9px;
 }
 .assistant-form textarea {
   display: block;
+  width: 100%;
   min-width: 0;
+  min-height: 42px;
   max-height: 120px;
-  flex: 1 1 auto;
+  grid-column: 1;
+  grid-row: 1;
+  padding: 8px 0;
   resize: none;
   overflow-y: auto;
   border: 0;
@@ -5401,9 +5406,9 @@ body {
 }
 .assistant-form textarea::placeholder { color: #858a82; }
 .assistant-form textarea:focus-visible { outline: 2px solid #8eae98; outline-offset: 3px; border-radius: 4px; }
-.assistant-form button[type="submit"] { flex: 0 0 38px; }
+.assistant-form button[type="submit"] { grid-column: 2; grid-row: 1; align-self: end; width: 38px; height: 38px; flex: 0 0 auto; }
 .assistant-form button:focus-visible, .assistant-header button:focus-visible, .assistant-mode-pill:focus-visible, .suggestion-chip:focus-visible, .rag-inline-citation:focus-visible, .rag-copy-answer:focus-visible, .assistant-jump-latest:focus-visible { outline: 2px solid #538366; outline-offset: 2px; }
-.assistant-composer-hint { position: absolute; bottom: 7px; left: 14px; color: #858a82; font-size: 9px; }
+.assistant-composer-hint { position: static; grid-column: 1 / -1; grid-row: 2; min-width: 0; color: #858a82; font-size: 9px; line-height: 1.3; }
 .assistant-disclaimer { flex: 0 0 auto; margin: 0; padding: 0 12px 9px; color: #858a82; font-size: 9px; text-align: center; }
 .assistant-error { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 11px; border: 1px solid #efd1ce; border-radius: 9px; background: #fff7f6; color: #87443e; font-size: 12px; }
 .assistant-error .small-button { flex: 0 0 auto; }
