@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   ArrowDownUp,
@@ -58,6 +59,7 @@ export function AppShell({
   const [company, setCompany] = useState("Company workspace");
   const [health, setHealth] = useState<Health | null>(null);
   const [selected, setSelected] = useState<{ entity: Entity; entityType: GraphEntityType | "Unknown" } | null>(null);
+  const hasHirenovaLogo = company.trim().toLowerCase().startsWith("hirenova");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -111,7 +113,9 @@ export function AppShell({
         <div className="sidebar-brand-row"><Brand href="/dashboard" compact={sidebarCollapsed} showMark={false} /><button className="sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}</button></div>
         <div className="sidebar-kicker">{company}</div>
         <button className="workspace-switch" type="button" aria-label={`${company} workspace`}>
-          <span className="workspace-mark">{company.slice(0, 1).toUpperCase()}</span>
+          <span className={`workspace-mark ${hasHirenovaLogo ? "workspace-mark-logo" : ""}`}>
+            {hasHirenovaLogo ? <Image src="/img/HirenovaLogo.png" alt="" width={36} height={36} /> : company.slice(0, 1).toUpperCase()}
+          </span>
           <span><b>{company}</b><small>Company workspace</small></span><ChevronDown size={13} />
         </button>
         <div className="nav-section-label">WORKSPACE</div>

@@ -5506,6 +5506,17 @@ body {
 .app-shell .workspace-switch small { color: #B9D8C7; opacity: 1; }
 .app-shell .workspace-switch > svg { color: #B9D8C7; }
 .app-shell .workspace-mark { background: #2C6B55; color: #F2FBF5; }
+.app-shell .workspace-mark-logo,
+.app-shell .entity-node .node-icon.hirenova-logo-icon { overflow: hidden; padding: 2px; background: #fff; }
+.app-shell .workspace-mark-logo img,
+.app-shell .entity-node .node-icon.hirenova-logo-icon img { width: 100%; height: 100%; object-fit: contain; }
+.app-shell .entity-node.company { width: 260px; max-width: 260px; }
+.app-shell .entity-node.hirenova-company .node-footer { justify-content: flex-start; gap: 20px; }
+.app-shell .entity-node.hirenova-company .node-type { text-transform: none; letter-spacing: 0; }
+.app-shell .node-source-logos { display: inline-flex; align-items: center; }
+.app-shell .node-source-logo { position: relative; display: grid; width: 20px; height: 20px; flex: 0 0 20px; place-items: center; overflow: hidden; border: 1px solid #fffef7; border-radius: 100%; background: #fff; box-shadow: 0 1px 3px rgba(20,40,30,.14); }
+.app-shell .node-source-logo + .node-source-logo { margin-left: -4px; }
+.app-shell .node-source-logo img { display: block; width: 100%; height: 100%; padding: 2px; border-radius: 100%; object-fit: contain; }
 .app-shell .nav-section-label { margin: 0; padding: 8px 10px; color: #A9CBB9; font-size: 9px; letter-spacing: .13em; }
 .app-shell .side-nav { gap: 2px; }
 .app-shell .side-nav a, .app-shell .side-nav-action { min-height: 35px; padding: 7px 9px; border-radius: 7px; color: #E4F2E9; opacity: 1; font-size: 12px; }

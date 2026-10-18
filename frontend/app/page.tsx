@@ -141,8 +141,8 @@ function GraphPreview() {
 
         {/* Central company */}
         <div className="absolute left-1/2 top-[47%] z-10 flex w-[190px] -translate-x-1/2 -translate-y-1/2 items-center gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-3 shadow-[0_10px_25px_rgba(30,45,80,0.08)] sm:w-[208px]">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#263653] text-sm font-bold text-white">
-            H
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white">
+            <Image src="/img/HirenovaLogo.png" alt="" width={36} height={36} className="h-full w-full object-contain" />
           </span>
           <span className="min-w-0">
             <b className="block text-[11px] font-bold text-slate-700">Hirenova</b>
