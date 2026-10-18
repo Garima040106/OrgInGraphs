@@ -4,7 +4,7 @@ import { runIngestionWorkflow } from '../src/workflow/ingestion-workflow.js';
 import type { NormalizedDocument } from '../src/agents/mock-fetcher/types.js';
 import type { DocumentOutcome } from '../src/agents/document-processor/types.js';
 
-const doc = (id = 'JIRA-1'): NormalizedDocument => ({ sourceSystem: 'jira', sourceRecordId: id, title: 'Bug: timeout', content: 'Bug: timeout', provenance: 'synthetic', synthetic: true, metadata: {} });
+const doc = (id = 'JIRA-1'): NormalizedDocument => ({ sourceSystem: 'jira', sourceRecordId: id, title: 'Bug: timeout', content: 'Bug: timeout', provenance: 'external-verified', synthetic: false, metadata: {} });
 const outcome = (id: string, status: DocumentOutcome['status'] = 'processed'): DocumentOutcome => ({ sourceSystem: 'jira', sourceRecordId: id, status, route: 'ticket-identification', unresolvedReferences: [] });
 
 test('fetches once and passes documents to the processor', async () => {
@@ -27,7 +27,25 @@ test('stops safely on fetch failure and sanitizes errors', async () => {
 
 test('aggregates processor failures and partial outcomes', async () => {
   const result = await runIngestionWorkflow({ source: 'jira' }, { fetcher: async () => ({ source: 'jira', documents: [doc('1'), doc('2')] }), processor: async () => [outcome('1'), outcome('2', 'failed')] });
-  assert.equal(result.status, 'processed'); assert.deepEqual(result.outcomes.map((item) => item.status), ['processed', 'failed']);
+  assert.equal(result.status, 'partial'); assert.deepEqual(result.outcomes.map((item) => item.status), ['processed', 'failed']);
+});
+
+test('returns failed when every fetched record fails persistence', async () => {
+  const result = await runIngestionWorkflow({ source: 'jira' }, { fetcher: async () => ({ source: 'jira', documents: [doc('1'), doc('2')] }), processor: async () => [outcome('1', 'failed'), outcome('2', 'failed')] });
+  assert.equal(result.status, 'failed');
+  assert.equal(result.documents.length, 2);
+  assert.match(result.errors[0], /2 of 2/);
+});
+
+test('reports the number of fixture records rejected without returning record contents', async () => {
+  const records = [doc('fixture-1'), doc('fixture-2')].map((record) => ({ ...record, provenance: 'synthetic' as const, synthetic: true }));
+  const result = await runIngestionWorkflow({ source: 'jira' }, { fetcher: async () => ({ source: 'jira', documents: records }) });
+  assert.equal(result.status, 'failed');
+  assert.equal(result.fetchedDocumentCount, 2);
+  assert.equal(result.excludedSyntheticCount, 2);
+  assert.equal(result.documents.length, 0);
+  assert.equal(result.outcomes.length, 0);
+  assert.match(result.errors[0], /synthetic/);
 });
 
 test('rejects invalid input and remains bounded', async () => {

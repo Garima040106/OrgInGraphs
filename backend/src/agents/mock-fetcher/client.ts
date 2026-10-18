@@ -30,7 +30,7 @@ const timestamp = (value: unknown) => {
   return Number.isNaN(parsed.valueOf()) ? valueText : parsed.toISOString();
 };
 
-function normalizeRecord(record: RawRecord, source: MockSource): NormalizedDocument {
+function normalizeRecord(record: RawRecord, source: MockSource, trustedProviderResponse = false): NormalizedDocument {
   const isJira = source === 'jira';
   const isGithub = source === 'github';
   const isSlack = source === 'slack';
@@ -45,13 +45,15 @@ function normalizeRecord(record: RawRecord, source: MockSource): NormalizedDocum
   const title = isJira ? summary : text(record.title) ?? text(record.name) ?? nestedText(commit, 'message') ?? summary;
   const content = isJira ? [summary, description].filter(Boolean).join('\n\n') : isGithub ? [title, text(record.body) ?? text(record.description) ?? nestedText(commit, 'message')].filter(Boolean).join('\n\n') : source === 'confluence' ? confluenceBody(record.body) ?? text(record.content) ?? text(record.description) ?? `Confluence page: ${title ?? id}` : text(record.content) ?? text(record.body) ?? text(record.description) ?? text(record.message) ?? text(record.text);
   if (!id || !content) throw new MockFetcherError('malformed-response', 'Mock API returned a record without an ID or content.');
-  const provenance = text(record.provenance) === 'external-verified' || text(record.provenance) === 'user-provided' ? text(record.provenance) as NormalizedDocument['provenance'] : 'synthetic';
+  const seedMarked = Boolean(text(record.rawSeedId) || text(record.seedId) || text(record.source) === 'seed');
+  const provenance = !seedMarked && trustedProviderResponse ? 'external-verified' : 'synthetic';
   const status = nestedText(record.status, 'name') ?? text(record.status);
   const issueType = nestedText(record.issuetype, 'name');
   const assignee = nestedText(record.assignee, 'displayName');
   const project = nestedText(record.project, 'name');
   const authorLogin = nestedText(record.user, 'login');
-  return { sourceSystem: source, sourceRecordId: id, title, summary, content, sourceUrl: text(record.sourceUrl) ?? text(record.url) ?? text(record.webUrl) ?? text(record.html_url) ?? (isSlack ? text(record.permalink) : undefined), createdAt: isJira ? timestamp(record.created) : timestamp(record.createdAt) ?? timestamp(record.created_at), updatedAt: isJira ? timestamp(record.updated) : timestamp(record.updatedAt) ?? timestamp(record.updated_at), occurredAt: isSlack ? timestamp(record.ts) : timestamp(record.occurredAt) ?? timestamp(record.occurred_at), provenance, synthetic: provenance === 'external-verified' || provenance === 'user-provided' ? false : true, metadata: isJira ? { ...record, issueKey: text(record.key), status, issueType, assignee, project } : isGithub ? { ...record, recordType: text(record.recordType) ?? 'pull_request', repository: record.repository, state: text(record.state), merged: typeof record.merged === 'boolean' ? record.merged : undefined, authorLogin } : isSlack ? { ...record, channelName: nestedText(record.channel, 'name') ?? text(record.channelName), channelId: nestedText(record.channel, 'id') ?? text(record.channelId) } : record };
+  const sourceUrl = text(record.sourceUrl) ?? text(record.url) ?? text(record.webUrl) ?? text(record.html_url) ?? (isSlack ? text(record.permalink) : undefined);
+  return { sourceSystem: source, sourceRecordId: id, title, summary, content, sourceUrl, createdAt: isJira ? timestamp(record.created) : timestamp(record.createdAt) ?? timestamp(record.created_at), updatedAt: isJira ? timestamp(record.updated) : timestamp(record.updatedAt) ?? timestamp(record.updated_at), occurredAt: isSlack ? timestamp(record.ts) : timestamp(record.occurredAt) ?? timestamp(record.occurred_at), provenance, synthetic: provenance === 'synthetic', metadata: isJira ? { ...record, ...(sourceUrl ? { externalUrl: sourceUrl } : {}), issueKey: text(record.key), status, issueType, assignee, project } : isGithub ? { ...record, recordType: text(record.recordType) ?? 'pull_request', repository: record.repository, state: text(record.state), merged: typeof record.merged === 'boolean' ? record.merged : undefined, authorLogin } : isSlack ? { ...record, channelName: nestedText(record.channel, 'name') ?? text(record.channelName), channelId: text(record.channelId) ?? nestedText(record.channel, 'id') } : record };
 }
 function payloadRecords(payload: unknown, source: MockSource): unknown[] {
   if (source === 'jira' && isRecord(payload) && Array.isArray(payload.issues)) return payload.issues;
@@ -128,8 +130,7 @@ async function fetchConfluenceDocuments(limit: number, timeoutMs: number): Promi
     const basePath = wikiBasePath;
     const sourcePath = webui ? (webui.startsWith(`${basePath}/`) ? webui : `${basePath}/${webui.replace(/^\/+/, '')}`) : undefined;
     const sourceUrl = sourcePath ? new URL(sourcePath, base.origin).toString() : undefined;
-    const normalized = normalizeRecord({ ...entry, id: entry.id, url: sourceUrl, provenance: 'external-verified' }, 'confluence');
-    return { ...normalized, provenance: 'external-verified', synthetic: false };
+    return normalizeRecord({ ...entry, id: entry.id, url: sourceUrl, provenance: 'external-verified' }, 'confluence', true);
   });
 }
 export async function fetchMockDocuments(source: MockSource, options: { baseUrl?: string; limit?: number; timeoutMs?: number } = {}): Promise<NormalizedDocument[]> {
@@ -178,13 +179,13 @@ export async function fetchMockDocuments(source: MockSource, options: { baseUrl?
     const perKind = String(Math.max(1, Math.floor(limit / 3)));
     const [pulls, issues, commits] = await Promise.all([
       requestJson('/api/github/pulls', { limit: perKind }),
-      requestJson('/api/github/issues', { limit: perKind }).catch(() => null),
-      requestJson('/api/github/commits', { limit: perKind }).catch(() => null)
+      requestJson('/api/github/issues', { limit: perKind }),
+      requestJson('/api/github/commits', { limit: perKind })
     ]);
     records = [
       ...payloadRecords(pulls, 'github').map((record) => isRecord(record) ? { ...record, recordType: 'pull_request' } : record),
-      ...(issues ? payloadRecords(issues, 'github').map((record) => isRecord(record) ? { ...record, recordType: 'issue' } : record) : []),
-      ...(commits ? payloadRecords(commits, 'github').map((record) => isRecord(record) ? { ...record, recordType: 'commit' } : record) : [])
+      ...payloadRecords(issues, 'github').map((record) => isRecord(record) ? { ...record, recordType: 'issue' } : record),
+      ...payloadRecords(commits, 'github').map((record) => isRecord(record) ? { ...record, recordType: 'commit' } : record)
     ];
   } else {
     const payload = await requestJson(MOCK_ENDPOINTS[source], { limit: String(limit) });
@@ -192,5 +193,5 @@ export async function fetchMockDocuments(source: MockSource, options: { baseUrl?
   }
   if (!records.length) throw new MockFetcherError('empty-result', `${source} returned no records.`);
   const requestedLimit = options.limit === undefined ? undefined : Math.max(1, Math.min(100, Math.floor(options.limit)));
-  return records.slice(0, requestedLimit).map((record) => isRecord(record) ? normalizeRecord(key ? { ...record, provenance: 'external-verified' } : record, source) : (() => { throw new MockFetcherError('malformed-response', 'Mock API returned a non-object record.'); })());
+  return records.slice(0, requestedLimit).map((record) => isRecord(record) ? normalizeRecord(record, source) : (() => { throw new MockFetcherError('malformed-response', 'Mock API returned a non-object record.'); })());
 }

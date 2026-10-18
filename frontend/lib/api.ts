@@ -10,13 +10,12 @@ import type {
   ProjectDetail,
   GraphResponse,
   SearchResult,
-  IngestionSource,
-  IngestionResponse,
   AssistantQuery,
   AssistantResponse,
   DashboardResponse,
   SourceRecordResponse,
   RagQueryResponse,
+  IntegrationStatusResponse,
 } from "@/lib/types";
 import { z } from "zod";
 
@@ -113,14 +112,10 @@ export const api = {
     request<Neighborhood>(`/api/graph/neighborhood/${encodeURIComponent(type)}/${encodeURIComponent(id)}`),
   search: (term: string, signal?: AbortSignal) =>
     request<SearchResult[]>(`/api/search${query({ q: term })}`, { signal }),
-  processIngestion: (source: IngestionSource, limit = 20) => request<IngestionResponse>("/api/ingestion/process", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ source, limit }),
-  }),
-  documents: (params: { q?: string; limit?: number; offset?: number } = {}) => request<SourceRecordResponse>(`/api/documents${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`),
-  tickets: (params: { q?: string; limit?: number; offset?: number } = {}) => request<SourceRecordResponse>(`/api/tickets${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`),
-  conversations: (params: { q?: string; limit?: number; offset?: number } = {}) => request<SourceRecordResponse>(`/api/conversations${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`),
+  integrationStatus: (signal?: AbortSignal) => request<IntegrationStatusResponse>("/api/integrations/status", { signal }),
+  documents: (params: { q?: string; limit?: number; offset?: number; signal?: AbortSignal } = {}) => request<SourceRecordResponse>(`/api/documents${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`, { signal: params.signal }),
+  tickets: (params: { q?: string; limit?: number; offset?: number; signal?: AbortSignal } = {}) => request<SourceRecordResponse>(`/api/tickets${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`, { signal: params.signal }),
+  conversations: (params: { q?: string; limit?: number; offset?: number; signal?: AbortSignal } = {}) => request<SourceRecordResponse>(`/api/conversations${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`, { signal: params.signal }),
   proactiveInsights: (params: { q?: string; limit?: number; offset?: number } = {}) => request<SourceRecordResponse>(`/api/proactive-insights${query({ q: params.q, limit: params.limit?.toString(), offset: params.offset?.toString() })}`),
   assistantQuery: (input: AssistantQuery) => request<AssistantResponse>("/api/assistant/query", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input),

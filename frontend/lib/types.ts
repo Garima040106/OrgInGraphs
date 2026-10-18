@@ -44,6 +44,37 @@ export type DashboardResponse = {
   totals: { entities: number; people: number; teams: number; services: number; decisions: number };
 };
 export type SourceRecordResponse = { source: string; items: GraphApiNode[]; total: number; limit: number; offset: number };
+export type IntegrationStatus = {
+  source: IngestionSource;
+  connectorConfigured: boolean;
+  indexedRecords: number;
+  connectionStatus: "not-configured" | "not-tested" | "available" | "fixture-data" | "error";
+  lastError: string | null;
+  lastSyncStatus: "received" | "failed" | "fetched" | "processed" | "partial" | "empty" | null;
+  lastSuccessfulSync: string | null;
+  lastAttemptedSync: string | null;
+  syncHistoryAvailable: boolean;
+  history: IntegrationSyncRun[];
+  browserSyncAvailable: boolean;
+};
+export type IntegrationSyncRun = {
+  id: string;
+  startedAt: string;
+  finishedAt: string;
+  status: "received" | "failed" | "fetched" | "processed" | "partial" | "empty";
+  fetched: number;
+  excludedSynthetic: number;
+  processed: number;
+  failed: number;
+  unresolved: number;
+  skipped: number;
+  error: string | null;
+};
+export type IntegrationStatusResponse = {
+  sources: IntegrationStatus[];
+  syncHistoryAvailable: boolean;
+  syncAuthorization: "backend-admin-key-required";
+};
 
 export type Entity = Record<string, unknown> & {
   id: string;
@@ -129,9 +160,10 @@ export type IngestionOutcome = {
   error?: string;
 };
 export type IngestionResponse = {
-  status: "received" | "failed" | "fetched" | "processed" | "empty";
+  status: "received" | "failed" | "fetched" | "processed" | "partial" | "empty";
   source?: string;
   fetchedDocumentCount: number;
+  excludedSyntheticCount: number;
   outcomes: IngestionOutcome[];
   errors: string[];
 };

@@ -24,7 +24,14 @@ export const identifiedTicketSchema = z.object({
   graphDomain: z.literal('product-progress'),
   synthetic: z.boolean(),
   createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime()
+  updatedAt: z.string().datetime(),
+  projectName: z.string().max(500).optional(),
+  issueKey: z.string().max(200).optional(),
+  originalStatus: z.string().max(200).optional(),
+  originalPriority: z.string().max(200).optional(),
+  assigneeName: z.string().max(500).optional(),
+  reporterName: z.string().max(500).optional(),
+  externalUrl: z.string().url().optional()
 });
 
 export type ValidatedIdentifiedTicket = z.infer<typeof identifiedTicketSchema>;

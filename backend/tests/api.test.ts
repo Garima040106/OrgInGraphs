@@ -5,6 +5,9 @@ import type { Graph } from "falkordb";
 import { createApp } from "../src/api/app.js";
 import type { NormalizedDocument } from "../src/agents/mock-fetcher/types.js";
 
+process.env.RAG_ADMIN_API_KEY = "test-ingestion-admin-key";
+const ingestionAdminHeaders = { "Content-Type": "application/json", "x-orgmind-user-id": "demo@example.com", "x-rag-admin-key": "test-ingestion-admin-key" };
+
 function assistantMemoryGraph() {
   const conversations = new Map<string, Record<string, unknown>>();
   const memories = new Map<string, Array<Record<string, unknown>>>();
@@ -174,24 +177,91 @@ test("graph neighborhood accepts Product Progress entity labels", async () => {
   }
 });
 
-const ingestionDocument: NormalizedDocument = { sourceSystem: 'jira', sourceRecordId: 'JIRA-1', title: 'Bug', content: 'Bug: timeout', provenance: 'synthetic', synthetic: true, metadata: {} };
-const startIngestionServer = async (ingestion: Parameters<typeof createApp>[1]['ingestion']) => {
-  const server = createApp({} as Graph, { ingestion }).listen(0, '127.0.0.1');
+const ingestionDocument: NormalizedDocument = { sourceSystem: 'jira', sourceRecordId: 'JIRA-1', title: 'Bug', content: 'Bug: timeout', provenance: 'external-verified', synthetic: false, metadata: {} };
+const startIngestionServer = async (ingestion: Parameters<typeof createApp>[1]['ingestion'], graph: Graph = { query: async () => ({ data: [] }) } as unknown as Graph) => {
+  const server = createApp(graph, { ingestion }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   const address = server.address();
   assert.ok(address && typeof address !== 'string');
   return { server, url: `http://127.0.0.1:${address.port}/api/ingestion/process` };
 };
 
+test("integration status returns safe config, verified counts, and recent sync history", async () => {
+  const graph = { query: async (cypher: string, options?: { params?: Record<string, unknown> }) => cypher.includes('IntegrationSyncRun')
+    ? { data: options?.params?.source === 'jira' ? [{ r: { properties: { id: 'run-1', source: 'jira', startedAt: '2026-10-18T00:00:00.000Z', finishedAt: '2026-10-18T00:00:01.000Z', status: 'failed', fetched: 4, processed: 0, failed: 0, unresolved: 0, skipped: 0, errorCode: 'fixture-data', errorMessage: 'The connector returned seeded fixture records; nothing was written.' } } }] : [] }
+    : { data: [{ total: options?.params?.source === 'jira' ? 7 : 0 }] } } as unknown as Graph;
+  const server = createApp(graph).listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const address = server.address();
+  assert.ok(address && typeof address !== 'string');
+  try {
+    const response = await fetch(`http://127.0.0.1:${address.port}/api/integrations/status`);
+    assert.equal(response.status, 200);
+    const payload = await response.json() as { sources: Array<{ source: string; indexedRecords: number; connectorConfigured: boolean; lastSuccessfulSync: string | null; lastAttemptedSync: string | null; connectionStatus: string; history: Array<{ fetched: number; error: string | null }>; browserSyncAvailable: boolean }>; syncHistoryAvailable: boolean };
+    assert.equal(payload.sources.length, 4);
+    assert.equal(payload.sources.find((item) => item.source === 'jira')?.indexedRecords, 7);
+    const jira = payload.sources.find((item) => item.source === 'jira');
+    assert.equal(jira?.connectionStatus, 'fixture-data');
+    assert.equal(jira?.lastSuccessfulSync, null);
+    assert.equal(jira?.lastAttemptedSync, '2026-10-18T00:00:01.000Z');
+    assert.equal(jira?.history[0]?.fetched, 4);
+    assert.match(jira?.history[0]?.error ?? '', /seeded fixture/);
+    assert.ok(payload.sources.every((item) => item.browserSyncAvailable === false));
+    assert.equal(payload.syncHistoryAvailable, true);
+    assert.equal(JSON.stringify(payload).includes('test-ingestion-admin-key'), false);
+  } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
+});
+
+test("provider synchronization rejects missing identity or admin credentials", async () => {
+  let fetched = false;
+  const { server, url } = await startIngestionServer({ fetcher: async () => { fetched = true; return { source: 'jira', documents: [] }; }, processor: async () => [] });
+  try {
+    const noIdentity = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-rag-admin-key': 'test-ingestion-admin-key' }, body: JSON.stringify({ source: 'jira' }) });
+    assert.equal(noIdentity.status, 401);
+    const noAdminKey = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-orgmind-user-id': 'demo@example.com' }, body: JSON.stringify({ source: 'jira' }) });
+    assert.equal(noAdminKey.status, 403);
+    assert.equal(fetched, false);
+  } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
+});
+
 test("ingestion API processes fetched documents and returns outcomes", async () => {
+  const runs: Record<string, unknown>[] = [];
+  const graph = { query: async (cypher: string, options?: { params?: Record<string, unknown> }) => {
+    if (cypher.includes('CREATE (r:IntegrationSyncRun)')) { runs.push(options?.params?.properties as Record<string, unknown>); return { data: [] }; }
+    if (cypher.includes('IntegrationSyncRun')) return { data: runs.map((run) => ({ r: { properties: run } })) };
+    return { data: [{ total: 0 }] };
+  } } as unknown as Graph;
   const { server, url } = await startIngestionServer({
     fetcher: async () => ({ source: 'jira', documents: [ingestionDocument] }),
     processor: async () => [{ sourceSystem: 'jira', sourceRecordId: 'JIRA-1', status: 'processed', route: 'ticket-identification', unresolvedReferences: [] }]
-  });
+  }, graph);
   try {
-    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'jira', limit: 1 }) });
+    const response = await fetch(url, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ source: 'jira', limit: 1 }) });
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { status: 'processed', source: 'jira', fetchedDocumentCount: 1, outcomes: [{ sourceSystem: 'jira', sourceRecordId: 'JIRA-1', status: 'processed', route: 'ticket-identification', unresolvedReferences: [] }], errors: [] });
+    assert.deepEqual(await response.json(), { status: 'processed', source: 'jira', fetchedDocumentCount: 1, excludedSyntheticCount: 0, outcomes: [{ sourceSystem: 'jira', sourceRecordId: 'JIRA-1', status: 'processed', route: 'ticket-identification', unresolvedReferences: [] }], errors: [] });
+    assert.equal(runs.length, 1);
+    assert.equal(runs[0].fetched, 1);
+    assert.equal(runs[0].processed, 1);
+    assert.equal(runs[0].excludedSynthetic, 0);
+    const statusResponse = await fetch(url.replace('/api/ingestion/process', '/api/integrations/status'));
+    const status = await statusResponse.json() as { sources: Array<{ source: string; connectionStatus: string; history: Array<{ processed: number }> }> };
+    const jiraStatus = status.sources.find((item) => item.source === 'jira');
+    assert.equal(jiraStatus?.connectionStatus, 'available');
+    assert.equal(jiraStatus?.history[0]?.processed, 1);
+  } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
+});
+
+test("ingestion API reports fixture counts and refuses to persist seeded rows", async () => {
+  const { server, url } = await startIngestionServer({ fetcher: async () => ({ source: 'jira', documents: [{ ...ingestionDocument, provenance: 'synthetic', synthetic: true }] }), processor: async () => { throw new Error('Synthetic records must not reach persistence.'); } });
+  try {
+    const response = await fetch(url, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ source: 'jira', limit: 1 }) });
+    assert.equal(response.status, 503);
+    const payload = await response.json() as { status: string; fetchedDocumentCount: number; excludedSyntheticCount: number; outcomes: unknown[]; errors: string[] };
+    assert.equal(payload.status, 'failed');
+    assert.equal(payload.fetchedDocumentCount, 1);
+    assert.equal(payload.excludedSyntheticCount, 1);
+    assert.deepEqual(payload.outcomes, []);
+    assert.match(payload.errors[0], /seeded fixture/);
   } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
 });
 
@@ -199,9 +269,9 @@ test("ingestion API handles empty results and rejects arbitrary URLs", async () 
   let processed = false;
   const { server, url } = await startIngestionServer({ fetcher: async () => ({ source: 'slack', documents: [] }), processor: async () => { processed = true; return []; } });
   try {
-    const empty = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'slack' }) });
+    const empty = await fetch(url, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ source: 'slack' }) });
     assert.equal(empty.status, 200); assert.equal((await empty.json()).status, 'empty'); assert.equal(processed, false);
-    const invalid = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'jira', url: 'https://example.test' }) });
+    const invalid = await fetch(url, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ source: 'jira', url: 'https://example.test' }) });
     assert.equal(invalid.status, 400);
   } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
 });
@@ -209,12 +279,12 @@ test("ingestion API handles empty results and rejects arbitrary URLs", async () 
 test("ingestion API returns sanitized fetch and database failures", async () => {
   const fetchServer = await startIngestionServer({ fetcher: async () => { throw new Error('token=secret https://tunnel.example failed'); }, processor: async () => [] });
   try {
-    const response = await fetch(fetchServer.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'github' }) });
+    const response = await fetch(fetchServer.url, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ source: 'github' }) });
     assert.equal(response.status, 503); assert.deepEqual((await response.json()).errors, ['Mock API fetch failed.']);
   } finally { await new Promise<void>((resolve, reject) => fetchServer.server.close((error) => error ? reject(error) : resolve())); }
   const dbServer = await startIngestionServer({ fetcher: async () => ({ source: 'jira', documents: [ingestionDocument] }), processor: async () => { throw new Error('FalkorDB password=secret unavailable'); } });
   try {
-    const response = await fetch(dbServer.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source: 'jira' }) });
+    const response = await fetch(dbServer.url, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ source: 'jira' }) });
     assert.equal(response.status, 503); assert.deepEqual((await response.json()).errors, ['Document processing failed.']);
   } finally { await new Promise<void>((resolve, reject) => dbServer.server.close((error) => error ? reject(error) : resolve())); }
 });
