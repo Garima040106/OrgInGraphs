@@ -42,7 +42,7 @@ export function RagSourceList({ sources, messageId }: { sources: Source[]; messa
             <SourceIcon sourceType={provider} />
             <span className="rag-source-copy">
               <span className="rag-source-title">{source.title || "Untitled source"}</span>
-              <span className="rag-source-meta">{provider || "Company source"}{"score" in source && Number.isFinite(source.score) ? ` · relevance ${source.score.toFixed(2)}` : ""} · {citations}</span>
+              <span className="rag-source-meta">{provider || "Company source"} · {citations}</span>
             </span>
             <span className="rag-source-expand">Details</span>
           </summary>

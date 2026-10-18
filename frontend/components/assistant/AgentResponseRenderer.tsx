@@ -361,7 +361,6 @@ export function PlatformEvidenceCard({
   platform,
   sourcePath,
   excerpt,
-  score,
   sourceUrl,
   entityId,
   entityType,
@@ -370,7 +369,6 @@ export function PlatformEvidenceCard({
   platform: PlatformType;
   sourcePath?: string;
   excerpt?: string;
-  score?: number;
   sourceUrl?: string;
   entityId?: string;
   entityType?: string;
@@ -379,11 +377,6 @@ export function PlatformEvidenceCard({
     <div className={`platform-card ${platform}`}>
       <div className="platform-card-header">
         <PlatformBadge platform={platform} />
-        {typeof score === "number" && (
-          <span className="platform-card-score">
-            {Math.round(score * 100)}% match
-          </span>
-        )}
       </div>
 
       <div className="platform-card-title-row">

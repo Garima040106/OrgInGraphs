@@ -18,7 +18,7 @@ export const RetrievalState = Annotation.Root({
   queryText: replace<string>(() => ''),
   queryEmbedding: replace<number[]>(() => []),
   queryEmbeddings: replace<number[][]>(() => []),
-  aggregateMetric: replace<'team-count' | 'team-list' | 'people-count' | 'jira-issue-count' | 'recent-jira-issues' | undefined>(() => undefined),
+  aggregateMetric: replace<'team-count' | 'team-list' | 'people-count' | 'jira-issue-count' | 'recent-jira-issues' | 'latest-product' | undefined>(() => undefined),
   searchResults: replace<SearchResult[]>(() => []),
   retrievedChunks: replace<RetrievedChunkInfo[]>(() => []),
   sources: replace<RAGSourceCitation[]>(() => []),
@@ -117,12 +117,14 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
       const asksForCount = /\b(how many|number of|count of|total)\b/i.test(q);
       const hasLocalScope = /\b(?:department|within|per)\b/i.test(q);
       const asksForJiraIssues = /\bjira\b/i.test(q) && /\b(issues?|tickets?)\b/i.test(q);
+      const asksForLatestProduct = /\b(latest|lates|newest|most recent)\b/i.test(q) && /\b(product|products|working on)\b/i.test(q);
       const asksForTeamList = (/\b(?:list|name|show)\b/i.test(q) && /\bteams?\b/i.test(q))
         || /\b(?:what are|which)\s+(?:all\s+)?teams\b/i.test(q)
         || (/\b(?:name|list)\s+(?:them|those)\b/i.test(q) && /\bteams?\b/i.test(previous?.query ?? ''));
       let aggregateMetric: RetrievalWorkflowState['aggregateMetric'];
       if (asksForCount && !hasLocalScope && asksForJiraIssues) aggregateMetric = 'jira-issue-count';
       else if (!asksForCount && asksForJiraIssues && /\b(recent|latest|newest|last)\b/i.test(q)) aggregateMetric = 'recent-jira-issues';
+      else if (asksForLatestProduct && !hasLocalScope) aggregateMetric = 'latest-product';
       else if (asksForCount && !hasLocalScope && /\bteams\b/i.test(q)) aggregateMetric = 'team-count';
       else if (!asksForCount && !hasLocalScope && asksForTeamList) aggregateMetric = 'team-list';
       else if (asksForCount && !hasLocalScope && !/\bteams?\b/i.test(q) && /\b(people|persons?|employees?|headcount|staff)\b/i.test(q)) aggregateMetric = 'people-count';
@@ -193,6 +195,38 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
               candidateCount: 1,
               retrievedChunks: [{ chunkId, sourcePath, score: 1, text: evidence, platform: 'jira' as const, metadata }],
               sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'jira' as const, excerpt: evidence }],
+              answer,
+              status: 'completed' as const
+            };
+          }
+          if (state.aggregateMetric === 'latest-product') {
+            const product = await store.getLatestOrganizationProduct();
+            const sourcePath = 'database/Product/latest';
+            const title = 'Latest product record from FalkorDB';
+            const text = product
+              ? `Latest Product node by recorded updatedAt, updated, createdAt, or created timestamp: ${product.name}; ID: ${product.id}${product.status ? `; status: ${product.status}` : ''}${product.updatedAt ? `; last updated: ${product.updatedAt}` : ''}${product.description ? `; description: ${product.description}` : ''}.`
+              : 'No Product nodes are currently recorded in the live company graph.';
+            const chunkId = 'live-aggregate-latest-product';
+            const timestamp = new Date().toISOString();
+            const metadata = {
+              chunkId,
+              orgId: state.request.orgId ?? 'hirenova',
+              sourceType: 'database' as const,
+              sourcePath,
+              title,
+              contentHash: `live:latest-product:${product?.id ?? 'none'}:${product?.updatedAt ?? ''}`,
+              docHash: `live:latest-product:${product?.id ?? 'none'}:${product?.updatedAt ?? ''}`,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+              summaryKind: 'latest-product'
+            };
+            const answer = product
+              ? `The latest product record is **${product.name}**${product.status ? ` (${product.status})` : ''}${product.updatedAt ? `, last updated ${product.updatedAt}` : ''}. [S1]`
+              : 'There are no Product records in the live company graph, so I can’t identify a latest product. [S1]';
+            return {
+              candidateCount: 1,
+              retrievedChunks: [{ chunkId, sourcePath, score: 1, text, platform: 'database' as const, metadata }],
+              sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'database' as const, excerpt: text }],
               answer,
               status: 'completed' as const
             };

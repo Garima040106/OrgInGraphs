@@ -137,11 +137,26 @@ export class FalkorDBVectorStore {
     return stale;
   }
 
-  async search(queryEmbedding: number[], options: { topK?: number; threshold?: number; orgId?: string; sourceTypes?: SourceType[]; sourcePlatforms?: Array<'jira' | 'confluence' | 'slack' | 'github' | 'route' | 'database'>; sourcePath?: string } = {}): Promise<SearchResult[]> {
+  async search(queryEmbedding: number[], options: { topK?: number; threshold?: number; orgId?: string; sourceTypes?: SourceType[]; sourcePlatforms?: Array<'jira' | 'confluence' | 'slack' | 'github' | 'route' | 'database'>; sourcePath?: string; queryText?: string } = {}): Promise<SearchResult[]> {
     await this.initialize();
     const embedding = vectorLiteral(queryEmbedding);
     const candidateCount = Math.min(100, (options.topK ?? 5) * 8);
     const found = rows(await this.graph.query(`CALL db.idx.vector.queryNodes('${LABEL}','embedding',${candidateCount},${embedding}) YIELD node,score WITH node,score WHERE coalesce(node.active,true)=true RETURN node,score`, {}));
+    const queryText = options.queryText ?? '';
+    const asksTeamFacts = /\b(team|teams|owner|owners|lead|leads|responsible|responsibility)\b/i.test(queryText);
+    const asksLatestProduct = /\b(latest|lates|newest|most recent)\b/i.test(queryText) && /\b(product|products|working on)\b/i.test(queryText);
+    const asksFrontendResponsibility = /\b(front.?end|web team)\b/i.test(queryText) && /\b(who|responsible|owner|lead|team)\b/i.test(queryText);
+    if (asksTeamFacts || asksLatestProduct || asksFrontendResponsibility) {
+      const summaries = rows(await this.graph.query(`MATCH (node:${LABEL} {orgId:$orgId})
+        WHERE coalesce(node.active,true)=true AND (
+          ($includeTeams AND toLower(coalesce(node.sourcePath,'')) CONTAINS '/teams') OR
+          ($includeProducts AND toLower(coalesce(node.sourcePath,'')) CONTAINS '/products') OR
+          ($includeResponsibilities AND toLower(coalesce(node.sourcePath,'')) CONTAINS 'frontend-responsibility')
+        ) RETURN node,1.0 AS score`, {
+        params: { orgId: options.orgId ?? this.orgId, includeTeams: asksTeamFacts, includeProducts: asksLatestProduct, includeResponsibilities: asksFrontendResponsibility }
+      }));
+      found.push(...summaries);
+    }
     const allowedTypes = options.sourceTypes ? new Set(options.sourceTypes) : undefined;
     const allowedPlatforms = options.sourcePlatforms ? new Set(options.sourcePlatforms) : undefined;
     return found.flatMap((row) => {
@@ -183,6 +198,24 @@ export class FalkorDBVectorStore {
       const name = typeof row.name === 'string' ? row.name.trim() : '';
       return name ? [name] : [];
     });
+  }
+
+  async getLatestOrganizationProduct(): Promise<{ id: string; name: string; status?: string; updatedAt?: string; description?: string } | null> {
+    const result = rows(await this.graph.query(`MATCH (p:Product)
+      RETURN p.id AS id,coalesce(p.name,p.title,p.summary,p.id) AS name,p.status AS status,
+        coalesce(p.updatedAt,p.updated,p.createdAt,p.created) AS updatedAt,
+        coalesce(p.description,p.summary,p.overview) AS description
+      ORDER BY coalesce(p.updatedAt,p.updated,p.createdAt,p.created) DESC LIMIT 1`));
+    const row = result[0];
+    const name = typeof row?.name === 'string' ? row.name.trim() : '';
+    if (!row || !name) return null;
+    return {
+      id: String(row.id ?? name),
+      name,
+      ...(typeof row.status === 'string' && row.status ? { status: row.status } : {}),
+      ...(typeof row.updatedAt === 'string' && row.updatedAt ? { updatedAt: row.updatedAt } : {}),
+      ...(typeof row.description === 'string' && row.description ? { description: row.description } : {})
+    };
   }
 
   async countVerifiedJiraIssues(): Promise<number> {
