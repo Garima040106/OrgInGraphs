@@ -103,6 +103,8 @@ Representative relationship families include reporting and membership (`REPORTS_
 OrgInGraphs is built around FalkorDB's graph data model. That choice lets the application represent company knowledge as **typed nodes and typed relationships**, then traverse those relationships as first-class structure. An employee is not just a row with a department name: the graph can record and query `(:Employee)-[:WORKS_IN]->(:Department)`, ownership, reporting, project work, and the links among issues, pull requests, services, and decisions.
 
 FalkorDB also hosts the RAG corpus in the same graph database. `RAGChunk` nodes carry source metadata and 384-dimensional vectors, while a native cosine/HNSW index finds semantically similar passages. The backend can then apply organization and source filters and return citations tied to the indexed graph records. This gives OrgInGraphs one graph-native persistence and query layer for **relationship traversal and semantic retrieval**, instead of maintaining disconnected graph and vector stores.
+<img width="2723" height="1198" alt="image" src="https://github.com/user-attachments/assets/1bfef5f0-e1cf-443e-a158-b9ccf24c2591" />
+
 
 ```mermaid
 flowchart LR
