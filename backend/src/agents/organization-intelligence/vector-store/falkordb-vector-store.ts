@@ -82,7 +82,7 @@ export class FalkorDBVectorStore {
   async getDocument(sourcePath: string): Promise<VectorStoreDocumentEntry | undefined> {
     const entry = this.documentCache.get(sourcePath);
     if (entry) return entry;
-    const found = rows(await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId,sourcePath:$sourcePath}) RETURN c.documentTitle AS title,c.sourceType AS sourceType,c.docHash AS docHash,c.updatedAt AS updatedAt,collect(c.chunkId) AS chunkIds LIMIT 1`, { params: { orgId: this.orgId, sourcePath } }))[0];
+    const found = rows(await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId,sourcePath:$sourcePath}) WHERE coalesce(c.active,true)=true RETURN c.documentTitle AS title,c.sourceType AS sourceType,c.docHash AS docHash,c.updatedAt AS updatedAt,collect(c.chunkId) AS chunkIds LIMIT 1`, { params: { orgId: this.orgId, sourcePath } }))[0];
     if (!found) return undefined;
     const document: VectorStoreDocumentEntry = { path: sourcePath, title: String(found.title ?? sourcePath), sourceType: found.sourceType as SourceType, docHash: String(found.docHash ?? ''), updatedAt: String(found.updatedAt ?? ''), chunkIds: Array.isArray(found.chunkIds) ? found.chunkIds.map(String) : [] };
     this.documentCache.set(sourcePath, document);
@@ -97,16 +97,27 @@ export class FalkorDBVectorStore {
   async upsertDocumentChunks(entry: VectorStoreDocumentEntry, chunks: DocumentChunk[], _persist = true): Promise<void> {
     const timestamp = new Date().toISOString();
     const chunkIds = chunks.map((chunk) => chunk.id);
-    for (const chunk of chunks) {
-      if (!chunk.embedding) throw new Error(`Chunk ${chunk.id} is missing an embedding.`);
-      const embedding = vectorLiteral(chunk.embedding);
-      await this.graph.query(`MERGE (c:${LABEL} {orgId:$orgId,chunkId:$chunkId}) SET c.sourcePath=$sourcePath,c.documentTitle=$title,c.sourceType=$sourceType,c.docHash=$docHash,c.chunkText=$text,c.metadataJson=$metadata,c.url=$url,c.updatedAt=$updatedAt,c.embedding=${embedding}`, {
-        params: { chunkId: chunk.id, orgId: this.orgId, sourcePath: entry.path, title: entry.title, sourceType: entry.sourceType, docHash: entry.docHash, text: chunk.text, metadata: json(chunk.metadata), url: String(chunk.metadata.url ?? ''), updatedAt: timestamp }
-      });
+    try {
+      for (const chunk of chunks) {
+        if (!chunk.embedding) throw new Error(`Chunk ${chunk.id} is missing an embedding.`);
+        const embedding = vectorLiteral(chunk.embedding);
+        await this.graph.query(`MERGE (c:${LABEL} {orgId:$orgId,chunkId:$chunkId}) SET c.active=CASE WHEN coalesce(c.docHash,'')=$docHash THEN coalesce(c.active,true) ELSE false END,c.sourcePath=$sourcePath,c.documentTitle=$title,c.sourceType=$sourceType,c.docHash=$docHash,c.chunkText=$text,c.metadataJson=$metadata,c.url=$url,c.updatedAt=$updatedAt,c.embedding=${embedding}`, {
+          params: { chunkId: chunk.id, orgId: this.orgId, sourcePath: entry.path, title: entry.title, sourceType: entry.sourceType, docHash: entry.docHash, text: chunk.text, metadata: json(chunk.metadata), url: String(chunk.metadata.url ?? ''), updatedAt: timestamp }
+        });
+      }
+    } catch (error) {
+      // New versions use content-addressed chunk IDs and remain invisible until
+      // the complete replacement is ready. Remove only staged, inactive data.
+      await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId,sourcePath:$sourcePath,docHash:$docHash,active:false}) DETACH DELETE c`, { params: { orgId: this.orgId, sourcePath: entry.path, docHash: entry.docHash } }).catch(() => undefined);
+      throw error;
     }
-    // Only remove superseded chunks after every replacement was written. A
-    // failed write therefore leaves the previous document searchable.
-    await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId,sourcePath:$sourcePath}) WHERE NOT c.chunkId IN $chunkIds DETACH DELETE c`, { params: { orgId: this.orgId, sourcePath: entry.path, chunkIds } });
+    if (chunkIds.length) {
+      await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId}) WHERE c.chunkId IN $chunkIds SET c.active=true`, { params: { orgId: this.orgId, chunkIds } });
+      // Only remove superseded chunks after every replacement was written and activated.
+      await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId,sourcePath:$sourcePath}) WHERE NOT c.chunkId IN $chunkIds DETACH DELETE c`, { params: { orgId: this.orgId, sourcePath: entry.path, chunkIds } });
+    } else {
+      await this.removeDocument(entry.path);
+    }
     const saved = { ...entry, chunkIds: chunks.map((chunk) => chunk.id), updatedAt: timestamp };
     this.documentCache.set(entry.path, saved);
     this.lastUpdated = timestamp;
@@ -130,7 +141,7 @@ export class FalkorDBVectorStore {
     await this.initialize();
     const embedding = vectorLiteral(queryEmbedding);
     const candidateCount = Math.min(100, (options.topK ?? 5) * 8);
-    const found = rows(await this.graph.query(`CALL db.idx.vector.queryNodes('${LABEL}','embedding',${candidateCount},${embedding}) YIELD node,score RETURN node,score`, {}));
+    const found = rows(await this.graph.query(`CALL db.idx.vector.queryNodes('${LABEL}','embedding',${candidateCount},${embedding}) YIELD node,score WITH node,score WHERE coalesce(node.active,true)=true RETURN node,score`, {}));
     const allowedTypes = options.sourceTypes ? new Set(options.sourceTypes) : undefined;
     const allowedPlatforms = options.sourcePlatforms ? new Set(options.sourcePlatforms) : undefined;
     return found.flatMap((row) => {
@@ -151,10 +162,10 @@ export class FalkorDBVectorStore {
 
   async getStats(): Promise<IngestionStats> {
     await this.initialize();
-    const found = rows(await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId}) RETURN count(c) AS chunks,count(DISTINCT c.sourcePath) AS documents,max(c.updatedAt) AS updatedAt`, { params: { orgId: this.orgId } }))[0] ?? {};
+    const found = rows(await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId}) WHERE coalesce(c.active,true)=true RETURN count(c) AS chunks,count(DISTINCT c.sourcePath) AS documents,max(c.updatedAt) AS updatedAt`, { params: { orgId: this.orgId } }))[0] ?? {};
     const job = rows(await this.graph.query('MATCH (s:RAGIndexStatus {orgId:$orgId}) RETURN s.pendingWork AS pendingWork,s.failedWork AS failedWork,s.lastSuccessfulIngestion AS lastSuccessfulIngestion LIMIT 1', { params: { orgId: this.orgId } }))[0] ?? {};
     const breakdown: Record<SourceType, number> = { route: 0, documentation: 0, database: 0, api: 0 };
-    const types = rows(await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId}) RETURN DISTINCT c.sourceType AS sourceType,count(DISTINCT c.sourcePath) AS count`, { params: { orgId: this.orgId } }));
+    const types = rows(await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId}) WHERE coalesce(c.active,true)=true RETURN DISTINCT c.sourceType AS sourceType,count(DISTINCT c.sourcePath) AS count`, { params: { orgId: this.orgId } }));
     for (const item of types) if (String(item.sourceType) in breakdown) breakdown[item.sourceType as SourceType] = Number(item.count ?? 0);
     return { totalSources: Number(found.documents ?? 0), processed: Number(found.documents ?? 0), skipped: 0, updated: 0, failed: Number(job.failedWork ?? 0), failedWork: Number(job.failedWork ?? 0), pendingWork: Number(job.pendingWork ?? 0), totalChunks: Number(found.chunks ?? 0), lastIngestedAt: String(job.lastSuccessfulIngestion ?? found.updatedAt ?? this.lastUpdated), lastSuccessfulIngestion: typeof job.lastSuccessfulIngestion === 'string' ? job.lastSuccessfulIngestion : undefined, sourceTypeBreakdown: breakdown };
   }
@@ -174,6 +185,6 @@ export class FalkorDBVectorStore {
   }
 
   async getAllDocuments(): Promise<VectorStoreDocumentEntry[]> {
-    return rows(await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId}) RETURN c.sourcePath AS path,c.documentTitle AS title,c.sourceType AS sourceType,c.docHash AS docHash,max(c.updatedAt) AS updatedAt,collect(c.chunkId) AS chunkIds`, { params: { orgId: this.orgId } })).map((row) => ({ path: String(row.path), title: String(row.title ?? ''), sourceType: row.sourceType as SourceType, docHash: String(row.docHash ?? ''), updatedAt: String(row.updatedAt ?? ''), chunkIds: Array.isArray(row.chunkIds) ? row.chunkIds.map(String) : [] }));
+    return rows(await this.graph.query(`MATCH (c:${LABEL} {orgId:$orgId}) WHERE coalesce(c.active,true)=true RETURN c.sourcePath AS path,c.documentTitle AS title,c.sourceType AS sourceType,c.docHash AS docHash,max(c.updatedAt) AS updatedAt,collect(c.chunkId) AS chunkIds`, { params: { orgId: this.orgId } })).map((row) => ({ path: String(row.path), title: String(row.title ?? ''), sourceType: row.sourceType as SourceType, docHash: String(row.docHash ?? ''), updatedAt: String(row.updatedAt ?? ''), chunkIds: Array.isArray(row.chunkIds) ? row.chunkIds.map(String) : [] }));
   }
 }

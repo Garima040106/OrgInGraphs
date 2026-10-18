@@ -4,7 +4,7 @@ import { query, rows } from '../../../db/falkordb.js';
 import { generateSeedData } from '../../../seed/generate.js';
 import type { DiscoveredSource } from '../types.js';
 
-export async function extractDatabaseSources(graph?: Graph): Promise<DiscoveredSource[]> {
+export async function extractDatabaseSources(graph?: Graph, options: { strictLive?: boolean } = {}): Promise<DiscoveredSource[]> {
   const sources: DiscoveredSource[] = [];
 
   // Try extracting live graph data if connected
@@ -168,11 +168,59 @@ export async function extractDatabaseSources(graph?: Graph): Promise<DiscoveredS
         });
       }
 
-      if (sources.length > 0) return sources;
+      // Connector ingestion persists verified Confluence, Jira, GitHub, and
+      // Slack records in the graph. Treat those records as authoritative RAG
+      // sources and hash normalized content, not timestamps, so unchanged
+      // records do not trigger new embeddings.
+      const connectorRes = await query(graph, `
+        MATCH (n)
+        WHERE toLower(coalesce(n.sourceSystem,'')) IN ['confluence','jira','github','slack']
+          AND n.sourceRecordId IS NOT NULL
+          AND coalesce(n.synthetic,false)=false
+          AND n.provenance IN ['external-verified','user-provided']
+        RETURN n, labels(n)[0] AS label
+      `);
+      for (const row of rows(connectorRes)) {
+        const node = row.n as Record<string, unknown> | undefined;
+        if (!node) continue;
+        const sourceSystem = String(node.sourceSystem ?? '').toLowerCase();
+        const sourceRecordId = String(node.sourceRecordId ?? '');
+        if (!sourceRecordId || !['confluence', 'jira', 'github', 'slack'].includes(sourceSystem)) continue;
+        const title = String(node.title ?? node.summary ?? node.name ?? sourceRecordId);
+        const body = String(node.content ?? node.description ?? node.body ?? node.summary ?? '');
+        const details = Object.entries(node)
+          .filter(([key, value]) => !['id', 'embedding', 'createdAt', 'updatedAt', 'occurredAt', 'provenance', 'synthetic', 'graphDomain'].includes(key) && value !== null && value !== undefined && value !== '')
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, value]) => `${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
+        const normalized = [title.trim().replace(/\s+/g, ' '), body.trim().replace(/\s+/g, ' '), ...details].join('\n');
+        const label = String(row.label ?? 'Record');
+        const text = [`# ${sourceSystem} ${label}: ${title}`, `Source record: ${sourceRecordId}`, body.trim(), ...(details.length ? ['Record details:', ...details] : [])].filter(Boolean).join('\n');
+        const sourcePath = `connectors/${sourceSystem}/${encodeURIComponent(sourceRecordId)}`;
+        sources.push({
+          id: `connector:${sourceSystem}:${sourceRecordId}`,
+          type: 'api',
+          path: sourcePath,
+          title,
+          content: text,
+          metadata: {
+            sourceSystem,
+            sourceRecordId,
+            entityType: label,
+            ...(typeof node.externalUrl === 'string' ? { url: node.externalUrl } : {})
+          },
+          hash: createHash('sha256').update(text).digest('hex'),
+          ...(typeof node.updatedAt === 'string' ? { lastModified: node.updatedAt } : {})
+        });
+      }
+
+      if (sources.length > 0 || options.strictLive) return sources;
     } catch {
+      if (options.strictLive) throw new Error('Live FalkorDB source discovery failed; no deletion reconciliation was performed.');
       // Fall through to deterministic seed extraction
     }
   }
+
+  if (options.strictLive && graph) return sources;
 
   // Deterministic fallback using seed data
   const seed = generateSeedData();

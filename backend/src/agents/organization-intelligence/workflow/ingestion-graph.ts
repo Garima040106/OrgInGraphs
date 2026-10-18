@@ -1,10 +1,7 @@
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
 import type { Graph } from 'falkordb';
 import type { DiscoveredSource, DocumentChunk, IngestionResult, IngestionStats, SourceIngestionRecord, SourceType } from '../types.js';
-import { discoverRouteSources } from '../sources/routes-catalog.js';
-import { loadDocumentationSources } from '../sources/docs-loader.js';
-import { extractDatabaseSources } from '../sources/database-extractor.js';
-import { loadSeedGraphSources } from '../sources/seed-graph-loader.js';
+import { discoverRagSources } from '../sources/discovery.js';
 import { chunkSource } from '../chunking/chunker.js';
 import { GeminiEmbeddingService } from '../embeddings/gemini-embeddings.js';
 import { PersistentVectorStore } from '../vector-store/persistent-store.js';
@@ -54,7 +51,7 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
     .addNode('discover_sources', async (_state) => {
       try {
         if (store instanceof FalkorDBVectorStore) await store.initialize();
-        const routes = discoverRouteSources();
+        const routes = await discoverRagSources({ graph: config.graph, docsDir: config.docsDir });
         return {
           routeSources: routes,
           status: 'discovering' as const
@@ -62,7 +59,7 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
       } catch (error) {
         return {
           status: 'failed' as const,
-          errors: [`${store instanceof FalkorDBVectorStore ? 'Vector index initialization' : 'Source discovery'} failed: ${error instanceof Error ? error.message : String(error)}`]
+          errors: [`${store instanceof FalkorDBVectorStore ? 'Vector index/source initialization' : 'Source discovery'} failed: ${error instanceof Error ? error.message : String(error)}`]
         };
       }
     })
@@ -71,9 +68,7 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
     .addNode('load_documentation', async (state) => {
       if (state.status === 'failed') return {};
       try {
-        const docs = loadDocumentationSources(config.docsDir);
-        const seedSources = loadSeedGraphSources();
-        return { docSources: [...docs, ...seedSources] };
+        return { docSources: [] };
       } catch (error) {
         return {
           status: 'failed' as const,
@@ -86,15 +81,14 @@ export function createIngestionWorkflow(config: IngestionGraphConfig = {}) {
     .addNode('extract_organization_data', async (state) => {
       if (state.status === 'failed') return {};
       try {
-        const dbSources = await extractDatabaseSources(config.graph);
-        const allSources = [...state.routeSources, ...state.docSources, ...dbSources];
+        const allSources = [...state.routeSources, ...state.docSources];
 
         const filtered = config.selectedSources && config.selectedSources.length > 0
           ? allSources.filter((s) => config.selectedSources!.includes(s.path) || config.selectedSources!.includes(s.id))
           : allSources;
 
         return {
-          dbSources,
+          dbSources: [],
           discoveredSources: filtered
         };
       } catch (error) {

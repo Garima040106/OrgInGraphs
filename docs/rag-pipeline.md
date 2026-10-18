@@ -27,6 +27,11 @@ ORGANIZATION_ID=hirenova
 RAG_EMBEDDING_PROVIDER=local
 RAG_CHUNK_MAX_CHARS=2000
 RAG_CHUNK_OVERLAP_CHARS=300
+RAG_AUTO_SYNC_ENABLED=true
+RAG_SYNC_POLL_INTERVAL_MS=60000
+RAG_SYNC_BATCH_SIZE=25
+RAG_SYNC_CONCURRENCY=4
+RAG_SYNC_MAX_RETRIES=5
 ```
 
 `RAG_ADMIN_API_KEY` authorizes RAG ingestion and re-index routes through the `x-rag-admin-key` header. It must only be used by a trusted backend administrator and must never be added to the Next.js bundle. The current application identifies users using its existing `x-orgmind-user-id` demo workspace header. Put the API behind the deployment's trusted authentication layer before treating that client supplied identity as proof of user or workspace membership; this repository does not yet include a signed session/JWT provider or source-system ACL connector.
@@ -54,7 +59,17 @@ Content-Type: application/json
 {"sources":["docs/architecture.md"],"force":false}
 ```
 
-Omit `sources` for a full source scan. Use `POST /api/rag/reindex` with `{}` for a full re-index, or `{ "sourcePath": "docs/architecture.md" }` for one source. Concurrent write jobs return `409`. `GET /api/rag/status` reports counts, model, last successful ingestion, pending work, failures, and store health.
+Omit `sources` for a full source scan. Use `POST /api/rag/reindex` with `{}` for a full re-index, or `{ "sourcePath": "docs/architecture.md" }` for one source. `GET /api/rag/status` reports indexed counts, the sync worker state, last observed change, pending/processing/completed/dead job counts, retries, lag, and a sanitized last error. `POST /api/rag/sync/replay` (same admin authorization as ingestion) retries dead-letter jobs.
+
+## Automatic incremental synchronization
+
+The backend starts one polling worker after it connects to FalkorDB. The queue is stored as `RAGSyncJob` nodes in the configured FalkorDB graph, so pending jobs survive process restarts and multiple server processes share leases. Each successful full source scan compares stable source paths and SHA-256 content hashes. Only new or changed source documents are sent through the existing chunker, MiniLM embedding service, and vector store. Unchanged hashes are skipped. Deleted sources are queued only after a complete live source scan; each deletion is checked again immediately before indexed chunks are removed. A failed or partial scan does not trigger deletion. Source chunks use content-addressed IDs, and updated chunks remain inactive until the complete new set is written, so an interrupted replacement leaves the last complete version searchable.
+
+Jobs are deduplicated by organization and source path, carry the latest observed operation/hash, use bounded concurrency and batch size, and are protected by expiring leases. Failures are retried with exponential backoff and jitter up to `RAG_SYNC_MAX_RETRIES`; exhausted jobs remain in dead-letter state until replayed. Shutdown waits for the active poll cycle, then releases the worker's leases to pending state. The first successful worker scan bootstraps an empty index through normal incremental ingestion; `npm run rag:rebuild` remains available for an intentional full rebuild.
+
+All currently discoverable RAG sources use polling; there is no CDC feed or webhook receiver in this repository. Repository documentation and README files are read from disk, route catalog entries come from the backend registry, and live company records are read from FalkorDB. When a Confluence, Jira, GitHub, or Slack connector is configured, the worker also uses the existing server-side fetcher on each poll and persists only verified, changed records through the existing document processor. A per-record hash checkpoint prevents unchanged records from being reprocessed. The fetchers return bounded pages (at most 100 records per connector poll), so they can detect new and updated records in those responses but cannot safely infer deletions from absence. Delete a connector record from its authoritative graph data, or add a source API that provides a complete snapshot or authenticated deletion webhooks, before expecting its vectors to be removed automatically.
+
+The worker uses only indexed vector-store records for reconciliation and scopes queue and chunk operations by `ORGANIZATION_ID`. It never deletes graph entities or unrelated indexes. To disable the worker set `RAG_AUTO_SYNC_ENABLED=false`; interval must be 1,000–86,400,000 ms, batch size 1–1,000, concurrency 1–32, and maximum attempts 1–20. These values are validated at backend startup.
 
 Existing `/api/organization/query`, `/api/organization/ingest`, `/api/organization/reindex`, and status/source routes remain for current frontend compatibility.
 
