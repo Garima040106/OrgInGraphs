@@ -31,10 +31,7 @@ export function useExpandableGraph(
     const nextExpanded = new Set(expandedIds);
     if (nextExpanded.has(id)) nextExpanded.delete(id);
     else nextExpanded.add(id);
-    const visible =
-      graphMode === "product" && nextExpanded.size === initialNodes.length
-        ? new Set(graph.nodes.map((n) => n.id))
-        : visibleIdsForExpanded(graph, graphRootId(graph), nextExpanded);
+    const visible = visibleIdsForExpanded(graph, graphRootId(graph), nextExpanded);
     const retained = new Set([...nextExpanded].filter((candidate) => visible.has(candidate)));
     const normalized = normalizeVisibleGraph(graph, visible, nodes, id, graphMode);
     setExpandedIds(retained);
