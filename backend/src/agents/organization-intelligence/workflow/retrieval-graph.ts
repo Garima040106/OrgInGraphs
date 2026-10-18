@@ -18,7 +18,7 @@ export const RetrievalState = Annotation.Root({
   queryText: replace<string>(() => ''),
   queryEmbedding: replace<number[]>(() => []),
   queryEmbeddings: replace<number[][]>(() => []),
-  aggregateMetric: replace<'team-count' | 'people-count' | 'jira-issue-count' | 'recent-jira-issues' | undefined>(() => undefined),
+  aggregateMetric: replace<'team-count' | 'team-list' | 'people-count' | 'jira-issue-count' | 'recent-jira-issues' | undefined>(() => undefined),
   searchResults: replace<SearchResult[]>(() => []),
   retrievedChunks: replace<RetrievedChunkInfo[]>(() => []),
   sources: replace<RAGSourceCitation[]>(() => []),
@@ -117,10 +117,14 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
       const asksForCount = /\b(how many|number of|count of|total)\b/i.test(q);
       const hasLocalScope = /\b(?:department|within|per)\b/i.test(q);
       const asksForJiraIssues = /\bjira\b/i.test(q) && /\b(issues?|tickets?)\b/i.test(q);
+      const asksForTeamList = (/\b(?:list|name|show)\b/i.test(q) && /\bteams?\b/i.test(q))
+        || /\b(?:what are|which)\s+(?:all\s+)?teams\b/i.test(q)
+        || (/\b(?:name|list)\s+(?:them|those)\b/i.test(q) && /\bteams?\b/i.test(previous?.query ?? ''));
       let aggregateMetric: RetrievalWorkflowState['aggregateMetric'];
       if (asksForCount && !hasLocalScope && asksForJiraIssues) aggregateMetric = 'jira-issue-count';
       else if (!asksForCount && asksForJiraIssues && /\b(recent|latest|newest|last)\b/i.test(q)) aggregateMetric = 'recent-jira-issues';
       else if (asksForCount && !hasLocalScope && /\bteams\b/i.test(q)) aggregateMetric = 'team-count';
+      else if (!asksForCount && !hasLocalScope && asksForTeamList) aggregateMetric = 'team-list';
       else if (asksForCount && !hasLocalScope && !/\bteams?\b/i.test(q) && /\b(people|persons?|employees?|headcount|staff)\b/i.test(q)) aggregateMetric = 'people-count';
       return {
         queryText: retrievalQuery,
@@ -189,6 +193,39 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
               candidateCount: 1,
               retrievedChunks: [{ chunkId, sourcePath, score: 1, text: evidence, platform: 'jira' as const, metadata }],
               sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'jira' as const, excerpt: evidence }],
+              answer,
+              status: 'completed' as const
+            };
+          }
+          if (state.aggregateMetric === 'team-list') {
+            const teams = await store.getOrganizationEntityNames('Team');
+            const count = teams.length;
+            const sourcePath = 'database/Organization/team-list';
+            const title = 'Live organization team names from FalkorDB';
+            const text = teams.length
+              ? `The live company graph contains ${count} distinct Team nodes. Their recorded names are:\n${teams.map((name) => `- ${name}`).join('\n')}`
+              : 'The live company graph contains no Team nodes with a recorded name.';
+            const chunkId = 'live-aggregate-team-list';
+            const timestamp = new Date().toISOString();
+            const metadata = {
+              chunkId,
+              orgId: state.request.orgId ?? 'hirenova',
+              sourceType: 'database' as const,
+              sourcePath,
+              title,
+              contentHash: `live:team-list:${teams.join('|')}`,
+              docHash: `live:team-list:${teams.join('|')}`,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+              summaryKind: 'team-list'
+            };
+            const answer = teams.length
+              ? `The live company graph contains **${count} teams**:\n\n${teams.map((name) => `- ${name}`).join('\n')}\n\n[S1]`
+              : 'The live company graph has no teams with recorded names. [S1]';
+            return {
+              candidateCount: 1,
+              retrievedChunks: [{ chunkId, sourcePath, score: 1, text, platform: 'database' as const, metadata }],
+              sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'database' as const, excerpt: text }],
               answer,
               status: 'completed' as const
             };
