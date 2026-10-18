@@ -3285,32 +3285,7 @@ body {
   background: #78a27c;
 }
 
-.landing-hero-visual > div.overflow-hidden {
-  border: 0;
-  border-radius: 0;
-  background: #fffdf6;
-  box-shadow: none;
-}
-
-.landing-hero-visual > div.overflow-hidden > div:first-child {
-  min-height: 42px;
-  height: 42px;
-  border-bottom-color: #f0ecdf;
-}
-
-.landing-hero-visual > div.overflow-hidden > div:last-child {
-  min-height: 38px;
-  border-top-color: #f0ecdf;
-}
-
-.landing-hero-visual > div.overflow-hidden > div:nth-child(2) {
-  height: 300px;
-  background-color: #fffdf6;
-}
-
-.landing-hero-visual > div.overflow-hidden > div:nth-child(2) > div:first-child {
-  opacity: .38;
-}
+.landing-dashboard-image { display: block; width: 100%; height: auto; }
 
 .landing-preview-footer {
   min-height: 38px;
@@ -3364,9 +3339,6 @@ body {
     width: 100%;
   }
 
-  .landing-hero-visual > div.overflow-hidden > div:nth-child(2) {
-    height: 280px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -3411,9 +3383,6 @@ body {
     font-size: 8px;
   }
 
-  .landing-hero-visual > div.overflow-hidden > div:nth-child(2) {
-    height: 230px;
-  }
 
   .landing-preview-footer {
     padding-inline: 12px;
@@ -3889,23 +3858,6 @@ body {
 
 .landing-preview-status i { background: #b9785c; }
 
-.landing-hero-visual > div.overflow-hidden > div:nth-child(2) {
-  height: 344px;
-  background-color: #fffdf8;
-}
-
-.landing-hero-visual > div.overflow-hidden > div:nth-child(2) > div:first-child { opacity: .52; }
-
-.landing-hero-visual > div.overflow-hidden > div:nth-child(2) svg g {
-  stroke: #b9a9a0;
-  stroke-width: 1.7;
-  stroke-dasharray: 3 5;
-}
-
-.landing-hero-visual > div.overflow-hidden > div:nth-child(2) > div:not(:first-child) {
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-
 .landing-preview-footer { color: #898078; border-top-color: #e9e2d5; }
 
 @media (max-width: 760px) {
@@ -3913,7 +3865,6 @@ body {
   .landing-hero-frame { padding-top: 98px; }
   .landing-hero { padding-top: 48px; padding-bottom: 44px; }
   .landing-hero h1 { font-size: clamp(52px, 11vw, 72px); }
-  .landing-hero-visual > div.overflow-hidden > div:nth-child(2) { height: 286px; }
 }
 
 @media (max-width: 480px) {
@@ -3927,7 +3878,6 @@ body {
   .landing-hero-visual { border-radius: 19px; }
   .landing-preview-heading { padding-inline: 14px; }
   .landing-preview-heading b { font-size: 20px; }
-  .landing-hero-visual > div.overflow-hidden > div:nth-child(2) { height: 236px; }
 }
 
 @media (max-width: 370px) {
