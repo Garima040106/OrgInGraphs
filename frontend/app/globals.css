@@ -60,6 +60,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); }
 .brand-mark { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-weight: 750; font-size: 18px; letter-spacing: -1.5px; background: #243356; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.brand-mark-image { display: block; width: 34px; height: 34px; object-fit: contain; }
 .brand-wordmark { display: grid; line-height: 1; gap: 3px; }
 .brand-wordmark strong { font-size: 17px; letter-spacing: -.6px; }
 .brand-wordmark span { color: #8790a2; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; font-weight: 650; }
@@ -2664,6 +2665,9 @@ body {
   font-family: var(--display);
   font-size: 10px;
 }
+
+.landing-footer-links .footer-about-label { display: flex; align-items: center; gap: 4px; }
+.footer-about-label img { width: 14px; height: 14px; object-fit: contain; }
 
 .landing-footer-links a,
 .landing-footer-links span {
