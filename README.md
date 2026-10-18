@@ -26,6 +26,10 @@
 
 <p align="center"><b>6 specialized agent components</b> &nbsp; | &nbsp; <b>384-dimensional vectors</b> &nbsp; | &nbsp; <b>FalkorDB cosine/HNSW</b> &nbsp; | &nbsp; <b>Bedrock-grounded answers</b></p>
 
+<p align="center"><b>770 Graph Relationships</b> &nbsp; | &nbsp; <b>223 Enrichment Relationships</b> &nbsp; | &nbsp; <b>FalkorDB-Powered Company Knowledge Graph</b></p>
+
+Graph enrichment adds connections between organizational entities, supporting richer graph traversal and more contextual retrieval. The configured FalkorDB graph contains 770 relationships, including 223 relationships identified with <code>sourceSystem = 'graph-enrichment'</code>; the enrichment count is not the total relationship count.
+
 > **On the roadmap:** exploring [**gRPC**](https://grpc.io/docs/) for a future typed, high-throughput service boundary alongside today's REST API. This is future exploration, not a currently implemented transport.
 
 OrgInGraphs (OIG) is a company intelligence platform built around a company graph and two specialized AI workflows. **OrgMind Assistant** reasons over graph entities, typed relationships, and bounded neighborhoods. **Company Brain** runs a retrieval-augmented generation (RAG) pipeline: it embeds the question, searches indexed graph chunks, assembles evidence, and asks the backend-configured Bedrock model for a cited response. That split keeps graph navigation and document-grounded synthesis explicit and inspectable.
@@ -354,3 +358,9 @@ docs/
 - [Backend environment template](backend/.env.example)
 
 <p align="center"><sub>OrgInGraphs · graph-grounded company intelligence</sub></p>
+
+## Authors — Team Prometheus
+
+- Garima
+- Nikhil
+- Mohit
