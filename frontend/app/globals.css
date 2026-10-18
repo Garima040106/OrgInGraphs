@@ -4358,7 +4358,7 @@ body {
 .usp-graph-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .usp-graph-status { display: inline-flex; align-items: center; gap: 7px; color: #8a766b; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
 .usp-graph-status i { width: 6px; height: 6px; border-radius: 50%; background: #a66b52; }
-.usp-graph-art { display: block; width: 100%; height: auto; margin-top: 20px; overflow: visible; }
+.usp-feature-image { display: block; width: 100%; height: auto; margin-top: 20px; border: 1px solid rgba(222, 212, 199, .8); border-radius: 14px; box-shadow: 0 10px 28px rgba(63, 48, 31, .08); }
 .usp-graph-lines { fill: none; stroke: #c6a99a; stroke-width: 1.5; stroke-dasharray: 4 6; }
 .usp-graph-node circle { fill: #fffdf7; stroke: #a66b52; stroke-width: 1.5; }
 .usp-graph-node text { fill: #6f655e; font-family: Inter, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .12em; text-anchor: middle; }
@@ -4412,7 +4412,7 @@ body {
 @media (max-width: 640px) {
   .usp-composition { grid-template-columns: 1fr; gap: 38px; margin-top: 44px; }
   .usp-graph-panel { padding: 18px 16px 16px; border-radius: 18px; }
-  .usp-graph-art { margin-top: 14px; }
+  .usp-feature-image { margin-top: 14px; border-radius: 10px; }
   .usp-chapters { border-top: 1px solid #ded4c7; }
   .usp-chapter { padding-block: 18px; }
   .usp-chapter:hover { padding-left: 5px; }
