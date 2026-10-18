@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { CircleAlert, Network, RefreshCw } from "lucide-react";
 import { OrganizationGraph } from "@/components/graph/OrganizationGraph";
 import { api, friendlyApiError } from "@/lib/api";
@@ -15,6 +16,7 @@ export default function OrganizationGraphPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [focus, setFocus] = useState<{ id?: string; type?: string; request: number }>({ request: 0 });
+  const [fromDocuments, setFromDocuments] = useState(false);
 
   const load = useCallback(async (selectedMode: GraphMode) => {
     setLoading(true);
@@ -34,6 +36,7 @@ export default function OrganizationGraphPage() {
     const initialMode: GraphMode = params.get("mode") === "product" ? "product" : "team";
     setMode(initialMode);
     setFocus({ id: params.get("focus") ?? undefined, type: params.get("type") ?? undefined, request: 1 });
+    setFromDocuments(params.get("from") === "documents");
     void load(initialMode);
     const listener = (event: Event) => {
       const detail = (event as CustomEvent<{ id: string; type: string; mode?: GraphMode }>).detail;
@@ -50,7 +53,7 @@ export default function OrganizationGraphPage() {
   return <>
     <div className="page-heading graph-page-heading">
       <div><div className="eyebrow"><span className="eyebrow-mark" /> Connected company data</div><h1>Organization graph</h1><p>Explore indexed entities, relationships, and dependencies.</p></div>
-      <button className="small-button" type="button" onClick={() => void load(mode)} disabled={loading}><RefreshCw size={12} /> Refresh graph</button>
+      <div className="graph-header-actions">{fromDocuments && <Link className="small-button" href="/documents">Back to Documentation</Link>}<button className="small-button" type="button" onClick={() => void load(mode)} disabled={loading}><RefreshCw size={12} /> Refresh graph</button></div>
     </div>
     <div className="graph-page-controls">
       <div className="graph-mode-switch" role="group" aria-label="Graph view">

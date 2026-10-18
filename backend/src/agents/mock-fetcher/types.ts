@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const mockSources = ['confluence', 'jira', 'github', 'slack'] as const;
 export type MockSource = (typeof mockSources)[number];
-export type DocumentProvenance = 'synthetic' | 'user-provided' | 'external-verified';
+export type DocumentProvenance = 'synthetic' | 'user-provided' | 'external-verified' | 'mock-verified';
 
 export interface MockFetcherRequest { source: MockSource; limit?: number; }
 export interface NormalizedDocument {
@@ -24,11 +24,11 @@ export const normalizedDocumentSchema = z.object({
   title: z.string().max(2000).optional(), summary: z.string().max(20_000).optional(),
   content: z.string().max(1_000_000), sourceUrl: z.string().url().optional(),
   createdAt: z.string().optional(), updatedAt: z.string().optional(), occurredAt: z.string().optional(),
-  provenance: z.enum(['synthetic', 'user-provided', 'external-verified']), synthetic: z.boolean(),
+  provenance: z.enum(['synthetic', 'user-provided', 'external-verified', 'mock-verified']), synthetic: z.boolean(),
   metadata: z.record(z.string(), z.unknown())
 }).strict();
 export interface MockFetcherResult { source: MockSource; documents: NormalizedDocument[]; }
-export type MockFetcherErrorCode = 'missing-configuration' | 'invalid-configuration' | 'unsupported-source' | 'http-error' | 'malformed-response' | 'timeout' | 'empty-result';
+export type MockFetcherErrorCode = 'missing-configuration' | 'invalid-configuration' | 'unsupported-source' | 'http-error' | 'malformed-response' | 'timeout' | 'empty-result' | 'dns-error' | 'tls-error' | 'connection-error';
 export class MockFetcherError extends Error {
-  constructor(public readonly code: MockFetcherErrorCode, message: string, public readonly retryable = false) { super(message); this.name = 'MockFetcherError'; }
+  constructor(public readonly code: MockFetcherErrorCode, message: string, public readonly retryable = false, public readonly httpStatus?: number, public readonly failureCategory?: 'configuration' | 'dns' | 'tls' | 'connection' | 'timeout' | 'http' | 'authentication' | 'permission' | 'response') { super(message); this.name = 'MockFetcherError'; }
 }

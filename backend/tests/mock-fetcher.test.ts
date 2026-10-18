@@ -112,17 +112,20 @@ test('does not trust provenance asserted by a generic route-catalog endpoint', a
 });
 
 test('normalizes the documented GitHub pulls envelope, preserves metadata, handles null URLs, and applies the local limit', async () => {
-  globalThis.fetch = async () => response({
-    pulls: [
-      { id: '142', title: 'Authentication refactor', state: 'open', merged: false, user: { login: 'ava' }, repository: 'org/checkout', html_url: null, body: 'Refactor authentication.' },
-      { id: '143', title: 'Payment timeout fix', state: 'closed', merged: true, user: { login: 'noah' }, repository: 'org/checkout', html_url: 'https://github.example/pr/143', body: 'Fix timeout handling.' },
-      { id: '144', title: 'Export improvements', state: 'open', merged: false, user: { login: 'mia' }, repository: 'org/checkout', html_url: 'https://github.example/pr/144', body: 'Improve CSV export.' }
-    ],
-    startAt: 0, maxResults: 50, total: 3, isLast: true
-  });
+  globalThis.fetch = async (input) => {
+    const path = new URL(String(input)).pathname;
+    if (path.endsWith('/pulls')) return response({
+      pulls: [
+        { id: '142', title: 'Authentication refactor', state: 'open', merged: false, user: { login: 'ava' }, repository: 'org/checkout', html_url: null, body: 'Refactor authentication.' },
+        { id: '143', title: 'Payment timeout fix', state: 'closed', merged: true, user: { login: 'noah' }, repository: 'org/checkout', html_url: 'https://github.example/pr/143', body: 'Fix timeout handling.' }
+      ], startAt: 0, maxResults: 2, total: 3, isLast: false
+    });
+    if (path.endsWith('/issues')) return response({ issues: [{ id: 'issue-201', number: 201, title: 'Fix webhook retry' }], startAt: 0, maxResults: 1, total: 1, isLast: true });
+    return response({ commits: [{ sha: 'commit-301', commit: { message: 'Fix idempotency guard' } }], startAt: 0, maxResults: 1, total: 1, isLast: true });
+  };
   try {
-    const items = await fetchMockDocuments('github', { baseUrl: 'https://mock.example', limit: 2 });
-    assert.equal(items.length, 2);
+    const items = await fetchMockDocuments('github', { baseUrl: 'https://mock.example', limit: 4 });
+    assert.equal(items.length, 4);
     assert.equal(items[0].sourceRecordId, '142');
     assert.equal(items[0].title, 'Authentication refactor');
     assert.equal(items[0].sourceUrl, undefined);
@@ -133,6 +136,28 @@ test('normalizes the documented GitHub pulls envelope, preserves metadata, handl
     assert.equal(items[1].sourceUrl, 'https://github.example/pr/143');
     assert.equal(items[1].metadata.merged, true);
     assert.equal(items[1].provenance, 'synthetic');
+    assert.equal(items[2].sourceRecordId, 'issue-201');
+    assert.equal(items[2].metadata.recordType, 'issue');
+    assert.equal(items[3].sourceRecordId, 'commit-301');
+    assert.equal(items[3].metadata.recordType, 'commit');
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test('recognizes the configured Company Brain seeded API as mock-verified while retaining its synthetic-data label', async () => {
+  let authHeadersPresent = false;
+  globalThis.fetch = async (input, init) => {
+    const path = new URL(String(input)).pathname;
+    const headers = init?.headers as Record<string, string> | undefined;
+    authHeadersPresent ||= Boolean(headers?.Authorization || headers?.['x-api-key']);
+    if (path.endsWith('/jira/issues')) return response({ issues: [{ id: 'seed-1', key: 'SEED-1', summary: 'Seeded test issue', description: 'Mock issue' }], startAt: 0, maxResults: 1, total: 1, isLast: true });
+    return response({ pulls: [], startAt: 0, maxResults: 1, total: 0, isLast: true });
+  };
+  try {
+    const [record] = await fetchMockDocuments('jira', { baseUrl: 'https://confluenece.vercel.app', limit: 1 });
+    assert.equal(record.provenance, 'mock-verified');
+    assert.equal(record.synthetic, true);
+    assert.equal(record.sourceRecordId, 'seed-1');
+    assert.equal(authHeadersPresent, false);
   } finally { globalThis.fetch = originalFetch; }
 });
 

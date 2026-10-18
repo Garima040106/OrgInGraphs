@@ -1,5 +1,5 @@
-import { IntegrationStatusView } from "@/components/integrations/IntegrationStatusView";
+import { DemoSyncDashboard } from "@/components/sources/DemoSyncDashboard";
 
 export default function IntegrationsPage() {
-  return <IntegrationStatusView />;
+  return <DemoSyncDashboard />;
 }
