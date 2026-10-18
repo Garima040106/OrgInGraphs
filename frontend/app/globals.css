@@ -19,6 +19,22 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; color: var(--ink); background: var(--paper); font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
 :root { --display: "EB Garamond", Georgia, serif; }
+
+/* Slim scrollbar that follows the OrgInGraphs green palette. */
+* {
+  scrollbar-color: #bdc9be transparent;
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #bdc9be;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background-color: #78937d; }
+
 button, input { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; text-decoration: none; }
@@ -5354,4 +5370,183 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .assistant-messages { scroll-behavior: auto; }
   .assistant-panel, .assistant-panel * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* Company Intelligence Hub dashboard. */
+.app-shell { background: #f6f5eb; color: #20211f; }
+.app-shell .sidebar { width: 228px; flex-basis: 228px; padding: 14px 10px; background: #fffef7; border-right-color: #e8e6d8; }
+.app-shell .sidebar .brand { padding: 0 8px 12px; }
+.app-shell .sidebar-kicker { margin: 0 8px 12px; color: #176349; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.app-shell .workspace-switch { min-height: 54px; margin-bottom: 19px; padding: 7px 9px; border-color: #e8e6d8; border-radius: 11px; background: #fffef7; }
+.app-shell .nav-section-label { margin: 0; padding: 8px 10px; color: #575950; font-size: 9px; letter-spacing: .13em; }
+.app-shell .side-nav { gap: 2px; }
+.app-shell .side-nav a, .app-shell .side-nav-action { min-height: 35px; padding: 7px 9px; border-radius: 7px; color: #42453f; font-size: 12px; }
+.app-shell .side-nav a svg, .app-shell .side-nav-action svg { width: 15px; height: 15px; color: #287353; }
+.app-shell .side-nav a.active, .app-shell .side-nav-action.active, .app-shell .side-nav-action:hover { background: #d2e8de; color: #174d35; }
+.app-shell .side-nav a:hover { background: #eef5ee; color: #174d35; }
+.app-shell .side-nav-group { margin-top: 8px; padding-top: 7px; border-top: 1px solid #e8e6d8; }
+.app-shell .sidebar-settings-nav { border-top-color: #e8e6d8; }
+.app-shell .sidebar-help { min-height: 38px; color: #74766e; font-size: 11px; }
+.app-shell .sidebar-user { border-top: 1px solid #e8e6d8; margin-top: 7px; padding-top: 11px; }
+.app-shell .sidebar-user b { font-size: 10px; color: #343832; }
+.app-shell .sidebar-user small { font-size: 9px; }
+.app-shell .main-column { background: #f6f5eb; }
+.app-shell .topbar { min-height: 58px; padding: 0 22px; background: rgba(255,254,247,.94); border-bottom-color: #e8e6d8; }
+.app-shell .breadcrumbs { display: none; }
+.app-shell .topbar-actions { width: 100%; justify-content: space-between; gap: 16px; }
+.app-shell .search-trigger { order: 0; flex: 1; max-width: 650px; min-height: 38px; justify-content: flex-start; padding: 0 12px; border: 1px solid #e8e6d8; border-radius: 9px; background: #fffef7; color: #565950; font-size: 12px; }
+.app-shell .search-trigger span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell .search-trigger kbd { margin-left: auto; }
+.app-shell .connection-pill { order: 1; color: #176349; background: #eaf4ed; border: 1px solid #dcebdd; }
+.app-shell .topbar-user-profile { order: 2; display: flex; align-items: center; gap: 9px; min-width: 0; }
+.app-shell .topbar-user-profile > span:last-child { display: grid; gap: 2px; }
+.app-shell .topbar-user-profile b { max-width: 140px; overflow: hidden; color: #343832; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.app-shell .topbar-user-profile small { color: #77786f; font-size: 9px; }
+.app-shell .workspace-content { padding: 22px 24px 30px; background: #f6f5eb; }
+.dashboard-bento-heading { min-height: 75px; margin-bottom: 17px; align-items: center; }
+.dashboard-heading-copy .eyebrow { color: #176349; }
+.dashboard-heading-copy h1 { margin: 5px 0; color: #20211f; font-size: clamp(30px, 2.5vw, 40px); }
+.dashboard-heading-copy p { margin: 0; color: #686b63; font-size: 13px; }
+.dashboard-bento-heading .heading-actions { align-items: center; }
+.dashboard-bento-heading .small-button { min-height: 38px; padding: 0 13px; border-radius: 8px; }
+.dashboard-bento-heading .primary-action { color: #fff; background: #07563f; border-color: #07563f; }
+.dashboard-bento-heading .primary-action:hover { background: #064733; }
+.hub-integrations { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.hub-integration-card { display: flex; min-width: 0; min-height: 226px; flex-direction: column; padding: 12px; border: 1px solid #e8e6d8; border-radius: 11px; background: #fffef7; box-shadow: 0 3px 12px rgba(36,40,32,.035); }
+.hub-integration-top { display: flex; min-width: 0; align-items: flex-start; gap: 9px; }
+.hub-integration-logo { display: grid; width: 32px; height: 32px; flex: 0 0 32px; place-items: center; border-radius: 8px; color: #246b49; background: #edf4ed; }
+.hub-integration-logo img { width: 26px; height: 26px; object-fit: contain; }
+.hub-integration-copy { display: grid; min-width: 0; flex: 1; gap: 3px; padding-top: 1px; }
+.hub-integration-copy b { color: #242821; font-size: 12px; }
+.hub-integration-copy small { min-height: 27px; color: #77786f; font-size: 9px; line-height: 1.4; }
+.hub-integration-menu { position: relative; flex: 0 0 auto; }
+.hub-integration-menu summary { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid #e8e6d8; border-radius: 6px; color: #666b62; cursor: pointer; font-size: 16px; line-height: 1; list-style: none; }
+.hub-integration-menu summary::-webkit-details-marker { display: none; }
+.hub-integration-menu > div { position: absolute; z-index: 3; top: 28px; right: 0; display: grid; min-width: 130px; gap: 2px; padding: 5px; border: 1px solid #e8e6d8; border-radius: 8px; background: #fffef7; box-shadow: 0 8px 24px rgba(32,33,31,.12); }
+.hub-integration-menu a, .hub-integration-menu button { padding: 7px; border: 0; border-radius: 5px; background: transparent; color: #343832; font: inherit; font-size: 10px; text-align: left; cursor: pointer; }
+.hub-integration-menu a:hover, .hub-integration-menu button:hover { background: #edf4ed; }
+.hub-integration-menu button:disabled { opacity: .55; cursor: wait; }
+.hub-source-status { display: flex; align-items: center; gap: 6px; margin-top: 9px; color: #365c45; font-size: 10px; }
+.hub-source-status i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #afb5ab; }
+.hub-source-status i.has-records { background: #18a66a; }
+.hub-indexed-count, .hub-sync-time { overflow: hidden; margin: 6px 0 0; color: #64675f; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.hub-sync-time { color: #3f433d; }
+.hub-sync-error { margin: 6px 0 0; color: #9a4137; font-size: 9px; overflow-wrap: anywhere; }
+.hub-integration-actions { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 8px; border-top: 1px solid #eeece2; }
+.hub-integration-actions button, .hub-integration-actions a { display: inline-flex; min-height: 29px; align-items: center; justify-content: center; gap: 5px; padding: 0 8px; border: 1px solid #e8e6d8; border-radius: 6px; background: transparent; color: #174d35; font: inherit; font-size: 9px; font-weight: 650; cursor: pointer; }
+.hub-integration-actions button { flex: 1; }
+.hub-integration-actions button:hover, .hub-integration-actions a:hover { background: #edf4ed; }
+.bento-grid { grid-template-columns: minmax(0,1.25fr) minmax(250px,.9fr) minmax(260px,.9fr); grid-template-rows: minmax(190px,auto) minmax(190px,auto) minmax(280px,auto) auto auto; grid-template-areas: "activity quick work" "activity teams work" "knowledge knowledge featured" "signals incidents decisions" "ownership timeline sources"; gap: 10px; }
+.bento-activity-card { grid-area: activity; min-height: 390px; }
+.hub-quick-insights { grid-area: quick; }
+.hub-top-teams { grid-area: teams; }
+.hub-ongoing-work { grid-area: work; }
+.hub-knowledge-explorer { grid-area: knowledge; }
+.hub-featured-knowledge { grid-area: featured; }
+.bento-insights-card { grid-area: signals; }
+.bento-investigations-card { grid-area: incidents; }
+.bento-decisions-card { grid-area: decisions; }
+.bento-ownership-card { grid-area: ownership; }
+.bento-timeline-card { grid-area: timeline; }
+.bento-sources-card { grid-area: sources; }
+.bento-activity-card .bento-card-heading, .hub-quick-insights .bento-card-heading, .hub-top-teams .bento-card-heading, .hub-ongoing-work .bento-card-heading, .hub-knowledge-explorer .bento-card-heading, .hub-featured-knowledge .bento-card-heading { padding: 13px 13px 7px; }
+.bento-card { border-color: #e8e6d8; border-radius: 11px; background: #fffef7; box-shadow: 0 3px 12px rgba(36,40,32,.035); }
+.bento-card-heading h2 { color: #20211f; font-size: 19px; }
+.bento-card-heading p { color: #77786f; font-size: 9px; }
+.hub-filter-tabs { display: flex; gap: 5px; overflow-x: auto; padding: 3px 12px 8px; scrollbar-width: none; }
+.hub-filter-tabs::-webkit-scrollbar { display: none; }
+.hub-filter-tabs button { flex: 0 0 auto; padding: 6px 9px; border: 1px solid #e8e6d8; border-radius: 999px; background: #fffef7; color: #52564e; font: inherit; font-size: 9px; cursor: pointer; }
+.hub-filter-tabs button.active { border-color: #07563f; background: #07563f; color: #fff; }
+.bento-activity-card .bento-list { gap: 0; padding-top: 0; }
+.bento-activity-card .bento-event { grid-template-columns: 28px minmax(0,1fr) auto; align-items: center; gap: 8px; min-height: 54px; padding: 6px 0; border-bottom: 1px solid #eeece2; }
+.bento-activity-card .bento-event:last-child { border-bottom: 0; }
+.hub-record-type-icon { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 7px; color: #176349; background: #edf4ed; }
+.hub-record-type-icon img { width: 20px; height: 20px; object-fit: contain; }
+.bento-event-main { display: grid; min-width: 0; gap: 2px; }
+.bento-event-main > small { overflow: hidden; color: #77786f; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.bento-event-main .bento-record { padding: 0; border: 0; background: transparent; }
+.bento-event-main .bento-record:hover { background: transparent; }
+.bento-event-main .bento-record-type { display: none; }
+.bento-event-main .bento-record b { font-size: 10px; }
+.bento-event-time { white-space: nowrap; }
+.hub-insight-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; padding: 5px 11px 12px; }
+.hub-insight-item { display: grid; grid-template-columns: 24px minmax(0,1fr); align-items: center; column-gap: 7px; row-gap: 2px; min-width: 0; padding: 8px; border: 1px solid #eeece2; border-radius: 8px; background: #fffefb; }
+.hub-insight-item img { grid-row: span 2; width: 22px; height: 22px; object-fit: contain; }
+.hub-insight-item b { color: #252a24; font-size: 14px; }
+.hub-insight-item span { overflow: hidden; color: #77786f; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.hub-compact-list { display: grid; gap: 0; padding: 0 12px 10px; }
+.hub-team-row, .hub-work-row { display: flex; min-width: 0; align-items: center; gap: 8px; min-height: 44px; padding: 6px 0; border-bottom: 1px solid #eeece2; }
+.hub-team-row:last-child, .hub-work-row:last-child { border-bottom: 0; }
+.hub-team-icon, .hub-work-icon { display: grid; width: 27px; height: 27px; flex: 0 0 27px; place-items: center; border-radius: 8px; color: #246b49; background: #edf4ed; }
+.hub-team-row > span:nth-child(2), .hub-work-row > span:nth-child(2) { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.hub-team-row b { overflow: hidden; color: #30352f; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.hub-team-row small, .hub-work-row small { color: #77786f; font-size: 8px; }
+.hub-team-row > svg { color: #176349; }
+.hub-work-row .bento-record { display: flex; padding: 0; border: 0; background: transparent; }
+.hub-work-row .bento-record-type, .hub-work-row .bento-record > svg { display: none; }
+.hub-work-row .bento-record b { color: #30352f; font-size: 10px; }
+.hub-status-badge { max-width: 90px; padding: 4px 6px; border-radius: 999px; background: #eef4ef; color: #176349; font-size: 8px; text-align: center; }
+.hub-knowledge-search { display: flex; min-height: 32px; align-items: center; gap: 7px; margin: 0 12px 7px; padding: 0 9px; border: 1px solid #e8e6d8; border-radius: 7px; color: #73766d; background: #fffefb; }
+.hub-knowledge-search input { width: 100%; border: 0; outline: 0; background: transparent; color: #20211f; font: inherit; font-size: 10px; }
+.hub-knowledge-tabs { padding: 0 12px 8px; }
+.hub-knowledge-list { display: grid; gap: 0; padding: 0 12px 10px; }
+.hub-knowledge-row { display: grid; grid-template-columns: 28px minmax(0,1fr) minmax(70px,auto); align-items: center; gap: 8px; min-height: 42px; padding: 5px 0; border-bottom: 1px solid #eeece2; }
+.hub-knowledge-row:last-child { border-bottom: 0; }
+.hub-knowledge-copy { display: grid; min-width: 0; gap: 2px; }
+.hub-knowledge-copy .bento-record { display: flex; padding: 0; border: 0; background: transparent; }
+.hub-knowledge-copy .bento-record-type, .hub-knowledge-copy .bento-record > svg { display: none; }
+.hub-knowledge-copy .bento-record b { color: #30352f; font-size: 10px; }
+.hub-knowledge-copy small { overflow: hidden; color: #77786f; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.hub-knowledge-row time { color: #77786f; font-size: 8px; text-align: right; }
+.hub-feature-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; padding: 2px 11px 11px; }
+.hub-feature-tile { display: grid; min-height: 91px; align-content: center; gap: 5px; padding: 10px; border: 1px solid #eeece2; border-radius: 8px; background: #fffefb; }
+.hub-feature-tile svg { color: #246b49; }
+.hub-feature-tile b { color: #30352f; font-size: 10px; }
+.hub-feature-tile small { color: #77786f; font-size: 8px; }
+.app-shell.assistant-open .assistant-launch { display: none; }
+.app-shell.dashboard-route.assistant-open .assistant-panel { position: fixed; z-index: 30; top: auto; right: 20px; bottom: 18px; width: min(520px, calc(100vw - 32px)); height: min(760px, calc(100dvh - 36px)); min-width: 0; min-height: 0; max-height: none; margin: 0; border: 1px solid #e8e6d8; border-radius: 18px; background: #fffef7; box-shadow: 0 16px 48px rgba(32,33,31,.18); }
+.app-shell.dashboard-route.assistant-open .assistant-header { min-height: 60px; border-color: #eeece2; background: #fffef7; }
+.app-shell.dashboard-route.assistant-open .assistant-messages { background: #fffef7; }
+.app-shell.dashboard-route.assistant-open .assistant-form { background: #fffef7; }
+@media (max-width: 1050px) {
+  .hub-integrations { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .app-shell.dashboard-route .bento-grid { grid-template-columns: repeat(2,minmax(0,1fr)); grid-template-rows: auto; grid-template-areas: "activity activity" "quick teams" "work work" "knowledge knowledge" "featured featured" "signals incidents" "decisions ownership" "timeline sources"; }
+  .app-shell.dashboard-route .bento-activity-card { grid-area: activity; }
+  .app-shell.dashboard-route .hub-quick-insights { grid-area: quick; }
+  .app-shell.dashboard-route .hub-top-teams { grid-area: teams; }
+  .app-shell.dashboard-route .hub-ongoing-work { grid-area: work; }
+  .app-shell.dashboard-route .hub-knowledge-explorer { grid-area: knowledge; }
+  .app-shell.dashboard-route .hub-featured-knowledge { grid-area: featured; }
+  .app-shell.dashboard-route .bento-insights-card { grid-area: signals; }
+  .app-shell.dashboard-route .bento-investigations-card { grid-area: incidents; }
+  .app-shell.dashboard-route .bento-decisions-card { grid-area: decisions; }
+  .app-shell.dashboard-route .bento-ownership-card { grid-area: ownership; }
+  .app-shell.dashboard-route .bento-timeline-card { grid-area: timeline; }
+  .app-shell.dashboard-route .bento-sources-card { grid-area: sources; }
+}
+@media (max-width: 650px) {
+  .app-shell .sidebar { width: 64px; flex-basis: 64px; align-items: center; padding-inline: 6px; }
+  .app-shell .sidebar-kicker, .app-shell .workspace-switch, .app-shell .nav-section-label, .app-shell .side-nav a span, .app-shell .side-nav-action span, .app-shell .sidebar-bottom { display: none; }
+  .app-shell .side-nav a, .app-shell .side-nav-action { justify-content: center; width: 42px; height: 42px; padding: 0; }
+  .app-shell .side-nav-group { margin-top: 6px; padding-top: 6px; }
+  .app-shell .topbar { padding-inline: 10px; }
+  .app-shell .topbar-user-profile > span:last-child, .app-shell .connection-pill { display: none; }
+  .app-shell .workspace-content { padding: 16px 10px 24px; }
+  .dashboard-bento-heading { gap: 12px; flex-direction: column; align-items: flex-start; }
+  .dashboard-heading-copy h1 { font-size: 30px; }
+  .hub-integrations { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+  .hub-integration-card { padding: 9px; }
+  .app-shell.dashboard-route .bento-grid { grid-template-columns: minmax(0,1fr); grid-template-areas: "activity" "quick" "teams" "work" "knowledge" "featured" "signals" "incidents" "decisions" "ownership" "timeline" "sources"; }
+  .app-shell.dashboard-route .bento-activity-card { grid-area: activity; }
+  .app-shell.dashboard-route .hub-quick-insights { grid-area: quick; }
+  .app-shell.dashboard-route .hub-top-teams { grid-area: teams; }
+  .app-shell.dashboard-route .hub-ongoing-work { grid-area: work; }
+  .app-shell.dashboard-route .hub-knowledge-explorer { grid-area: knowledge; }
+  .app-shell.dashboard-route .hub-featured-knowledge { grid-area: featured; }
+  .app-shell.dashboard-route .bento-insights-card { grid-area: signals; }
+  .app-shell.dashboard-route .bento-investigations-card { grid-area: incidents; }
+  .app-shell.dashboard-route .bento-decisions-card { grid-area: decisions; }
+  .app-shell.dashboard-route .bento-ownership-card { grid-area: ownership; }
+  .app-shell.dashboard-route .bento-timeline-card { grid-area: timeline; }
+  .app-shell.dashboard-route .bento-sources-card { grid-area: sources; }
 }
