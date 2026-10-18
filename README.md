@@ -353,6 +353,52 @@ docs/
   rag-pipeline.md                  RAG, index, sync and operational details
   api-capability-inventory.md      Verified route inventory and integration limits
 ```
+<h1 align="center">✦ Team Prometheus ✦</h1>
+
+
+
+<br />
+
+<table align="center">
+  <tr>
+    <td align="center" width="220">
+      <a href="https://github.com/Garima040106">
+        <img src="https://avatars.githubusercontent.com/u/176151459?s=200&v=4" width="130" height="130" alt="Garima Varma" />
+        <br /><br />
+        <strong>Garima Varma</strong>
+        <br />
+        <sub>Team Prometheus</sub>
+        <br /><br />
+        <img src="https://img.shields.io/badge/GitHub-Profile-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile" />
+      </a>
+    </td>
+    <td align="center" width="220">
+      <a href="https://github.com/nickhil-verma">
+        <img src="https://avatars.githubusercontent.com/u/137506342?s=200&v=4" width="130" height="130" alt="Nick" />
+        <br /><br />
+        <strong>Nick</strong>
+        <br />
+        <sub>Team Prometheus</sub>
+        <br /><br />
+        <img src="https://img.shields.io/badge/GitHub-Profile-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile" />
+      </a>
+    </td>
+    <td align="center" width="220">
+      <a href="https://github.com/MohitSr2005">
+        <img src="https://avatars.githubusercontent.com/u/175561840?s=200&v=4" width="130" height="130" alt="Mohit Srivastava" />
+        <br /><br />
+        <strong>Mohit Srivastava</strong>
+        <br />
+        <sub>Team Prometheus</sub>
+        <br /><br />
+        <img src="https://img.shields.io/badge/GitHub-Profile-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Profile" />
+      </a>
+    </td>
+  </tr>
+</table>
+
+<br />
+
 
 ## Further reading
 
@@ -361,9 +407,3 @@ docs/
 - [Backend environment template](backend/.env.example)
 
 <p align="center"><sub>OrgInGraphs · graph-grounded company intelligence</sub></p>
-
-## Authors — Team Prometheus
-
-- Garima
-- Nikhil
-- Mohit
