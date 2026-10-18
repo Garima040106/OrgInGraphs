@@ -128,9 +128,9 @@ test("Product Progress endpoints validate payloads and keep graph data scoped", 
     assert.deepEqual(graphPayload.nodes.map((node) => node.id), ['product-orbit', 'emp-01']);
     assert.deepEqual(graphPayload.edges[0], { id: 'OWNED_BY:product-orbit:emp-01', type: 'OWNED_BY', source: 'product-orbit', target: 'emp-01', properties: { graphDomain: 'product-progress' } });
 
-    const invalid = await fetch(`http://127.0.0.1:${address.port}/api/product-progress/tickets`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: '' }) });
+    const invalid = await fetch(`http://127.0.0.1:${address.port}/api/product-progress/tickets`, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ text: '' }) });
     assert.equal(invalid.status, 400);
-    const processed = await fetch(`http://127.0.0.1:${address.port}/api/product-progress/activities`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'PR #142 was merged.' }) });
+    const processed = await fetch(`http://127.0.0.1:${address.port}/api/product-progress/activities`, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ text: 'PR #142 was merged.' }) });
     assert.equal(processed.status, 200);
     const payload = await processed.json() as { eventType: string; unresolvedReferences: Array<{ text: string }> };
     assert.equal(payload.eventType, 'feature-update');
@@ -240,6 +240,11 @@ test("provider synchronization rejects missing identity or admin credentials", a
     assert.equal(noIdentity.status, 401);
     const noAdminKey = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-orgmind-user-id': 'demo@example.com' }, body: JSON.stringify({ source: 'jira' }) });
     assert.equal(noAdminKey.status, 403);
+    const base = url.replace('/api/ingestion/process', '');
+    const publicSync = await fetch(`${base}/api/integrations/jira/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 1 }) });
+    assert.equal(publicSync.status, 401);
+    const missingSyncAdmin = await fetch(`${base}/api/integrations/jira/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-orgmind-user-id': 'demo@example.com' }, body: JSON.stringify({ limit: 1 }) });
+    assert.equal(missingSyncAdmin.status, 403);
     assert.equal(fetched, false);
   } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
 });
@@ -348,7 +353,7 @@ test("integration sync only reports success after fetched records are confirmed 
   const successAddress = successServer.address();
   assert.ok(successAddress && typeof successAddress !== 'string');
   try {
-    const response = await fetch(`http://127.0.0.1:${successAddress.port}/api/integrations/jira/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 1 }) });
+    const response = await fetch(`http://127.0.0.1:${successAddress.port}/api/integrations/jira/sync`, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ limit: 1 }) });
     assert.equal(response.status, 200, JSON.stringify(await response.clone().json()));
     const payload = await response.json() as { syncState: string; fetched: number; processed: number; indexed: number; failed: number; lastSuccessfulSync: string | null };
     assert.deepEqual([payload.syncState, payload.fetched, payload.processed, payload.indexed, payload.failed], ['completed', 1, 1, 1, 0]);
@@ -360,7 +365,7 @@ test("integration sync only reports success after fetched records are confirmed 
   const failureAddress = failureServer.address();
   assert.ok(failureAddress && typeof failureAddress !== 'string');
   try {
-    const response = await fetch(`http://127.0.0.1:${failureAddress.port}/api/integrations/jira/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 1 }) });
+    const response = await fetch(`http://127.0.0.1:${failureAddress.port}/api/integrations/jira/sync`, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ limit: 1 }) });
     assert.equal(response.status, 502);
     const payload = await response.json() as { syncState: string; failed: number; lastSuccessfulSync: string | null; error: string };
     assert.equal(payload.syncState, 'failed');
@@ -390,13 +395,13 @@ test("integration status separates reachable connectivity from a partial ingesti
   const address = server.address();
   assert.ok(address && typeof address !== 'string');
   try {
-    const response = await fetch(`http://127.0.0.1:${address.port}/api/integrations/jira/sync`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 2 }) });
+    const response = await fetch(`http://127.0.0.1:${address.port}/api/integrations/jira/sync`, { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ limit: 2 }) });
     assert.equal(response.status, 207);
     const payload = await response.json() as { syncState: string; fetched: number; processed: number; persisted: number; indexedThisRun: number; indexed: number; failed: number };
-    assert.deepEqual([payload.syncState, payload.fetched, payload.processed, payload.persisted, payload.indexedThisRun, payload.indexed, payload.failed], ['partial', 2, 1, 2, 2, 9, 1]);
+    assert.deepEqual([payload.syncState, payload.fetched, payload.processed, payload.persisted, payload.indexedThisRun, payload.indexed, payload.failed], ['partial', 2, 1, 1, 1, 9, 1]);
     const status = await fetch(`http://127.0.0.1:${address.port}/api/integrations/status`);
     const source = (await status.json() as { sources: Array<{ source: string; connectionState: string; syncState: string; indexed: number; indexedThisRun: number }> }).sources.find((entry) => entry.source === 'jira');
-    assert.deepEqual([source?.connectionState, source?.syncState, source?.indexed, source?.indexedThisRun], ['Connected', 'partial', 9, 2]);
+    assert.deepEqual([source?.connectionState, source?.syncState, source?.indexed, source?.indexedThisRun], ['Connected', 'partial', 9, 1]);
   } finally { await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve())); }
 });
 
@@ -423,7 +428,7 @@ test("integration status remains available after app restart via graph-backed la
   const firstAddress = first.address();
   assert.ok(firstAddress && typeof firstAddress !== 'string');
   try {
-    const response = await fetch('http://127.0.0.1:' + firstAddress.port + '/api/integrations/jira/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ limit: 1 }) });
+    const response = await fetch('http://127.0.0.1:' + firstAddress.port + '/api/integrations/jira/sync', { method: 'POST', headers: ingestionAdminHeaders, body: JSON.stringify({ limit: 1 }) });
     assert.equal(response.status, 200);
   } finally { await new Promise<void>((resolve, reject) => first.close((error) => error ? reject(error) : resolve())); }
 

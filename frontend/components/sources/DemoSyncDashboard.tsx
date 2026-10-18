@@ -143,6 +143,7 @@ export function DemoSyncDashboard() {
             <p><b>Latest attempt:</b> {lastAttempt ? timestamp(lastAttempt) : "Not recorded"}</p>
             <p><b>Connectivity:</b> {status}</p>
             <p><b>Sync health:</b> {syncLabel}</p>
+            {!summary.browserSyncAvailable && <p>Syncs require a backend operator credential and cannot be started from this demo workspace.</p>}
             <p><b>Run stages:</b> {showCount(result?.fetched ?? summary.fetchedRecords)} fetched · {showCount(result?.processed ?? summary.processedRecords)} processed · {showCount(result?.persisted ?? summary.persistedRecords)} persisted · {showCount(result?.indexedThisRun ?? summary.indexedThisRun)} indexed this run · {showCount(result?.failed ?? summary.failedRecords)} failed · {showCount(result?.skipped ?? summary.skippedRecords)} skipped</p>
             <p><b>Cumulative distinct indexed:</b> {summary.verifiedIndexedRecordCount ?? "Unavailable"}</p>
             {summary.failureCategory && <p><b>Failure category:</b> {summary.failureCategory}</p>}
@@ -152,7 +153,7 @@ export function DemoSyncDashboard() {
           </details>
 
           <div className="demo-sync-actions">
-            <button className="button-primary source-sync-button" type="button" disabled={loading || running !== null || connection !== "Connected"} onClick={() => void sync(id)}><RefreshCw size={14} className={running === id ? "source-spin" : ""} />{running === id ? "Syncing…" : `Sync ${source.displayName}`}</button>
+            <button className="button-primary source-sync-button" type="button" disabled={loading || running !== null || summary.syncState === "running" || connection !== "Connected" || !summary.browserSyncAvailable} title={!summary.browserSyncAvailable ? "Sync requires a backend operator credential." : undefined} onClick={() => void sync(id)}><RefreshCw size={14} className={running === id ? "source-spin" : ""} />{running === id ? "Syncing…" : summary.browserSyncAvailable ? `Sync ${source.displayName}` : "Operator sync required"}</button>
             <Link className="small-button demo-open-source" href={source.href}>Open records</Link>
           </div>
         </article>;

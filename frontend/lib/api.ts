@@ -23,7 +23,11 @@ import type {
 import { z } from "zod";
 import { DEFAULT_DEMO_EMAIL, getDemoSession } from "@/lib/demo-auth";
 
-const baseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080").replace(/\/$/, "");
+const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+if (process.env.NODE_ENV === "production" && !configuredBaseUrl) {
+  throw new Error("NEXT_PUBLIC_API_BASE_URL must be configured for production builds.");
+}
+const baseUrl = (configuredBaseUrl || (process.env.NODE_ENV !== "production" ? "http://localhost:8080" : "")).replace(/\/$/, "");
 
 const ragQueryResponseSchema = z.object({
   answer: z.string(),
@@ -52,6 +56,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 12_000): Promise<T> {
+  if (!baseUrl) throw new ApiError("The backend API URL is not configured for this deployment.", null);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const signal = options.signal
