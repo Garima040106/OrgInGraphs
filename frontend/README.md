@@ -31,7 +31,7 @@ npm start
 
 Set `NEXT_PUBLIC_API_BASE_URL` in `.env.local` to the browser-accessible backend URL. The default is `http://localhost:8080`.
 
-Set `FRONTEND_ORIGINS` in the backend environment to a comma-separated list of allowed browser origins when the frontend is hosted somewhere other than the local defaults.
+The backend CORS allowlist includes `https://orgingraphs-ysq7.vercel.app`. Set `FRONTEND_ORIGINS` in the backend environment to a comma-separated list for local development or any additional deployment origins.
 
 ## Supported behavior and limitations
 
