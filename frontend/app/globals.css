@@ -3856,7 +3856,8 @@ body {
 .oig-cursor-enabled span { cursor: text; }
 .oig-cursor-enabled a,
 .oig-cursor-enabled button,
-.oig-cursor-enabled .landing-hero-visual { cursor: none; }
+.oig-cursor-enabled .landing-hero-visual,
+.oig-cursor-enabled .architecture-visual { cursor: none; }
 
 .oig-cursor-hover .oig-cursor-ring {
   width: 42px;
@@ -3867,6 +3868,11 @@ body {
 }
 
 .oig-cursor-graph .oig-cursor-label { opacity: 1; }
+
+/* The architecture canvas is charcoal, so retain cursor contrast there
+   without changing the cursor treatment elsewhere on the landing page. */
+.oig-cursor-architecture .oig-cursor-dot { background: #fffef3; }
+.oig-cursor-architecture .oig-cursor-ring { border-color: rgba(255, 254, 243, .72); }
 
 @media (prefers-reduced-motion: reduce), (hover: none), (pointer: coarse) {
   .oig-cursor-layer { display: none !important; }
@@ -4275,6 +4281,286 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .usp-graph-lines, .usp-graph-node, .usp-chapter { transition: none; }
+}
+
+/* ── Architecture section ─────────────────────────────────────────────── */
+.architecture-section {
+  width: min(calc(100% - 40px), 1424px);
+  margin: 0 auto 32px;
+  padding: clamp(42px, 6vw, 84px) clamp(22px, 5vw, 72px);
+  border: 1px solid #302f2c;
+  border-radius: 28px;
+  background: #242321;
+  color: #fffef3;
+  overflow: hidden;
+}
+
+.architecture-copy { max-width: 670px; }
+.architecture-eyebrow { color: #c7a998; font-size: 10px; font-weight: 700; letter-spacing: .2em; }
+.architecture-copy h2 { max-width: 720px; margin-top: 20px; font-family: var(--display); font-size: clamp(44px, 5vw, 76px); font-weight: 500; letter-spacing: -.055em; line-height: .95; }
+.architecture-copy p { max-width: 540px; margin-top: 22px; color: #b9b2a8; font-size: 14px; line-height: 1.75; }
+
+.architecture-visual { position: relative; min-height: 438px; margin-top: 42px; border-top: 1px solid rgba(255,254,243,.16); }
+.architecture-flow-label { position: absolute; top: 20px; color: #9db9a3; font-size: 9px; font-weight: 700; letter-spacing: .16em; }
+.architecture-flow-label-sources { left: 0; }
+.architecture-source-list { position: absolute; z-index: 1; left: 0; top: 64px; display: flex; flex-wrap: wrap; gap: 7px; max-width: 230px; }
+.architecture-source-list span { padding: 7px 9px; border: 1px solid rgba(255,254,243,.2); border-radius: 5px; color: #eee9dd; font-family: var(--display); font-size: 14px; }
+.architecture-flow-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.architecture-path { stroke: #9db9a3; stroke-width: 1.5; stroke-dasharray: 5 7; opacity: .75; }
+.architecture-path-branch { stroke: #b9785c; opacity: .7; }
+.architecture-path-source {
+  fill: none;
+  stroke: #9db9a3;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  opacity: .55;
+}
+.architecture-flow-dot { fill: #d6a17e; }
+.architecture-node { position: absolute; z-index: 1; display: flex; width: 184px; min-height: 98px; flex-direction: column; justify-content: center; padding: 15px 16px; border: 1px solid rgba(255,254,243,.26); border-radius: 12px; background: rgba(36,35,33,.94); box-shadow: 0 12px 30px rgba(0,0,0,.15); }
+.architecture-node-kicker { color: #c7a998; font-size: 8px; font-weight: 700; letter-spacing: .14em; }
+.architecture-node strong { margin-top: 8px; color: #fffef3; font-family: var(--display); font-size: 22px; font-weight: 500; line-height: 1; }
+.architecture-node small { margin-top: 7px; color: #aaa49b; font-size: 10px; line-height: 1.35; }
+.architecture-node-ingest { left: 17%; top: 145px; }
+.architecture-node-embed { left: 38%; top: 145px; border-color: rgba(199,169,152,.65); }
+.architecture-node-vector { left: 59%; top: 145px; }
+.architecture-node-graph { right: 0; top: 145px; border-color: rgba(157,185,163,.72); }
+.architecture-note { position: absolute; z-index: 1; color: #aaa49b; font-size: 10px; line-height: 1.5; }
+.architecture-note span { color: #c7a998; font-size: 8px; font-weight: 700; letter-spacing: .14em; }
+.architecture-note-titan { left: 39%; top: 278px; max-width: 170px; }
+.architecture-note-titan b { color: #d6a17e; font-weight: 600; }
+.architecture-note-graph { right: 0; top: 278px; max-width: 184px; color: #9db9a3; }
+.architecture-caption { position: absolute; bottom: 4px; left: 0; color: #817b73; font-size: 10px; font-style: italic; }
+
+@media (max-width: 900px) {
+  .architecture-section { width: calc(100% - 40px); }
+  .architecture-node { width: 150px; }
+  .architecture-node strong { font-size: 19px; }
+  .architecture-node-ingest { left: 14%; }
+  .architecture-node-embed { left: 36%; }
+  .architecture-node-vector { left: 58%; }
+  .architecture-node-graph { right: 0; }
+}
+
+@media (max-width: 640px) {
+  .architecture-section { width: calc(100% - 32px); padding: 38px 20px 28px; border-radius: 22px; }
+  .architecture-visual { min-height: 700px; margin-top: 36px; }
+  .architecture-source-list { top: 52px; right: 0; max-width: 260px; margin: 0 auto; justify-content: center; }
+  .architecture-flow-svg { display: none; }
+  .architecture-node { left: 0; right: 0; width: auto; min-height: 92px; }
+  .architecture-node-ingest { top: 150px; }
+  .architecture-node-embed { top: 260px; }
+  .architecture-node-vector { top: 370px; }
+  .architecture-node-graph { top: 480px; }
+  .architecture-node:before { position: absolute; left: 50%; top: -30px; height: 30px; border-left: 1px dashed #9db9a3; content: ""; }
+  .architecture-node-ingest:before { display: none; }
+  .architecture-source-list:after { position: absolute; left: 50%; top: 100%; height: 38px; border-left: 1px dashed #9db9a3; content: ""; }
+  .architecture-note-titan { left: 0; top: 595px; }
+  .architecture-note-graph { right: 0; top: 595px; max-width: 145px; }
+  .architecture-caption { bottom: 0; }
+}
+
+@media (max-width: 380px) {
+  .architecture-section { width: calc(100% - 24px); padding-inline: 16px; }
+  .architecture-copy h2 { font-size: 43px; }
+  .architecture-note-graph { max-width: 125px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .architecture-path { animation: none; }
+}
+
+/* The cards and their gaps share one layout.  Connectors are attached to
+   card boundaries instead of being independently scaled SVG coordinates. */
+@media (min-width: 1024px) {
+  .architecture-flow-svg { z-index: 0; preserveAspectRatio: none; }
+  .architecture-stages {
+    position: absolute;
+    top: 145px;
+    right: 0;
+    left: 16%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 224px;
+    gap: 24px;
+    align-items: start;
+  }
+  .architecture-node,
+  .architecture-node-graph {
+    position: relative;
+    inset: auto;
+    width: auto;
+  }
+  .architecture-node:not(:last-child)::after {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 1px);
+    width: 23px;
+    border-top: 2px solid #b9785c;
+    content: "";
+    transform: translateY(-50%);
+  }
+}
+
+@media (max-width: 1023px) {
+  .architecture-flow-svg { display: none; }
+  .architecture-stages {
+    position: absolute;
+    top: 150px;
+    right: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 20px;
+  }
+  .architecture-node,
+  .architecture-node-graph {
+    position: relative;
+    inset: auto;
+    width: auto;
+  }
+  .architecture-node:not(:last-child)::after {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    width: 20px;
+    border-top: 2px solid #b9785c;
+    content: "";
+    transform: translateY(-50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .architecture-stages { display: flex; flex-direction: column; gap: 28px; }
+  .architecture-node,
+  .architecture-node-graph { width: 100%; }
+  .architecture-node:not(:last-child)::after {
+    top: 100%;
+    left: 50%;
+    width: 0;
+    height: 28px;
+    border-top: 0;
+    border-left: 2px dashed #b9785c;
+    transform: none;
+  }
+}
+
+/* Architecture-specific semantic and graph polish. */
+.architecture-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.architecture-source-list { margin: 0; padding: 0; list-style: none; }
+.architecture-source-list li { position: relative; width: 92px; padding: 6px 10px; border: 1px solid rgba(255,254,243,.2); border-radius: 5px; color: #eee9dd; font-family: var(--display); font-size: 14px; line-height: 1.1; }
+.architecture-source-list li:after { position: absolute; right: -7px; top: 50%; width: 6px; height: 6px; border-radius: 50%; background: #d6a17e; content: ""; transform: translateY(-50%); }
+.architecture-stages { position: static; margin: 0; padding: 0; list-style: none; }
+.architecture-node-graph { width: 204px; min-height: 190px; padding-bottom: 10px; }
+.architecture-graph-network { display: block; width: 100%; height: 86px; margin-top: 9px; overflow: visible; }
+.architecture-graph-network path { fill: none; stroke: #9db9a3; stroke-width: 1; opacity: .7; }
+.architecture-graph-network circle { fill: #242321; stroke: #b9d1ba; stroke-width: 1.5; }
+.architecture-graph-network rect { fill: #242321; stroke: #b9d1ba; stroke-width: 1.5; }
+.architecture-graph-network polygon { fill: #242321; stroke: #d6a17e; stroke-width: 1.5; }
+.architecture-node-graph small { margin-top: 2px; }
+.architecture-source-list { flex-direction: column; align-items: flex-start; gap: 10px; max-width: none; }
+.architecture-source-list li { width: 118px; padding: 7px 10px; }
+.architecture-node-graph { width: 224px; min-height: 246px; padding-bottom: 12px; }
+.architecture-graph-legend { display: flex; flex-wrap: wrap; gap: 5px 8px; margin-top: 8px; color: #9db9a3; font-size: 8px; letter-spacing: .04em; line-height: 1.2; }
+.architecture-graph-legend span::before { display: inline-block; width: 4px; height: 4px; margin: 0 4px 1px 0; border-radius: 50%; background: #9db9a3; content: ""; }
+.architecture-graph-legend span:last-child::before { background: #d6a17e; }
+.architecture-dimension { display: flex; align-items: baseline; gap: 6px; margin-top: 10px; }
+.architecture-dimension b { color: #d6a17e; font-family: var(--display); font-size: 27px; font-weight: 500; line-height: 1; }
+.architecture-dimension small { margin-top: 0; }
+.architecture-note-titan { top: 306px; max-width: 190px; }
+.architecture-note-titan strong { display: block; margin-top: 6px; color: #eee9dd; font-family: var(--display); font-size: 14px; font-weight: 500; line-height: 1.15; }
+.architecture-note-titan b { display: block; margin-top: 4px; }
+.architecture-path { stroke-dasharray: none; }
+.architecture-flow-svg,
+.architecture-flow-svg * { pointer-events: none; }
+.architecture-path-main { stroke: #b9785c; stroke-width: 2; opacity: .9; }
+.architecture-path-source {
+  fill: none;
+  stroke: #9db9a3;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  opacity: .7;
+}
+.architecture-path-branch { stroke-dasharray: 4 6; opacity: .55; }
+
+@media (max-width: 1023px) {
+  .architecture-visual { min-height: 650px; }
+  .architecture-flow-svg { display: none; }
+  .architecture-source-list { flex-direction: row; flex-wrap: wrap; max-width: 100%; }
+  .architecture-source-list li { width: 108px; }
+  .architecture-node { width: calc(50% - 10px); }
+  .architecture-node-ingest { left: 0; top: 150px; }
+  .architecture-node-embed { left: calc(50% + 10px); top: 150px; }
+  .architecture-node-vector { left: 0; top: 355px; }
+  .architecture-node-graph { right: 0; top: 355px; width: calc(50% - 10px); min-height: 230px; }
+  .architecture-note-titan { left: calc(50% + 10px); top: 285px; }
+}
+
+@media (max-width: 640px) {
+  .architecture-visual { min-height: 880px; }
+  .architecture-source-list { flex-direction: column; align-items: center; max-width: 100%; }
+  .architecture-source-list li { width: 118px; }
+  .architecture-node { width: auto; }
+  .architecture-node-ingest { top: 150px; }
+  .architecture-node-embed { left: 0; top: 270px; }
+  .architecture-note-titan { left: 0; top: 386px; max-width: none; text-align: center; }
+  .architecture-node-vector { top: 470px; }
+  .architecture-node-graph { top: 590px; width: auto; min-height: 230px; }
+  .architecture-source-list li { min-width: 74px; text-align: center; }
+}
+
+@media (max-width: 900px) {
+  .architecture-node-graph { width: 166px; min-height: 175px; }
+  .architecture-graph-network { height: 72px; }
+}
+
+@media (max-width: 640px) {
+  .architecture-node-graph { min-height: 150px; }
+  .architecture-graph-network { height: 62px; }
+  .architecture-source-list li { width: auto; min-width: 74px; text-align: center; }
+  .architecture-source-list li:after { right: auto; top: auto; bottom: -7px; left: 50%; transform: translateX(-50%); }
+}
+
+/* Keep the repaired responsive geometry last so the legacy architecture
+   defaults above cannot collapse the graph destination on smaller screens. */
+@media (max-width: 1023px) {
+  .architecture-node-graph { width: calc(50% - 10px); min-height: 230px; }
+}
+
+@media (max-width: 640px) {
+  .architecture-visual { min-height: 965px; }
+  .architecture-node-graph { width: auto; min-height: 230px; }
+  .architecture-node-ingest { top: 235px; }
+  .architecture-node-embed { top: 355px; }
+  .architecture-note-titan { top: 471px; }
+  .architecture-node-vector { top: 555px; }
+  .architecture-node-graph { top: 675px; }
+}
+
+/* Final architecture layout overrides: stage positions come from the same
+   grid/flex layout that owns the connector endpoints. */
+@media (min-width: 1024px) {
+  .architecture-stages { position: absolute; top: 145px; right: 0; left: 16%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 224px; gap: 24px; align-items: start; }
+  .architecture-node,
+  .architecture-node-graph { position: relative; inset: auto; width: auto; min-height: 98px; }
+  .architecture-node-graph { min-height: 246px; }
+  .architecture-node:not(:last-child)::after { position: absolute; top: 50%; left: calc(100% + 1px); width: 23px; border-top: 2px solid #b9785c; content: ""; transform: translateY(-50%); }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .architecture-stages { position: absolute; top: 150px; right: 0; left: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 20px; }
+  .architecture-node,
+  .architecture-node-graph { position: relative; inset: auto; width: auto; }
+  .architecture-node:not(:last-child)::after { position: absolute; top: 50%; left: calc(100% + 1px); width: 19px; border-top: 2px solid #b9785c; content: ""; transform: translateY(-50%); }
+}
+
+@media (max-width: 640px) {
+  .architecture-stages { position: absolute; top: 235px; right: 0; left: 0; display: flex; flex-direction: column; gap: 28px; }
+  .architecture-node,
+  .architecture-node-graph { position: relative; inset: auto; width: 100%; }
+  .architecture-node:not(:last-child)::after { position: absolute; top: 100%; left: 50%; width: 0; height: 28px; border-top: 0; border-left: 2px dashed #b9785c; content: ""; transform: none; }
 }
 
 /* ==========================================================================

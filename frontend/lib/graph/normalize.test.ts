@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   getChildNodeIds,
   initialVisibleIds,
+  normalizeGraph,
   normalizeVisibleGraph,
   organizationGraph,
   visibleIdsForExpanded,
@@ -262,4 +263,73 @@ test("empty-child cases: expanding a department with no employees does not fail 
   const emptyNode = normalized.nodes.find((n) => n.id === "dept-empty");
   assert.ok(emptyNode);
   assert.equal(emptyNode.data.hasChildren, false);
+});
+
+test("product progress graph mode renders all expected nodes and edges without data fabrication", () => {
+  const productGraph: GraphResponse = {
+    nodes: [
+      { id: "product-orbit", labels: ["Product"], properties: { id: "product-orbit", name: "Orbit Checkout", graphDomain: "product-progress" } },
+      { id: "mod-pay", labels: ["ProductModule"], properties: { id: "mod-pay", name: "Payment Methods", graphDomain: "product-progress" } },
+      { id: "rel-dec", labels: ["Release"], properties: { id: "rel-dec", name: "Release 2025-12", graphDomain: "product-progress" } },
+      { id: "feat-retry", labels: ["Feature"], properties: { id: "feat-retry", name: "Smart Retry", graphDomain: "product-progress" } },
+      { id: "ticket-1", labels: ["Ticket"], properties: { id: "ticket-1", title: "Add retry policy", graphDomain: "product-progress" } },
+      { id: "pr-1", labels: ["PullRequest"], properties: { id: "pr-1", title: "Introduce retry policy", graphDomain: "product-progress" } },
+      { id: "emp-lead", labels: ["Employee"], properties: { id: "emp-lead", name: "Lead Engineer", graphDomain: "product-progress" } },
+    ],
+    edges: [
+      { id: "e1", type: "HAS_MODULE", source: "product-orbit", target: "mod-pay", properties: {} },
+      { id: "e2", type: "HAS_RELEASE", source: "product-orbit", target: "rel-dec", properties: {} },
+      { id: "e3", type: "HAS_FEATURE", source: "mod-pay", target: "feat-retry", properties: {} },
+      { id: "e4", type: "HAS_TICKET", source: "feat-retry", target: "ticket-1", properties: {} },
+      { id: "e5", type: "IMPLEMENTS", source: "ticket-1", target: "pr-1", properties: {} },
+      { id: "e6", type: "ASSIGNED_TO", source: "emp-lead", target: "ticket-1", properties: {} },
+    ],
+  };
+
+  const normalized = normalizeGraph(productGraph, "product");
+  // All 7 nodes must be rendered
+  assert.equal(normalized.nodes.length, 7);
+  // All 6 edges must be preserved
+  assert.equal(normalized.edges.length, 6);
+
+  // Check that all node IDs are present
+  const ids = new Set(normalized.nodes.map((n) => n.id));
+  for (const node of productGraph.nodes) {
+    assert.ok(ids.has(node.id), `Expected node ${node.id} to be present`);
+  }
+
+  // Check that edges connect correctly
+  const edgeSet = new Set(normalized.edges.map((e) => `${e.source}->${e.target}`));
+  assert.ok(edgeSet.has("product-orbit->mod-pay"));
+  assert.ok(edgeSet.has("product-orbit->rel-dec"));
+  assert.ok(edgeSet.has("mod-pay->feat-retry"));
+  assert.ok(edgeSet.has("feat-retry->ticket-1"));
+  assert.ok(edgeSet.has("ticket-1->pr-1"));
+  assert.ok(edgeSet.has("emp-lead->ticket-1"));
+});
+
+test("confluence document properties preserve sourceSystem, sourceRecordId, and externalUrl", () => {
+  const confNode = {
+    id: "doc-163941",
+    labels: ["Document"],
+    properties: {
+      id: "doc-163941",
+      title: "Getting started in Confluence",
+      sourceSystem: "confluence",
+      sourceRecordId: "163941",
+      externalUrl: "https://hirenova.atlassian.net/wiki/spaces/163941",
+    },
+  };
+  const docGraph: GraphResponse = {
+    nodes: [confNode],
+    edges: [],
+  };
+
+  const normalized = normalizeGraph(docGraph, "team");
+  assert.equal(normalized.nodes.length, 1);
+  const entity = normalized.nodes[0].data.entity;
+  assert.equal(entity.sourceSystem, "confluence");
+  assert.equal(entity.sourceRecordId, "163941");
+  assert.equal(entity.title, "Getting started in Confluence");
+  assert.equal(entity.externalUrl, "https://hirenova.atlassian.net/wiki/spaces/163941");
 });

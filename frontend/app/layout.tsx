@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "@xyflow/react/dist/style.css";
 import "./globals.css";
+import LenisProvider from "../components/LenisProvider";
 
 export const metadata: Metadata = {
   title: "OIG — OrgInGraphs",
@@ -9,8 +10,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" data-scroll-behavior="smooth">
+      <body><LenisProvider>{children}</LenisProvider></body>
     </html>
   );
 }
