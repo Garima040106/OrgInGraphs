@@ -95,7 +95,7 @@ const query = (params: Record<string, string | undefined>) => {
 };
 
 export const api = {
-  health: () => request<Health>("/health"),
+  health: () => request<Health>("/health", {}, 120_000),
   dashboard: () => request<DashboardResponse>("/api/dashboard"),
   dashboardSummary: () => request<Pick<DashboardResponse, "company" | "sourceCounts" | "totals">>("/api/dashboard/summary"),
   graph: () => request<GraphResponse>("/api/graph"),

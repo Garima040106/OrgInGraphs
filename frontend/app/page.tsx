@@ -9,6 +9,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { api } from "@/lib/api";
 
 function LandingCursor() {
   const dotRef = useRef<HTMLSpanElement>(null);
@@ -158,6 +159,12 @@ function MobileMenu() {
 
 export default function Home() {
   const [activeUspChapter, setActiveUspChapter] = useState(1);
+
+  useEffect(() => {
+    void api.health().catch(() => {
+      // The landing page stays usable if the backend is still waking up.
+    });
+  }, []);
 
   return (
     <main className="landing min-h-screen bg-[#FFFEF3] text-[#19191B]">
