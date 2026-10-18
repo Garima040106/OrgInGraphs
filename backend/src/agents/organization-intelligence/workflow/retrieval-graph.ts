@@ -18,6 +18,7 @@ export const RetrievalState = Annotation.Root({
   queryText: replace<string>(() => ''),
   queryEmbedding: replace<number[]>(() => []),
   queryEmbeddings: replace<number[][]>(() => []),
+  aggregateMetric: replace<'team-count' | 'people-count' | 'jira-issue-count' | 'recent-jira-issues' | undefined>(() => undefined),
   searchResults: replace<SearchResult[]>(() => []),
   retrievedChunks: replace<RetrievedChunkInfo[]>(() => []),
   sources: replace<RAGSourceCitation[]>(() => []),
@@ -84,6 +85,12 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
   const store = config.vectorStore ?? new PersistentVectorStore();
   const embeddings = config.embeddingService ?? new GeminiEmbeddingService();
   const model = config.model ?? configuredRagModel();
+  const canAnswerWithLiveAggregate = (state: RetrievalWorkflowState) => {
+    const databaseAllowed = (!state.request.sourceTypes || state.request.sourceTypes.includes('database')) &&
+      (!state.request.sourcePlatforms || state.request.sourcePlatforms.includes('database') ||
+        (state.aggregateMetric === 'jira-issue-count' || state.aggregateMetric === 'recent-jira-issues') && state.request.sourcePlatforms.includes('jira'));
+    return store instanceof FalkorDBVectorStore && Boolean(state.aggregateMetric) && databaseAllowed;
+  };
 
   const graph = new StateGraph(RetrievalState)
     // 1. process_user_query
@@ -107,15 +114,24 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
       const retrievalQuery = previous
         ? `${q}\nPrevious question: ${previous.query}\nPrevious answer: ${previous.answer}`
         : q;
+      const asksForCount = /\b(how many|number of|count of|total)\b/i.test(q);
+      const hasLocalScope = /\b(?:department|within|per)\b/i.test(q);
+      const asksForJiraIssues = /\bjira\b/i.test(q) && /\b(issues?|tickets?)\b/i.test(q);
+      let aggregateMetric: RetrievalWorkflowState['aggregateMetric'];
+      if (asksForCount && !hasLocalScope && asksForJiraIssues) aggregateMetric = 'jira-issue-count';
+      else if (!asksForCount && asksForJiraIssues && /\b(recent|latest|newest|last)\b/i.test(q)) aggregateMetric = 'recent-jira-issues';
+      else if (asksForCount && !hasLocalScope && /\bteams\b/i.test(q)) aggregateMetric = 'team-count';
+      else if (asksForCount && !hasLocalScope && !/\bteams?\b/i.test(q) && /\b(people|persons?|employees?|headcount|staff)\b/i.test(q)) aggregateMetric = 'people-count';
       return {
         queryText: retrievalQuery,
+        aggregateMetric,
         status: 'received' as const
       };
     })
 
     // 2. generate_query_embedding
     .addNode('generate_query_embedding', async (state) => {
-      if (state.status !== 'received') return {};
+      if (state.status !== 'received' || canAnswerWithLiveAggregate(state)) return {};
       try {
         const dimensions = await store.getEmbeddingDimensions();
         const queryEmbeddings = dimensions.length
@@ -134,6 +150,82 @@ export function createRetrievalWorkflow(config: RetrievalGraphConfig = {}) {
     .addNode('retrieve_relevant_context', async (state) => {
       if (state.status !== 'received') return {};
       try {
+        if (canAnswerWithLiveAggregate(state) && store instanceof FalkorDBVectorStore && state.aggregateMetric) {
+          if (state.aggregateMetric === 'jira-issue-count' || state.aggregateMetric === 'recent-jira-issues') {
+            const sourcePath = '/api/tickets';
+            const title = 'Verified Jira issues indexed in the company graph';
+            let count = 0;
+            let evidence: string;
+            let answer: string;
+            if (state.aggregateMetric === 'jira-issue-count') {
+              count = await store.countVerifiedJiraIssues();
+              evidence = `The live company graph contains ${count} distinct verified Jira issue records (Ticket and Bug nodes), matching the Jira-filtered Tickets API count. Synthetic records are excluded.`;
+              answer = `There are **${count} verified Jira issues** indexed in the company graph. [S1]`;
+            } else {
+              const issues = await store.getRecentVerifiedJiraIssues(5);
+              count = await store.countVerifiedJiraIssues();
+              evidence = issues.length
+                ? `The five most recently updated verified Jira issue records, sorted by their recorded updatedAt, updated, createdAt, or created timestamp:\n${issues.map((issue) => `- ${issue.key}: ${issue.summary}${issue.status ? `; status ${issue.status}` : ''}${issue.priority ? `; priority ${issue.priority}` : ''}${issue.updatedAt ? `; updated ${issue.updatedAt}` : ''}`).join('\n')}`
+                : `No verified Jira issue records are currently available in the company graph. The graph contains ${count} distinct verified Jira issue records.`;
+              answer = issues.length
+                ? `Here are the most recently updated Jira issues in the indexed records:\n\n${issues.map((issue) => `- **${issue.key} — ${issue.summary}**${issue.status ? ` · ${issue.status}` : ''}${issue.priority ? ` · ${issue.priority}` : ''}${issue.updatedAt ? ` · updated ${issue.updatedAt}` : ''}`).join('\n')}\n\n[S1]`
+                : `There are no verified Jira issues indexed right now. [S1]`;
+            }
+            const chunkId = `live-${state.aggregateMetric}-${count}`;
+            const timestamp = new Date().toISOString();
+            const metadata = {
+              chunkId,
+              orgId: state.request.orgId ?? 'hirenova',
+              sourceType: 'database' as const,
+              sourcePath,
+              title,
+              contentHash: `live:${state.aggregateMetric}:${count}`,
+              docHash: `live:${state.aggregateMetric}:${count}`,
+              createdAt: timestamp,
+              updatedAt: timestamp,
+              summaryKind: state.aggregateMetric
+            };
+            return {
+              candidateCount: 1,
+              retrievedChunks: [{ chunkId, sourcePath, score: 1, text: evidence, platform: 'jira' as const, metadata }],
+              sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'jira' as const, excerpt: evidence }],
+              answer,
+              status: 'completed' as const
+            };
+          }
+          const entity = state.aggregateMetric === 'team-count' ? 'Team' : 'Employee';
+          const count = await store.countOrganizationEntities(entity);
+          const entityName = entity === 'Team' ? 'team' : 'people';
+          const sourcePath = `database/Organization/${state.aggregateMetric}`;
+          const title = `Live organization ${entityName} count from FalkorDB`;
+          const text = entity === 'Team'
+            ? `The live company graph contains ${count} Team nodes, counted as distinct graph entities.`
+            : `The live company graph contains ${count} Employee nodes, counted as distinct graph entities. This total includes every employee record regardless of employment status.`;
+          const chunkId = `live-aggregate-${state.aggregateMetric}`;
+          const timestamp = new Date().toISOString();
+          const metadata = {
+            chunkId,
+            orgId: state.request.orgId ?? 'hirenova',
+            sourceType: 'database' as const,
+            sourcePath,
+            title,
+            contentHash: `live:${state.aggregateMetric}:${count}`,
+            docHash: `live:${state.aggregateMetric}:${count}`,
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            summaryKind: 'live-entity-count'
+          };
+          const answer = entity === 'Team'
+            ? `The live company graph contains **${count} teams**. [S1]`
+            : `The live company graph records **${count} people** as Employee nodes. This includes all employment statuses. [S1]`;
+          return {
+            candidateCount: 1,
+            retrievedChunks: [{ chunkId, sourcePath, score: 1, text, platform: 'database' as const, metadata }],
+            sources: [{ title, sourceType: 'database' as const, sourcePath, platform: 'database' as const, excerpt: text }],
+            answer,
+            status: 'completed' as const
+          };
+        }
         const topK = Math.min(state.request.topK ?? 5, 5);
         const candidateLimit = Math.max(10, topK);
         const searchOptions = {

@@ -5551,7 +5551,7 @@ body {
   line-height: 1.5;
 }
 .assistant-form textarea::placeholder { color: #858a82; }
-.assistant-form textarea:focus-visible { outline: 2px solid #8eae98; outline-offset: 3px; border-radius: 4px; }
+.assistant-form textarea:focus-visible { outline: none; box-shadow: none; }
 .assistant-form button[type="submit"] { grid-column: 3; grid-row: 1; align-self: end; width: 38px; height: 38px; flex: 0 0 auto; }
 .assistant-composer-icon { grid-column: 1; grid-row: 1; align-self: center; color: #6d8b74; }
 .assistant-form button:focus-visible, .assistant-header button:focus-visible, .assistant-mode-pill:focus-visible, .suggestion-chip:focus-visible, .rag-inline-citation:focus-visible, .rag-copy-answer:focus-visible, .assistant-jump-latest:focus-visible { outline: 2px solid #538366; outline-offset: 2px; }
@@ -5583,6 +5583,22 @@ body {
 .rag-source-expand { flex: 0 0 auto; color: #72776f; font-size: 9px; }
 .rag-source-detail { display: grid; gap: 7px; padding: 0 10px 9px 45px; }
 .rag-source-detail > p { margin: 0; color: #686e66; font-size: 10px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.assistant-brand-caption { color: #7b8278; font-size: 9px; letter-spacing: .015em; }
+.assistant-title .assistant-heading-copy { grid-template-columns: 1fr; }
+.assistant-title .assistant-heading-copy > b { color: #183b2c; font-size: 13px; letter-spacing: -.015em; }
+.assistant-pending { min-height: 46px; margin: 2px 0; padding: 7px 10px; border: 1px solid #e5ece3; border-radius: 12px; background: linear-gradient(110deg, #fbfcf6, #f1f7f1 50%, #fbfcf6); }
+.orgmind-thinking-orb { position: relative; display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border-radius: 50%; background: radial-gradient(circle at 38% 32%, #d5f4df, #66b889 39%, #1d6545 72%, #16412e); box-shadow: 0 0 0 4px rgba(47, 133, 84, .08), 0 0 16px rgba(47, 133, 84, .25); animation: nora-orb-breathe 1.8s ease-in-out infinite; }
+.orgmind-thinking-orb b { width: 7px; height: 7px; border-radius: 50%; background: #f7fff7; box-shadow: 0 0 8px rgba(255,255,255,.9); }
+.orgmind-thinking-orb i { position: absolute; inset: -4px; border: 1px solid rgba(50, 130, 82, .3); border-radius: 50%; animation: nora-orb-ring 2.2s ease-out infinite; }
+.orgmind-thinking-orb i:nth-child(2) { animation-delay: .72s; }
+.orgmind-thinking-orb i:nth-child(3) { animation-delay: 1.44s; }
+.rag-typing-caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: #2d7850; animation: nora-caret .8s steps(2, start) infinite; }
+@keyframes nora-orb-breathe { 50% { transform: scale(1.08); filter: saturate(1.15); } }
+@keyframes nora-orb-ring { 0% { opacity: .55; transform: scale(.72); } 85%, 100% { opacity: 0; transform: scale(1.65); } }
+@keyframes nora-caret { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  .orgmind-thinking-orb, .orgmind-thinking-orb i, .rag-typing-caret { animation: none; }
+}
 .rag-source-link { display: inline-flex; width: fit-content; align-items: center; gap: 5px; color: #236443; font-size: 10px; font-weight: 600; text-decoration: none; }
 .rag-source-link:hover { text-decoration: underline; }
 .rag-source-developer { color: #747a72; font-size: 9px; }
