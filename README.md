@@ -29,6 +29,11 @@
 <p align="center"><b>770 Graph Relationships</b> &nbsp; | &nbsp; <b>223 Enrichment Relationships</b> &nbsp; | &nbsp; <b>FalkorDB-Powered Company Knowledge Graph</b></p>
 
 Graph enrichment adds connections between organizational entities, supporting richer graph traversal and more contextual retrieval. The configured FalkorDB graph contains 770 relationships, including 223 relationships identified with <code>sourceSystem = 'graph-enrichment'</code>; the enrichment count is not the total relationship count.
+## 🎥 Project Demo
+
+[![Watch the Demo](https://img.youtube.com/vi/dvfOqwWCB7Q/maxresdefault.jpg)](https://www.youtube.com/watch?v=dvfOqwWCB7Q)
+
+**▶ Click the thumbnail above to watch the full demo on YouTube.**
 
 > **On the roadmap:** exploring [**gRPC**](https://grpc.io/docs/) for a future typed, high-throughput service boundary alongside today's REST API. This is future exploration, not a currently implemented transport.
 
