@@ -37,11 +37,22 @@ export function deterministicTicket(input: TicketInput) {
   const timestamp = input.receivedAt ?? '2026-01-01T00:00:00.000Z';
   const sourceSystem = input.source ?? 'synthetic';
   const sourceRecordId = input.sourceRecordId ?? createHash('sha256').update(text).digest('hex').slice(0, 16);
+  const metadata = input.metadata ?? {};
+  const nested = (value: unknown, key: string) => value && typeof value === 'object' ? (value as Record<string, unknown>)[key] : undefined;
+  const valueText = (value: unknown) => typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  const providerField = (field: string, nestedField: string) => valueText(nested(metadata[field], nestedField)) ?? valueText(metadata[field]);
   return {
     kind: classifyTicket(text), title: title || 'Untitled ticket', description: text,
     priority: extractPriority(text), status: extractStatus(text), references: [],
     sourceSystem, sourceRecordId, graphDomain: 'product-progress' as const,
     synthetic: input.provenance === 'synthetic' || (!input.provenance && (sourceSystem === 'synthetic' || sourceSystem === 'seed')),
-    createdAt: timestamp, updatedAt: timestamp
+    createdAt: timestamp, updatedAt: timestamp,
+    ...(providerField('project', 'name') ? { projectName: providerField('project', 'name') } : {}),
+    ...(valueText(metadata.issueKey) ? { issueKey: valueText(metadata.issueKey) } : {}),
+    ...(providerField('status', 'name') ? { originalStatus: providerField('status', 'name') } : {}),
+    ...(providerField('priority', 'name') ? { originalPriority: providerField('priority', 'name') } : {}),
+    ...(providerField('assignee', 'displayName') ? { assigneeName: providerField('assignee', 'displayName') } : {}),
+    ...(providerField('reporter', 'displayName') ? { reporterName: providerField('reporter', 'displayName') } : {}),
+    ...(valueText(metadata.externalUrl) ? { externalUrl: valueText(metadata.externalUrl) } : {})
   };
 }

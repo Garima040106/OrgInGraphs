@@ -90,6 +90,27 @@ test('normalizes the documented Jira pagination envelope and rejects the wrong e
   finally { globalThis.fetch = originalFetch; }
 });
 
+test('keeps Jira records marked with rawSeedId synthetic', async () => {
+  globalThis.fetch = async () => response({ issues: [{ id: 'task-idempotency', key: 'TASK-IDEMPOTENCY', summary: 'Implement idempotency middleware', description: '', status: { name: 'Done' }, priority: { name: 'P2' }, issuetype: { name: 'Task' }, assignee: { displayName: 'Liam Johnson' }, project: { key: 'ORB', name: 'Orbit Checkout' }, url: 'https://example.com/task/task-idempotency', rawSeedId: 'task-idempotency' }], startAt: 0, maxResults: 1, total: 1, isLast: true });
+  try {
+    const [item] = await fetchMockDocuments('jira', { baseUrl: 'https://connector.example' });
+    assert.equal(item.metadata.issueKey, 'TASK-IDEMPOTENCY');
+    assert.equal(item.provenance, 'synthetic');
+    assert.equal(item.synthetic, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('does not trust provenance asserted by a generic route-catalog endpoint', async () => {
+  globalThis.fetch = async () => response({ issues: [{ id: '42', key: 'PAY-42', summary: 'Payment timeout', description: 'Retry payment safely.', provenance: 'external-verified' }], startAt: 0, maxResults: 1, total: 1, isLast: true });
+  try {
+    const [item] = await fetchMockDocuments('jira', { baseUrl: 'https://connector.example' });
+    assert.equal(item.provenance, 'synthetic');
+    assert.equal(item.synthetic, true);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
 test('normalizes the documented GitHub pulls envelope, preserves metadata, handles null URLs, and applies the local limit', async () => {
   globalThis.fetch = async () => response({
     pulls: [

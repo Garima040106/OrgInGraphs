@@ -57,6 +57,27 @@ test('reprocessing the same source produces the same stable ticket and idempoten
   assert.ok(queries.every((query) => query.includes('$')));
 });
 
+test('preserves Jira issue identity and source metadata on the persisted ticket', async () => {
+  let persisted: Record<string, unknown> | undefined;
+  const graph = { query: async (cypher: string, options?: { params?: Record<string, unknown> }) => {
+    if (cypher.includes('MERGE (n:Ticket')) persisted = options?.params?.properties as Record<string, unknown>;
+    if (cypher.includes('MATCH (n:Ticket')) return { data: [{ n: { properties: { id: options?.params?.id, sourceSystem: 'jira', sourceRecordId: 'task-idempotency' } } }] };
+    return { data: [] };
+  } } as never;
+  const result = await runTicketIdentification({
+    text: 'Implement idempotency middleware', source: 'jira', sourceRecordId: 'task-idempotency',
+    receivedAt: '2026-01-01T00:00:00.000Z', provenance: 'external-verified',
+    metadata: { issueKey: 'TASK-IDEMPOTENCY', project: { key: 'ORB', name: 'Orbit Checkout' }, status: { name: 'done' }, priority: { name: 'P2' }, assignee: { displayName: 'Liam Johnson' }, externalUrl: 'https://example.com/task/task-idempotency' }
+  }, { graph, useConfiguredModel: false });
+  assert.equal(result.persisted, true);
+  assert.equal(persisted?.issueKey, 'TASK-IDEMPOTENCY');
+  assert.equal(persisted?.projectName, 'Orbit Checkout');
+  assert.equal(persisted?.originalStatus, 'done');
+  assert.equal(persisted?.originalPriority, 'P2');
+  assert.equal(persisted?.assigneeName, 'Liam Johnson');
+  assert.equal(persisted?.externalUrl, 'https://example.com/task/task-idempotency');
+});
+
 test('fails persistence when the ticket is missing after the write', async () => {
   const graph = { query: async () => ({ data: [] }) } as never;
   const result = await runTicketIdentification(input('Task: missing after write'), { graph });

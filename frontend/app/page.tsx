@@ -298,7 +298,7 @@ export default function Home() {
         role="banner"
       >
         {/* Logo */}
-        <Link href="/" aria-label="OrgInGraphs home" className="flex shrink-0 items-center">
+        <Link href="/" aria-label="OrgInGraphs home" className="landing-brand flex shrink-0 items-center">
           <Image
             src="/img/logo.png"
             alt="OrgInGraphs"
@@ -307,6 +307,9 @@ export default function Home() {
             priority
             className="h-10 w-[105px] object-contain object-left sm:h-12 sm:w-[150px]"
           />
+          <span className="landing-brand-wordmark" aria-hidden="true">
+            Org<span>In</span>Graphs
+          </span>
         </Link>
 
         {/* Desktop navigation */}

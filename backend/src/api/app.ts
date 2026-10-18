@@ -1,5 +1,5 @@
 import express, { type Request, type Response } from 'express';
-import { timingSafeEqual } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import type { Graph } from 'falkordb';
 import { query, rows } from '../db/falkordb.js';
@@ -12,6 +12,7 @@ import { conversationTurns, createConversation, listConversations, loadAssistant
 import { getOrganizationIntelligenceAgent, type OrganizationIntelligenceAgent } from '../agents/organization-intelligence/agent.js';
 import { ragQueryInputSchema } from '../agents/organization-intelligence/types.js';
 import type { RAGSyncWorker } from '../agents/organization-intelligence/sync/rag-sync-worker.js';
+import { configuredSourceConnectors } from '../agents/mock-fetcher/client.js';
 
 const idSchema = z.string().regex(/^[a-z0-9-]+$/);
 const conversationIdSchema = z.string().uuid();
@@ -33,13 +34,27 @@ const apiGraphNode = (value:unknown, labels:string[]=[]):ApiGraphNode|undefined 
   const id=typeof properties.id==='string'?properties.id:undefined;
   return id?{id,labels:node.labels??labels,properties}:undefined;
 };
-const sourceRecordFilter = (q:string) => '(n.title IS NOT NULL AND toLower(n.title) CONTAINS toLower($q)) OR (n.content IS NOT NULL AND toLower(n.content) CONTAINS toLower($q)) OR (n.description IS NOT NULL AND toLower(n.description) CONTAINS toLower($q)) OR (n.sourceRecordId IS NOT NULL AND toLower(n.sourceRecordId) CONTAINS toLower($q))';
+const sourceRecordFilter = (q:string) => '(n.title IS NOT NULL AND toLower(n.title) CONTAINS toLower($q)) OR (n.content IS NOT NULL AND toLower(n.content) CONTAINS toLower($q)) OR (n.description IS NOT NULL AND toLower(n.description) CONTAINS toLower($q)) OR (n.sourceRecordId IS NOT NULL AND toLower(n.sourceRecordId) CONTAINS toLower($q)) OR (n.issueKey IS NOT NULL AND toLower(n.issueKey) CONTAINS toLower($q))';
 const workflowBodySchema = z.object({ text:z.string().trim().min(1).max(20_000), type:z.enum(['auto','ticket','feature-update']).optional(), source:z.string().trim().min(1).max(100).optional(), sourceRecordId:z.string().trim().min(1).max(200).optional(), receivedAt:z.string().datetime().optional(), provenance:z.enum(['synthetic','user-provided','external-verified']).optional() }).strict();
 
 const workflowStatus = (result: Awaited<ReturnType<typeof runOrgInGraphsWorkflow>>) => {
   if (result.errors.some((error) => error.code === 'invalid-input')) return 400;
   if (result.errors.some((error) => error.code === 'database-failure' || error.code === 'model-failure')) return 503;
   return 200;
+};
+const safeIngestionError = (errors: string[], processedCount = 0) => {
+  const value = errors[0] ?? '';
+  if (/synthetic|demo/i.test(value)) return { code: 'fixture-data', message: processedCount ? 'Seeded fixture records were excluded; verified records were processed.' : 'The connector returned seeded fixture records; nothing was written.' };
+  if (/credentials are not configured/i.test(value)) return { code: 'not-configured', message: 'Provider credentials are not configured.' };
+  if (/MOCK_API_BASE_URL is not configured/i.test(value)) return { code: 'not-configured', message: 'The provider connector URL is not configured.' };
+  const status = value.match(/HTTP (\d{3})/i)?.[1];
+  if (status === '401' || status === '403') return { code: 'unauthorized', message: `Provider rejected the configured credentials (HTTP ${status}).` };
+  if (status === '429') return { code: 'rate-limited', message: 'Provider rate limit reached (HTTP 429). Retry later.' };
+  if (status) return { code: 'provider-error', message: `Provider request failed (HTTP ${status}).` };
+  if (/timed out/i.test(value)) return { code: 'timeout', message: 'Provider request timed out.' };
+  if (value === 'Mock API fetch failed.') return { code: 'provider-error', message: value };
+  if (value === 'Document processing failed.' || value === 'Document processing failed safely.') return { code: 'persistence-failure', message: value };
+  return value ? { code: 'sync-failed', message: 'Provider sync failed. Check backend logs for the sanitized connector diagnostic.' } : null;
 };
 
 export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowDependencies; agent1?: OrganizationIntelligenceAgent; ragSyncWorker?: RAGSyncWorker } = {}) {
@@ -70,6 +85,16 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     if (!identity.success) { res.status(401).json({ error: 'Sign in to use company knowledge.' }); return undefined; }
     return identity.data;
   };
+  const adminOwner = (req: Request, res: Response): boolean => {
+    if (!ragIdentity(req, res)) return false;
+    const expected = process.env.RAG_ADMIN_API_KEY;
+    const provided = req.header('x-rag-admin-key') ?? '';
+    if (!expected || !provided || Buffer.byteLength(expected) !== Buffer.byteLength(provided) || !timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
+      res.status(403).json({ error: 'Administrative integration access is not authorized.' });
+      return false;
+    }
+    return true;
+  };
   app.get('/health',async (_req,res)=>{ try { await query(graph,'RETURN 1 AS connected'); res.json({status:'ok',database:'connected'}); } catch(error){ console.error(error); res.status(503).json({status:'degraded',database:'unavailable'}); } });
   const dashboardResponse = async () => {
     const [company, organization, productProgress] = await Promise.all([
@@ -79,11 +104,56 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     ]);
     const nodes=[...new Map([...organization.nodes,...productProgress.nodes].map((node)=>[node.id,node])).values()];
     const sources=['confluence','jira','slack','github'] as const;
-    const sourceCounts=Object.fromEntries(sources.map((source)=>[source,nodes.filter((node)=>String(node.properties.sourceSystem??'').toLowerCase()===source).length]));
+    const sourceCounts=Object.fromEntries(sources.map((source)=>[source,nodes.filter((node)=>String(node.properties.sourceSystem??'').toLowerCase()===source && node.properties.synthetic!==true && ['external-verified','user-provided'].includes(String(node.properties.provenance??''))).length]));
     return { company:company??null, organization, productProgress, sourceCounts, totals:{ entities:nodes.length, people:nodes.filter((node)=>node.labels.includes('Employee')).length, teams:nodes.filter((node)=>node.labels.includes('Team')).length, services:nodes.filter((node)=>node.labels.includes('Service')).length, decisions:nodes.filter((node)=>node.labels.includes('Decision')).length } };
   };
   app.get('/api/dashboard',async(_req,res)=>{try{return res.json(await dashboardResponse());}catch(error){return sendError(res,error);}});
   app.get('/api/dashboard/summary',async(_req,res)=>{try{const result=await dashboardResponse();return res.json({company:result.company,sourceCounts:result.sourceCounts,totals:result.totals});}catch(error){return sendError(res,error);}});
+  app.get('/api/integrations/status', async (_req, res) => {
+    const sources = ['confluence', 'jira', 'slack', 'github'] as const;
+    const labels: Record<(typeof sources)[number], string> = {
+      confluence: 'n:Document', jira: 'n:Ticket OR n:Bug', slack: 'n:Message', github: 'n:PullRequest OR n:Bug OR n:Commit'
+    };
+    try {
+      const configured = new Set(configuredSourceConnectors());
+      const items = await Promise.all(sources.map(async (source) => {
+        const condition = `(${labels[source]}) AND toLower(n.sourceSystem)=toLower($source) AND coalesce(n.synthetic,false)=false AND n.provenance IN ['external-verified','user-provided']`;
+        const [result, historyResult] = await Promise.all([
+          query(graph, `MATCH (n) WHERE ${condition} RETURN count(n) AS total`, { source }),
+          query(graph, 'MATCH (r:IntegrationSyncRun {source:$source}) RETURN r ORDER BY r.startedAt DESC LIMIT 10', { source })
+        ]);
+        const history = rows(historyResult).map((row) => row.r as Record<string, unknown>);
+        const latest = history[0];
+        const lastSuccess = history.find((run) => run.status === 'processed');
+        return {
+          source,
+          connectorConfigured: configured.has(source),
+          indexedRecords: Number(rows(result)[0]?.total ?? 0),
+          connectionStatus: !configured.has(source) ? 'not-configured' : !latest ? 'not-tested' : latest.errorCode === 'fixture-data' ? 'fixture-data' : ['processed', 'partial', 'empty'].includes(String(latest.status)) ? 'available' : 'error',
+          lastError: latest?.errorMessage ?? null,
+          lastSyncStatus: latest?.status ?? null,
+          lastSuccessfulSync: lastSuccess?.finishedAt ?? null,
+          lastAttemptedSync: latest?.finishedAt ?? null,
+          syncHistoryAvailable: true,
+          history: history.map((run) => ({
+            id: run.id,
+            startedAt: run.startedAt,
+            finishedAt: run.finishedAt,
+            status: run.status,
+            fetched: Number(run.fetched ?? 0),
+            excludedSynthetic: Number(run.excludedSynthetic ?? 0),
+            processed: Number(run.processed ?? 0),
+            failed: Number(run.failed ?? 0),
+            unresolved: Number(run.unresolved ?? 0),
+            skipped: Number(run.skipped ?? 0),
+            error: run.errorMessage ?? null
+          })),
+          browserSyncAvailable: false
+        };
+      }));
+      return res.json({ sources: items, syncHistoryAvailable: true, syncAuthorization: 'backend-admin-key-required' });
+    } catch (error) { return sendError(res, error); }
+  });
   const sourceRecords = (source:string, labels:string, sortProperty='updatedAt') => async (req:Request,res:Response) => {
     const parsed=sourceRecordsQuerySchema.safeParse(req.query);
     if(!parsed.success)return res.status(400).json({error:'Invalid source records query',details:parsed.error.flatten()});
@@ -196,14 +266,33 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
     }
   });
   app.post('/api/ingestion/process', async (req, res) => {
+    if (!adminOwner(req, res)) return;
+    const startedAt = new Date().toISOString();
     try {
       const body = parse(ingestionRequestSchema, req.body);
       const dependencies = options.ingestion
         ? { ...options.ingestion, processorOptions: { ...options.ingestion.processorOptions, graph } }
         : { processorOptions: { graph } };
       const result = await runIngestionWorkflow(body, dependencies);
-      if (result.status === 'failed') return res.status(503).json({ status: result.status, source: result.source, fetchedDocumentCount: result.documents.length, outcomes: result.outcomes, errors: result.errors });
-      return res.json({ status: result.status, source: result.source, fetchedDocumentCount: result.documents.length, outcomes: result.outcomes, errors: result.errors });
+      const counts = { processed: 0, failed: 0, unresolved: 0, skipped: 0 };
+      for (const outcome of result.outcomes) {
+        if (outcome.status === 'processed') counts.processed++;
+        else if (outcome.status === 'failed') counts.failed++;
+        else if (outcome.status === 'unresolved') counts.unresolved++;
+        else counts.skipped++;
+      }
+      const diagnostic = safeIngestionError(result.errors, counts.processed);
+      const finishedAt = new Date().toISOString();
+      const source = result.source ?? body.source;
+      const run = {
+        id: randomUUID(), source, startedAt, finishedAt, status: result.status,
+        fetched: result.fetchedDocumentCount, excludedSynthetic: result.excludedSyntheticCount, ...counts,
+        ...(diagnostic ? { errorCode: diagnostic.code, errorMessage: diagnostic.message } : {})
+      };
+      try { await query(graph, 'CREATE (r:IntegrationSyncRun) SET r += $properties', { properties: run }); }
+      catch { console.error('Could not persist integration sync status.'); }
+      const response = { status: result.status, source, fetchedDocumentCount: result.fetchedDocumentCount, excludedSyntheticCount: result.excludedSyntheticCount, outcomes: result.outcomes, errors: diagnostic ? [diagnostic.message] : [] };
+      return res.status(result.status === 'failed' ? 503 : 200).json(response);
     } catch (error) {
       if (error instanceof z.ZodError) return res.status(400).json({ error: 'Invalid request', details: error.flatten() });
       console.error('Unable to process ingestion request:', error);
@@ -212,17 +301,6 @@ export function createApp(graph:Graph, options: { ingestion?: IngestionWorkflowD
   });
 
   // Agent 1: Organization Intelligence & Knowledge Ingestion endpoints
-  const adminOwner = (req: Request, res: Response): boolean => {
-    if (!ragIdentity(req, res)) return false;
-    const expected = process.env.RAG_ADMIN_API_KEY;
-    const provided = req.header('x-rag-admin-key') ?? '';
-    if (!expected || !provided || Buffer.byteLength(expected) !== Buffer.byteLength(provided) || !timingSafeEqual(Buffer.from(provided), Buffer.from(expected))) {
-      res.status(403).json({ error: 'Administrative RAG access is not authorized.' });
-      return false;
-    }
-    return true;
-  };
-
   const handleIngest = async (req: Request, res: Response) => {
     if (!adminOwner(req, res)) return;
     if (!acquireRagWrite(res)) return;

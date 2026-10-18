@@ -15,6 +15,7 @@ export interface TicketInput {
   sourceRecordId?: string;
   receivedAt?: string;
   provenance?: 'synthetic' | 'user-provided' | 'external-verified';
+  metadata?: Record<string, unknown>;
 }
 
 export interface ReferenceCandidate {
@@ -43,6 +44,13 @@ export interface IdentifiedTicket {
   synthetic: boolean;
   createdAt: string;
   updatedAt: string;
+  projectName?: string;
+  issueKey?: string;
+  originalStatus?: string;
+  originalPriority?: string;
+  assigneeName?: string;
+  reporterName?: string;
+  externalUrl?: string;
 }
 
 export interface TicketIdentificationState {

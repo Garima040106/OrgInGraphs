@@ -229,7 +229,7 @@ export const BACKEND_ROUTES: RouteDefinition[] = [
         limit: 'Optional integer between 1 and 100'
       }
     },
-    responseDescription: 'Object with status, source, fetchedDocumentCount, outcomes, and errors.',
+    responseDescription: 'Object with status, source, fetchedDocumentCount, excludedSyntheticCount, outcomes, and sanitized errors.',
     associatedEntities: ['Document', 'Ticket', 'Activity']
   },
   {
