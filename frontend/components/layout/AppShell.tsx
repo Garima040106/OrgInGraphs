@@ -7,6 +7,8 @@ import {
   ArrowDownUp,
   BriefcaseBusiness,
   ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
   CircleHelp,
   Command,
   Home,
@@ -56,10 +58,12 @@ export function AppShell({
   const [company, setCompany] = useState("Company workspace");
   const [health, setHealth] = useState<Health | null>(null);
   const [selected, setSelected] = useState<{ entity: Entity; entityType: GraphEntityType | "Unknown" } | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const email = window.localStorage.getItem("oig-demo-workspace");
     if (email) setWorkspace(email);
+    setSidebarCollapsed(window.localStorage.getItem("oig-sidebar-collapsed") === "true");
     let mounted = true;
     api.company().then((item) => { if (mounted) setCompany(String(item.name ?? "Company workspace")); }).catch(() => { if (mounted) setCompany("Company workspace"); });
     api.health().then((item) => { if (mounted) setHealth(item); }).catch(() => { if (mounted) setHealth({ status: "degraded", database: "unavailable" }); });
@@ -93,11 +97,18 @@ export function AppShell({
           pathname === "/dashboard" ? "Overview" :
           pathname === "/org-graph" ? "Organization graph" : "Workspace";
   const connection = health?.status === "ok";
+  function toggleSidebar() {
+    setSidebarCollapsed((collapsed) => {
+      const next = !collapsed;
+      window.localStorage.setItem("oig-sidebar-collapsed", String(next));
+      return next;
+    });
+  }
 
   return (
-    <div className={`app-shell ${assistantOpen ? "assistant-open" : ""} ${pathname === "/dashboard" ? "dashboard-route" : ""}`}>
-      <aside className="sidebar" data-lenis-prevent>
-        <Brand href="/dashboard" />
+    <div className={`app-shell ${assistantOpen ? "assistant-open" : ""} ${pathname === "/dashboard" ? "dashboard-route" : ""} ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+      <aside className={`sidebar ${sidebarCollapsed ? "is-collapsed" : ""}`} data-lenis-prevent>
+        <div className="sidebar-brand-row"><Brand href="/dashboard" compact={sidebarCollapsed} /><button className="sidebar-toggle" type="button" onClick={toggleSidebar} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>{sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}</button></div>
         <div className="sidebar-kicker">{company}</div>
         <button className="workspace-switch" type="button" aria-label={`${company} workspace`}>
           <span className="workspace-mark">{company.slice(0, 1).toUpperCase()}</span>
@@ -111,13 +122,13 @@ export function AppShell({
             const active = !isAction && (href === "/dashboard"
               ? pathname === "/dashboard"
               : !href.includes("#") && (pathname === target || pathname.startsWith(`${target}/`)));
-            if (isAction) return <button type="button" className="side-nav-action" key={label} onClick={() => href === "search" ? setSearchOpen(true) : setAssistantOpen(true)}><Icon size={15} /><span>{label}</span></button>;
-            return <Link href={href} className={active ? "active" : ""} key={label} aria-current={active ? "page" : undefined}><Icon size={15} /><span>{label}</span></Link>;
+            if (isAction) return <button type="button" className="side-nav-action" key={label} title={sidebarCollapsed ? label : undefined} aria-label={label} onClick={() => href === "search" ? setSearchOpen(true) : setAssistantOpen(true)}><Icon size={15} /><span>{label}</span></button>;
+            return <Link href={href} className={active ? "active" : ""} key={label} aria-current={active ? "page" : undefined} title={sidebarCollapsed ? label : undefined}><Icon size={15} /><span>{label}</span></Link>;
           })}
-          <div className="side-nav-group"><div className="nav-section-label">TOOLS</div>{navigation.filter((item) => item.group === "tools").map(({ href, label, icon: Icon })=>{const active=pathname===href||pathname.startsWith(`${href}/`);return <Link href={href} className={active?"active":""} key={label} aria-current={active?"page":undefined}><Icon size={15}/><span>{label}</span></Link>;})}</div>
+          <div className="side-nav-group"><div className="nav-section-label">TOOLS</div>{navigation.filter((item) => item.group === "tools").map(({ href, label, icon: Icon })=>{const active=pathname===href||pathname.startsWith(`${href}/`);return <Link href={href} className={active?"active":""} key={label} aria-current={active?"page":undefined} title={sidebarCollapsed ? label : undefined}><Icon size={15}/><span>{label}</span></Link>;})}</div>
         </nav>
         <div className="sidebar-bottom">
-          <nav className="side-nav sidebar-settings-nav" aria-label="Preferences"><Link href="/settings" className={pathname === "/settings" ? "active" : ""} aria-current={pathname === "/settings" ? "page" : undefined}><Settings2 size={15} /><span>Settings</span></Link></nav>
+          <nav className="side-nav sidebar-settings-nav" aria-label="Preferences"><Link href="/settings" className={pathname === "/settings" ? "active" : ""} aria-current={pathname === "/settings" ? "page" : undefined} title={sidebarCollapsed ? "Settings" : undefined}><Settings2 size={15} /><span>Settings</span></Link></nav>
           <div className="sidebar-help"><CircleHelp size={14} /><span>Help center</span></div>
           <div className="sidebar-user"><span className="user-avatar">{workspace.slice(0, 2).toUpperCase()}</span><div><b title={workspace}>{workspace}</b><small>Demo access</small></div><ArrowDownUp size={13} color="#98a0af" /></div>
         </div>
