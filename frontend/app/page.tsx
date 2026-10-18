@@ -557,7 +557,7 @@ export default function Home() {
             <a href="#how-it-works">How it works</a>
           </div>
           <div>
-            <small>ABOUT OIG</small>
+            <small className="footer-about-label">ABOUT <Image src="/img/logo.png" alt="" width={16} height={16} /></small>
             <span>Company knowledge, connected.</span>
             <span>Built for teams in motion.</span>
             <span>© 2026 OrgInGraphs</span>
