@@ -6,22 +6,19 @@ import { usePathname } from "next/navigation";
 import {
   ArrowDownUp,
   BriefcaseBusiness,
-  Building2,
   ChevronDown,
   CircleHelp,
   Command,
   Home,
   SearchCheck,
-  FileClock,
+  Search,
   ChartNoAxesCombined,
   Network,
-  Search,
   FileText,
   CircleAlert,
   MessagesSquare,
   Plug,
   RefreshCw,
-  Lightbulb,
   Settings2,
   Sparkles,
   UsersRound,
@@ -34,18 +31,17 @@ import type { Entity, GraphEntityType, Health } from "@/lib/types";
 
 const navigation = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "assistant", label: "Investigate", icon: SearchCheck, action: true },
-  { href: "/org-graph", label: "Knowledge Graph", icon: Network },
-  { href: "/dashboard#decisions", label: "Decisions", icon: FileClock },
-  { href: "/impact-analysis", label: "Impact Analysis", icon: ChartNoAxesCombined },
-  { href: "/people", label: "People & Expertise", icon: UsersRound },
-  { href: "/projects", label: "Projects & Services", icon: BriefcaseBusiness },
-  { href: "/documents", label: "Documents", icon: FileText },
-  { href: "/tickets", label: "Tickets", icon: CircleAlert },
-  { href: "/conversations", label: "Conversations", icon: MessagesSquare },
   { href: "/integrations", label: "Integrations", icon: Plug },
-  { href: "/sync-data", label: "Sync & Data", icon: RefreshCw },
-  { href: "/proactive-insights", label: "Proactive Insights", icon: Lightbulb },
+  { href: "/org-graph", label: "Knowledge Graph", icon: Network },
+  { href: "/projects", label: "Projects", icon: BriefcaseBusiness },
+  { href: "/people", label: "People", icon: UsersRound },
+  { href: "assistant", label: "RAG Assistant", icon: SearchCheck, action: true },
+  { href: "search", label: "Search", icon: Search, action: true },
+  { href: "/impact-analysis", label: "Impact Analysis", icon: ChartNoAxesCombined },
+  { href: "/documents", label: "Documents", icon: FileText, group: "tools" },
+  { href: "/tickets", label: "Tickets", icon: CircleAlert, group: "tools" },
+  { href: "/conversations", label: "Conversations", icon: MessagesSquare, group: "tools" },
+  { href: "/sync-data", label: "Sync & Data", icon: RefreshCw, group: "tools" },
 ];
 
 export function AppShell({
@@ -99,7 +95,7 @@ export function AppShell({
   const connection = health?.status === "ok";
 
   return (
-    <div className={`app-shell ${assistantOpen ? "assistant-open" : ""}`}>
+    <div className={`app-shell ${assistantOpen ? "assistant-open" : ""} ${pathname === "/dashboard" ? "dashboard-route" : ""}`}>
       <aside className="sidebar" data-lenis-prevent>
         <Brand href="/dashboard" />
         <div className="sidebar-kicker">{company}</div>
@@ -109,15 +105,16 @@ export function AppShell({
         </button>
         <div className="nav-section-label">WORKSPACE</div>
         <nav className="side-nav" aria-label="Workspace navigation">
-          {navigation.map(({ href, label, icon: Icon }) => {
-            const isAction = href === "assistant";
+          {navigation.filter((item) => !item.group).map(({ href, label, icon: Icon }) => {
+            const isAction = href === "assistant" || href === "search";
             const target = href.split("#")[0];
             const active = !isAction && (href === "/dashboard"
               ? pathname === "/dashboard"
               : !href.includes("#") && (pathname === target || pathname.startsWith(`${target}/`)));
-            if (isAction) return <button type="button" className="side-nav-action" key={label} onClick={() => setAssistantOpen(true)}><Icon size={15} /><span>{label}</span></button>;
+            if (isAction) return <button type="button" className="side-nav-action" key={label} onClick={() => href === "search" ? setSearchOpen(true) : setAssistantOpen(true)}><Icon size={15} /><span>{label}</span></button>;
             return <Link href={href} className={active ? "active" : ""} key={label} aria-current={active ? "page" : undefined}><Icon size={15} /><span>{label}</span></Link>;
           })}
+          <div className="side-nav-group"><div className="nav-section-label">TOOLS</div>{navigation.filter((item) => item.group === "tools").map(({ href, label, icon: Icon })=>{const active=pathname===href||pathname.startsWith(`${href}/`);return <Link href={href} className={active?"active":""} key={label} aria-current={active?"page":undefined}><Icon size={15}/><span>{label}</span></Link>;})}</div>
         </nav>
         <div className="sidebar-bottom">
           <nav className="side-nav sidebar-settings-nav" aria-label="Preferences"><Link href="/settings" className={pathname === "/settings" ? "active" : ""} aria-current={pathname === "/settings" ? "page" : undefined}><Settings2 size={15} /><span>Settings</span></Link></nav>
@@ -130,8 +127,8 @@ export function AppShell({
           <div className="breadcrumbs"><span className="breadcrumb-company">{company}</span><span className="breadcrumb-divider">/</span><strong>{title}</strong></div>
           <div className="topbar-actions">
             <div className={`connection-pill ${connection ? "" : "offline"}`} title={connection ? "Backend connected" : "Backend unavailable"}><span className="status-dot" /><span>{connection ? "Connected" : health ? "Offline" : "Checking"}</span></div>
-            <button className="search-trigger" type="button" onClick={() => setSearchOpen(true)}><Search size={13} /><span>Search your organization</span><kbd><Command size={9} /> K</kbd></button>
-            <button className="topbar-user" type="button" onClick={() => setAssistantOpen((open) => !open)} aria-label="Open OrgMind Assistant"><Sparkles size={13} /></button>
+            <button className="search-trigger" type="button" onClick={() => setSearchOpen(true)}><Search size={13} /><span>Search across Confluence, Jira, Slack, GitHub, people, projects, and more...</span><kbd><Command size={9} /> K</kbd></button>
+            <div className="topbar-user-profile"><span className="user-avatar">{workspace.slice(0, 1).toUpperCase()}</span><span><b>{workspace}</b><small>Workspace member</small></span></div>
           </div>
         </header>
         <main className="workspace-content" data-lenis-prevent>{children}</main>
