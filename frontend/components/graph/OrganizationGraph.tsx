@@ -23,7 +23,6 @@ import {
   ChevronRight,
   CircleHelp,
   Expand,
-  ExternalLink,
   GitBranch,
   Network,
   RotateCcw,
@@ -415,17 +414,6 @@ export function GraphRenderer({
                       : "Expand"}
               </button>
               {path && <Link href={path} className="small-button">Open profile <ArrowUpRight size={11} /></Link>}
-              {typeof selectedNode.data.entity.externalUrl === "string" && selectedNode.data.entity.externalUrl.startsWith("http") && (
-                <a
-                  href={selectedNode.data.entity.externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="small-button"
-                  title="Open in Confluence"
-                >
-                  Open in {entitySource(selectedNode.data.entity)} <ExternalLink size={11} />
-                </a>
-              )}
             </div>
             {panelError && <div className="panel-error">{panelError}</div>}
             {detailLoading && <div className="inspector-section"><span className="inline-loading"><span className="spinner" />Loading record details…</span></div>}
