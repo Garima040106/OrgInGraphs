@@ -25,9 +25,11 @@ import { DEFAULT_DEMO_EMAIL, getDemoSession } from "@/lib/demo-auth";
 
 const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 const defaultBaseUrl = process.env.NODE_ENV === "production"
-  ? "https://orgingraphs.onrender.com"
+  ? ""
   : "http://localhost:8080";
-const baseUrl = (configuredBaseUrl || defaultBaseUrl).replace(/\/$/, "");
+const baseUrl = process.env.NODE_ENV === "production"
+  ? ""
+  : (configuredBaseUrl || defaultBaseUrl).replace(/\/$/, "");
 
 const ragQueryResponseSchema = z.object({
   answer: z.string(),
