@@ -58,7 +58,9 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 12_000): Promise<T> {
-  if (!baseUrl) throw new ApiError("The backend API URL is not configured for this deployment.", null);
+  if (!baseUrl && process.env.NODE_ENV !== "production") {
+    throw new ApiError("The backend API URL is not configured for this deployment.", null);
+  }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const signal = options.signal
