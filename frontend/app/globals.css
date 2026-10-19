@@ -5846,6 +5846,96 @@ body {
 .hub-feature-tile svg { color: #246b49; }
 .hub-feature-tile b { color: #30352f; font-size: 10px; }
 .hub-feature-tile small { color: #77786f; font-size: 8px; }
+
+/* Responsive workspace containment: keep the shell, dashboard grid, and graph surface in one fluid column system. */
+.app-shell {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+}
+.app-shell .sidebar { width: auto; min-width: 0; flex: none; }
+.app-shell .main-column,
+.app-shell .workspace-content,
+.app-shell .dashboard-bento-heading,
+.app-shell .hub-integrations,
+.app-shell .bento-grid,
+.app-shell .bento-card,
+.app-shell .graph-workspace { min-width: 0; max-width: 100%; }
+.app-shell .topbar-actions { min-width: 0; }
+.app-shell .search-trigger { min-width: 0; }
+.app-shell .graph-workspace { width: 100%; }
+.app-shell .bento-grid { grid-template-areas: "activity quick work" "activity teams work" "knowledge knowledge featured" "signals incidents decisions" "ownership timeline sources"; }
+
+@media (max-width: 1180px) {
+  .app-shell { grid-template-columns: 72px minmax(0, 1fr); }
+  .app-shell .sidebar { position: static; width: 72px; min-width: 72px; padding-inline: 8px; }
+  .app-shell .bento-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "activity activity" "quick teams" "work work" "knowledge knowledge" "featured featured" "signals incidents" "decisions ownership" "timeline sources";
+    grid-auto-rows: auto;
+  }
+  .app-shell .bento-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .app-shell .bento-graph-card,
+  .app-shell .bento-activity-card,
+  .app-shell .bento-investigations-card,
+  .app-shell .bento-insights-card,
+  .app-shell .bento-decisions-card,
+  .app-shell .bento-ownership-card,
+  .app-shell .bento-timeline-card,
+  .app-shell .bento-sources-card { min-height: 250px; }
+}
+
+@media (max-width: 760px) {
+  .app-shell { grid-template-columns: 58px minmax(0, 1fr); }
+  .app-shell .sidebar { width: 58px; min-width: 58px; padding-inline: 7px; }
+  .app-shell .sidebar-brand-row { justify-content: center; }
+  .app-shell .sidebar .brand-wordmark,
+  .app-shell .sidebar-kicker,
+  .app-shell .workspace-switch > span:not(.workspace-mark),
+  .app-shell .workspace-switch > svg,
+  .app-shell .nav-section-label,
+  .app-shell .side-nav a > span,
+  .app-shell .side-nav-action > span,
+  .app-shell .sidebar-help > span,
+  .app-shell .sidebar-user > div,
+  .app-shell .sidebar-user > svg { display: none; }
+  .app-shell .workspace-switch,
+  .app-shell .side-nav a,
+  .app-shell .side-nav-action,
+  .app-shell .sidebar-help,
+  .app-shell .sidebar-user { justify-content: center; }
+  .app-shell .workspace-switch { padding-inline: 0; }
+  .app-shell .side-nav a,
+  .app-shell .side-nav-action { padding-inline: 0; }
+  .app-shell .workspace-content { padding: 16px 12px 24px; }
+  .app-shell .topbar { padding-inline: 12px; }
+  .app-shell .bento-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-shell .hub-integrations { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-shell .dashboard-bento-heading { align-items: flex-start; }
+  .app-shell .dashboard-bento-heading .heading-actions { flex-wrap: wrap; }
+}
+
+@media (max-width: 640px) {
+  .app-shell .topbar { min-height: 58px; height: auto; padding-block: 8px; }
+  .app-shell .topbar-actions { gap: 8px; }
+  .app-shell .connection-pill { padding: 6px 8px; }
+  .app-shell .connection-pill > span:last-child,
+  .app-shell .topbar-user-profile > span:nth-child(2),
+  .app-shell .topbar-user-profile > svg { display: none; }
+  .app-shell .search-trigger { width: 32px; flex: 0 0 32px; justify-content: center; padding: 0; }
+  .app-shell .search-trigger span,
+  .app-shell .search-trigger kbd { display: none; }
+  .app-shell .hub-integrations,
+  .app-shell .bento-grid { grid-template-columns: minmax(0, 1fr); }
+  .app-shell .bento-grid { grid-template-areas: "activity" "quick" "teams" "work" "knowledge" "featured" "signals" "incidents" "decisions" "ownership" "timeline" "sources"; }
+  .app-shell .bento-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-shell .bento-sources-card .bento-list { grid-template-columns: minmax(0, 1fr); }
+  .app-shell .hub-integration-card { min-height: 0; }
+  .app-shell .hub-indexed-count,
+  .app-shell .hub-sync-time { white-space: normal; overflow-wrap: anywhere; }
+}
 .app-shell.assistant-open .assistant-launch { display: none; }
 .app-shell.dashboard-route.assistant-open .assistant-panel { position: fixed; z-index: 30; top: auto; right: 20px; bottom: 18px; width: min(520px, calc(100vw - 32px)); height: min(760px, calc(100dvh - 36px)); min-width: 0; min-height: 0; max-height: none; margin: 0; border: 1px solid #174d35; border-radius: 16px; background: #f8faf4; box-shadow: 0 16px 48px rgba(32,33,31,.18); }
 .app-shell.dashboard-route.assistant-open .assistant-header { min-height: 60px; border-color: #eeece2; background: #fffef7; }
@@ -5868,7 +5958,8 @@ body {
   .app-shell.dashboard-route .bento-sources-card { grid-area: sources; }
 }
 @media (max-width: 650px) {
-  .app-shell .sidebar { width: 64px; flex-basis: 64px; align-items: center; padding-inline: 6px; }
+  .app-shell { grid-template-columns: 58px minmax(0, 1fr); }
+  .app-shell .sidebar { width: 58px; min-width: 58px; flex-basis: 58px; align-items: center; padding-inline: 6px; }
   .app-shell .sidebar-kicker, .app-shell .workspace-switch, .app-shell .nav-section-label, .app-shell .side-nav a span, .app-shell .side-nav-action span, .app-shell .sidebar-bottom { display: none; }
   .app-shell .side-nav a, .app-shell .side-nav-action { justify-content: center; width: 42px; height: 42px; padding: 0; }
   .app-shell .side-nav-group { margin-top: 6px; padding-top: 6px; }
@@ -5877,7 +5968,7 @@ body {
   .app-shell .workspace-content { padding: 16px 10px 24px; }
   .dashboard-bento-heading { gap: 12px; flex-direction: column; align-items: flex-start; }
   .dashboard-heading-copy h1 { font-size: 30px; }
-  .hub-integrations { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+  .hub-integrations { grid-template-columns: minmax(0,1fr); gap: 7px; }
   .hub-integration-card { padding: 9px; }
   .app-shell.dashboard-route .bento-grid { grid-template-columns: minmax(0,1fr); grid-template-areas: "activity" "quick" "teams" "work" "knowledge" "featured" "signals" "incidents" "decisions" "ownership" "timeline" "sources"; }
   .app-shell.dashboard-route .bento-activity-card { grid-area: activity; }
@@ -5892,4 +5983,40 @@ body {
   .app-shell.dashboard-route .bento-ownership-card { grid-area: ownership; }
   .app-shell.dashboard-route .bento-timeline-card { grid-area: timeline; }
   .app-shell.dashboard-route .bento-sources-card { grid-area: sources; }
+}
+
+/* Browser zoom reduces the CSS viewport, so use a content-width breakpoint before the physical screen is small. */
+@media (min-width: 761px) and (max-width: 1280px) {
+  .app-shell { grid-template-columns: 72px minmax(0, 1fr); }
+  .app-shell .sidebar { width: 72px; min-width: 72px; flex-basis: 72px; align-items: center; padding-inline: 8px; }
+  .app-shell .sidebar-brand-row { justify-content: center; }
+  .app-shell .sidebar .brand-wordmark,
+  .app-shell .sidebar-kicker,
+  .app-shell .workspace-switch > span:not(.workspace-mark),
+  .app-shell .workspace-switch > svg,
+  .app-shell .nav-section-label,
+  .app-shell .side-nav a > span,
+  .app-shell .side-nav-action > span,
+  .app-shell .sidebar-help > span,
+  .app-shell .sidebar-user > div,
+  .app-shell .sidebar-user > svg { display: none; }
+  .app-shell .workspace-switch,
+  .app-shell .side-nav a,
+  .app-shell .side-nav-action,
+  .app-shell .sidebar-help,
+  .app-shell .sidebar-user { justify-content: center; }
+  .app-shell .workspace-switch { padding-inline: 0; }
+  .app-shell .side-nav a,
+  .app-shell .side-nav-action { padding-inline: 0; }
+  .app-shell .sidebar-user { padding-inline: 0; }
+  .app-shell .hub-integrations { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .app-shell .bento-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-shell.sidebar-collapsed { grid-template-columns: 58px minmax(0, 1fr); }
+  .app-shell.sidebar-collapsed .sidebar.is-collapsed { width: 58px; min-width: 58px; }
+}
+
+@media (max-width: 760px) {
+  .app-shell.sidebar-collapsed { grid-template-columns: 48px minmax(0, 1fr); }
+  .app-shell.sidebar-collapsed .sidebar.is-collapsed { width: 48px; min-width: 48px; padding-inline: 4px; }
+  .app-shell.sidebar-collapsed .sidebar-toggle { width: 24px; flex-basis: 24px; }
 }
