@@ -24,10 +24,10 @@ import { z } from "zod";
 import { DEFAULT_DEMO_EMAIL, getDemoSession } from "@/lib/demo-auth";
 
 const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-if (process.env.NODE_ENV === "production" && !configuredBaseUrl) {
-  throw new Error("NEXT_PUBLIC_API_BASE_URL must be configured for production builds.");
-}
-const baseUrl = (configuredBaseUrl || (process.env.NODE_ENV !== "production" ? "http://localhost:8080" : "")).replace(/\/$/, "");
+const defaultBaseUrl = process.env.NODE_ENV === "production"
+  ? "https://orgingraphs.onrender.com"
+  : "http://localhost:8080";
+const baseUrl = (configuredBaseUrl || defaultBaseUrl).replace(/\/$/, "");
 
 const ragQueryResponseSchema = z.object({
   answer: z.string(),
