@@ -487,3 +487,5 @@ docs/
 - [Backend environment template](backend/.env.example)
 
 <p align="center"><sub>OrgInGraphs · graph-grounded company intelligence</sub></p>
+
+OFF CAMPUS CODE: GHPEPJ
